@@ -13,7 +13,6 @@ Rules for agents working in this repo. Read them before changing `plugins/alf/`.
 
 - Change files under `plugins/alf/assets/` through `scripts/update-assets.sh`.
 - Add local instructions to a wrapper between its `<!-- overlay:start -->` and `<!-- overlay:end -->` markers. The script regenerates the frontmatter and the pointer line.
-- Write files in this repo without AI disclaimers.
 
 ## Writing style
 
