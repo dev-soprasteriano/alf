@@ -1,0 +1,7 @@
+version: '3'
+
+tasks:
+  update-assets:
+    desc: Move unpinned assets to latest. SKILL=name moves one asset, REF=rev pins it, DRY_RUN=1 only plans.
+    cmds:
+      - scripts/update-assets.sh update {{if .DRY_RUN}}--dry-run {{end}}{{if .REF}}--ref {{.REF}} {{end}}{{if .SKILL}}{{.SKILL}}{{end}}

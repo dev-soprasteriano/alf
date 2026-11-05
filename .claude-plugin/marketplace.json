@@ -1,0 +1,14 @@
+{
+  "name": "alf",
+  "owner": {
+    "name": "olillevik"
+  },
+  "description": "Foundation skills for software developers.",
+  "plugins": [
+    {
+      "name": "alf",
+      "source": "./plugins/alf",
+      "description": "Upstream skills kept as pinned assets, with wrapper skills that add local instructions."
+    }
+  ]
+}
