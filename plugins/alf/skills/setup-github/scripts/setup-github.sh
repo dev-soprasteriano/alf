@@ -82,12 +82,15 @@ else
 fi
 
 # Repository settings: squash only, PR title as the squash title, blank body,
-# head branches deleted on merge. Everything else is left as it is.
+# head branches deleted on merge, auto-merge allowed, PR branches updatable from
+# the PR page. Everything else is left as it is.
 settings=$(jq -n '{
   allow_squash_merge: true,
   allow_merge_commit: false,
   allow_rebase_merge: false,
   delete_branch_on_merge: true,
+  allow_auto_merge: true,
+  allow_update_branch: true,
   squash_merge_commit_title: "PR_TITLE",
   squash_merge_commit_message: "BLANK"
 }')
@@ -169,7 +172,8 @@ fi
 want=$(jq -S . <<<"$settings")
 got=$(gh api "repos/$repo" --jq '{
   allow_squash_merge, allow_merge_commit, allow_rebase_merge,
-  delete_branch_on_merge, squash_merge_commit_title, squash_merge_commit_message
+  delete_branch_on_merge, squash_merge_commit_title, squash_merge_commit_message,
+  allow_auto_merge, allow_update_branch
 }' | jq -S .)
 if [ "$want" != "$got" ]; then
   echo "error: repository settings differ from what was requested" >&2

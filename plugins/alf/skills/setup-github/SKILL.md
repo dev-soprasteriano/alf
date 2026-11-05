@@ -14,7 +14,7 @@ The script is `scripts/setup-github.sh` in this skill's folder, the folder that 
 
 ## What it sets
 
-- **Merge settings:** squash merges only. The squash commit title is the PR title and the body is blank. Head branches are deleted after merge. Other settings are left as they are.
+- **Merge settings:** squash merges only. The squash commit title is the PR title and the body is blank. Head branches are deleted after merge. Auto-merge is allowed, and "Always suggest updating pull request branches" is on. Other settings are left as they are.
 - **Ruleset `trunk-based`** on the default branch:
   - Changes go through a pull request.
   - One approving review is required, from someone other than the person who pushed the latest commit. GitHub checks the pusher, not the commit author.
