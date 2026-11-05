@@ -7,4 +7,7 @@ Follow the skill in full at `../../assets/mattpocock/code-review/SKILL.md`. Read
 
 <!-- Local additions go between the markers. scripts/update-assets.sh rewrites everything else. -->
 <!-- overlay:start -->
+## Setup skill name
+
+In this plugin the setup skill is `/setup-alf`. Wherever the instructions above name `/setup-matt-pocock-skills`, use `/setup-alf` instead.
 <!-- overlay:end -->

@@ -15,6 +15,14 @@ Rules for agents working in this repo. Read them before changing `plugins/alf/`.
 - Add local instructions to a wrapper between its `<!-- overlay:start -->` and `<!-- overlay:end -->` markers. The script regenerates the frontmatter and the pointer line.
 - Write files in this repo without AI disclaimers.
 
+## Writing style
+
+Write like a technical writer. State facts, steps and decisions. Cut anything else.
+
+- Lead with the point. Keep sentences short.
+- Name the exact file, command or field. Use specific verbs: "writes", not "handles".
+- Use active voice. Write steps in the imperative: "Run the setup."
+
 ## Adding or updating assets, or checking a PR that touches them
 
 1. **License.** Read the upstream `LICENSE`. Tell the user its name and copyright line. If it is new, or changed since the last pin, say so. If it is missing, or not permissive (MIT, Apache-2.0, BSD-2/3-Clause, ISC, Unlicense, CC0), warn the user and suggest aborting that change.

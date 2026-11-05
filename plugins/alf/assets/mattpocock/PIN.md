@@ -18,7 +18,7 @@ Edit only through scripts/update-assets.sh. Rows marked yes are skipped by the w
 | prototype | skills/engineering/prototype | 321658273cb1d20b76026717d027d505790106d4 | no | prototype |
 | research | skills/engineering/research | 7739eaed7f8f3915437a8def198a6d0d7206dbc7 | no | research |
 | retro | skills/engineering/retro | a7d038f6bf7f01b516408e95e2fb56e0b338fa6f | no | retro |
-| setup-matt-pocock-skills | skills/engineering/setup-matt-pocock-skills | 59db609eb1e18aaf59b63284d0e52255aff0c63c | no | setup-matt-pocock-skills |
+| setup-matt-pocock-skills | skills/engineering/setup-matt-pocock-skills | 59db609eb1e18aaf59b63284d0e52255aff0c63c | no | setup-alf |
 | tdd | skills/engineering/tdd | 3f599139104dfceabc7754eeb91319802f85e042 | no | tdd |
 | to-spec | skills/engineering/to-spec | 5c89081d4bbeb3d039a42093653f90bb698d780e | no | to-spec |
 | to-tickets | skills/engineering/to-tickets | 9e2abf8611a345efbf779aacb171cff015bcdeb6 | no | to-tickets |
