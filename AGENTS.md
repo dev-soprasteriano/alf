@@ -36,6 +36,8 @@ Write like a technical writer. State facts, steps and decisions. Cut anything el
 - `task update-assets SKILL=<name> REF=<sha or tag>` pins one asset.
 - Add `DRY_RUN=1` to any of these to print the plan.
 - `scripts/update-assets.sh add <upstream> <url> <path>...` copies new assets in and writes the files.
+- `task ci` scans the skills and assets with SkillSpector (static, no LLM). CI runs the same task.
+- `task hooks:install` points this clone's git hooks at `.githooks`. Run it once per clone.
 
 Each update opens a PR. Its description tells the reviewer to check LICENSE changes and missing linked assets.
 

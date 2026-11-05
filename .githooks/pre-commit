@@ -1,0 +1,16 @@
+#!/bin/sh
+# Runs `task ci` before each commit. Activated by `task hooks:install`.
+set -eu
+
+if ! command -v task >/dev/null 2>&1; then
+  echo "pre-commit: 'task' not found on PATH. Install go-task with: brew install go-task" >&2
+  exit 1
+fi
+
+task ci
+
+# core.hooksPath in this repo hides the global hooks directory, so run the global pre-commit hook here.
+global_dir=$(git config --global --get core.hooksPath || true)
+if [ -n "$global_dir" ] && [ -x "$global_dir/pre-commit" ]; then
+  exec "$global_dir/pre-commit" "$@"
+fi

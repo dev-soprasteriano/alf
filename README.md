@@ -37,3 +37,11 @@ Install [go-task](https://taskfile.dev) once (`brew install go-task`), then:
 - `DRY_RUN=1` on any of these prints the plan.
 
 A GitHub Actions job runs `task update-assets` every Monday at 06:00 UTC. `AGENTS.md` lists the rules agents follow when they touch assets.
+
+## Checks
+
+Install [uv](https://docs.astral.sh/uv/) once (`brew install uv`), then run `task ci`. It scans the skills and assets with SkillSpector. The scan runs without the LLM stage, so file contents are not sent to an LLM provider. GitHub Actions runs the same task on every pull request and on every push to `main`.
+
+Run `task hooks:install` once per clone. After that, `git commit` runs `task ci` first and stops the commit if the scan fails.
+
+If the scan fails, see [docs/skillspector.md](docs/skillspector.md) for how to fix or accept each finding.
