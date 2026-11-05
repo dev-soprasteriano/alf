@@ -40,7 +40,7 @@ A GitHub Actions job runs `task update-assets` every Monday at 06:00 UTC. `AGENT
 
 ## Checks
 
-Install [uv](https://docs.astral.sh/uv/) once (`brew install uv`), then run `task ci`. It scans the skills and assets with SkillSpector. The scan runs without the LLM stage, so file contents are not sent to an LLM provider. GitHub Actions runs the same task on every pull request and on every push to `main`.
+Install [uv](https://docs.astral.sh/uv/) once (`brew install uv`). The `task ci` scan runs SkillSpector over the skills and assets. The scan runs without the LLM stage, so file contents are not sent to an LLM provider. GitHub Actions runs the same task on every pull request and on every push to `main`.
 
 Run `task hooks:install` once per clone. After that, `git commit` runs `task ci` first and stops the commit if the scan fails.
 
