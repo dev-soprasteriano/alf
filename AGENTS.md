@@ -6,7 +6,7 @@ Rules for agents working in this repo. Read them before changing `plugins/alf/`.
 
 - `plugins/alf/assets/<upstream>/<skill>/`: a byte-for-byte copy of one upstream skill folder.
 - `plugins/alf/assets/<upstream>/LICENSE` and `PIN.md`: the upstream's license, and one row per asset with its commit and whether it is pinned.
-- `plugins/alf/skills/<skill>/SKILL.md`: a wrapper. Its frontmatter is copied from the asset, and its body points at the asset. A wrapper can have a different name from its asset folder; the `Wrapper` column in `PIN.md` gives that name.
+- `plugins/alf/skills/<skill>/SKILL.md`: either a wrapper that points at an asset, or an in-house skill. A wrapper's frontmatter is copied from the asset, and its body points at the asset. A wrapper can have a different name from its asset folder; the `Wrapper` column in `PIN.md` gives that name.
 - `scripts/update-assets.sh`: changes assets. `task update-assets` and the weekly workflow both run it.
 
 ## Editing rules
@@ -39,3 +39,24 @@ Write like a technical writer. State facts, steps and decisions. Cut anything el
 - `scripts/update-assets.sh add <upstream> <url> <path>...` copies new assets in and writes the files.
 
 Each update opens a PR. Its description tells the reviewer to check LICENSE changes and missing linked assets.
+
+## Agent skills
+
+### Issue tracker
+
+Issues live in GitHub Issues for `olillevik/alf`, managed with the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+<!-- alf:issue-workflow start -->
+- **Spec from an existing ticket**: add the spec to that ticket's body under a `## Spec` heading, replacing any existing `## Spec` section. Apply the label for the `ready-for-agent` role (see `docs/agents/triage-labels.md`).
+- **Spec with no existing ticket**: create a new ticket for the spec.
+- **Implementation tickets** (for example from `to-tickets`): create each one as a sub-issue of the ticket it was based on, the existing ticket or the spec ticket. With no such ticket, create standalone tickets.
+- **Sub-issue operation**: if `docs/agents/issue-tracker.md` describes a sub-issue feature, use it. If the tracker has no sub-issue feature, or it is switched off (for example raw markdown files), link both ways by hand: the child's body starts with `Part of <parent>`, and the parent's body gets a `## Child tickets` checklist with one `- [ ] <child>` line per child. This overrides to-tickets' rule against modifying the parent, for these links only. Do not change the parent's open or closed state.
+<!-- alf:issue-workflow end -->
+
+### Triage labels
+
+Default labels: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: one `GLOSSARY.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.

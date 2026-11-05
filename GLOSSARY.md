@@ -29,6 +29,10 @@ The newest revision on an upstream's default branch that changes an asset's fold
 A plugin skill that points at one asset and adds the overlay. The asset is the skill being wrapped.
 _Avoid_: Alias, proxy
 
+**In-house skill**:
+A plugin skill written in this repo, with no asset behind it.
+_Avoid_: Full skill, standalone skill
+
 **Overlay**:
 Local instructions a wrapper adds after following its asset.
 _Avoid_: Patch, customisation
