@@ -14,7 +14,7 @@ BLOCKING="$WORK/blocking.tsv"
 status=0
 
 # --baseline is rejected for recursive multi-skill scans, so each skill folder is scanned on its own.
-for skill in $(find plugins/alf/skills plugins/alf/assets/mattpocock plugins/alf/assets/humanlayer -mindepth 1 -maxdepth 1 -type d | sort); do
+for skill in $(find plugins/alf/skills plugins/alf/upstream/mattpocock plugins/alf/upstream/humanlayer -mindepth 1 -maxdepth 1 -type d | sort); do
   [ -f "$skill/SKILL.md" ] || continue
   report="$WORK/$(echo "$skill" | tr '/' '_').json"
 

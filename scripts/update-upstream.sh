@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Copies upstream skills into plugins/alf/assets, records each asset's commit in PIN.md,
-# and writes the wrapper skills under plugins/alf/skills. Run by `task update-assets`,
+# Copies upstream skills into plugins/alf/upstream, records each upstream skill's commit in PIN.md,
+# and writes the wrapper skills under plugins/alf/skills. Run by `task update-upstream`,
 # by the weekly workflow, and by agents. See AGENTS.md.
 #
 # Written for bash 3.2 (macOS /bin/bash): plain variables, loops and case only.
@@ -9,11 +9,11 @@ set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PLUGIN_DIR="$REPO_DIR/plugins/alf"
-ASSETS_DIR="$PLUGIN_DIR/assets"
+UPSTREAM_DIR="$PLUGIN_DIR/upstream"
 SKILLS_DIR="$PLUGIN_DIR/skills"
 OVERLAY_START='<!-- overlay:start -->'
 OVERLAY_END='<!-- overlay:end -->'
-REVIEW_NOTE='Reviewer: check LICENSE changes, and check for missing assets if an updated asset links other skills. See AGENTS.md.'
+REVIEW_NOTE='Reviewer: check LICENSE changes, and check for missing upstream skills if an updated upstream skill links other skills. See AGENTS.md.'
 
 WORK_DIR="$(mktemp -d)"
 trap 'rm -rf "$WORK_DIR"' EXIT
@@ -22,16 +22,16 @@ mkdir -p "$WORK_DIR/rows" "$WORK_DIR/clones"
 usage() {
   cat >&2 <<'EOF'
 Usage:
-  scripts/update-assets.sh update [--dry-run] [--ref REV] [SKILL]
-      Move unpinned assets to the latest revision of their upstream folder.
-      With SKILL, move that one asset to latest. With SKILL and --ref REV, pin it to REV.
-  scripts/update-assets.sh add UPSTREAM URL PATH[=WRAPPER]...
-      Copy assets from an upstream into the catalogue. Writes the files; commit them yourself.
-      WRAPPER is the name of the plugin skill that points at the asset (default: the folder name).
+  scripts/update-upstream.sh update [--dry-run] [--ref REV] [SKILL]
+      Move unpinned upstream skills to the latest revision of their upstream folder.
+      With SKILL, move that one upstream skill to latest. With SKILL and --ref REV, pin it to REV.
+  scripts/update-upstream.sh add UPSTREAM URL PATH[=WRAPPER]...
+      Copy upstream skills from an upstream into the catalogue. Writes the files; commit them yourself.
+      WRAPPER is the name of the plugin skill that points at the upstream skill (default: the folder name).
 
 Environment for update:
-  ASSETS_BRANCH        branch for the update (default: assets/update-<UTC timestamp>)
-  ASSETS_LOCAL_ONLY=1  commit to the branch, but skip the push and the PR
+  UPSTREAM_BRANCH        branch for the update (default: upstream/update-<UTC timestamp>)
+  UPSTREAM_LOCAL_ONLY=1  commit to the branch, but skip the push and the PR
 EOF
   exit 2
 }
@@ -56,10 +56,10 @@ pin_rows() {
 }
 
 load_rows() {   # slug
-  pin_rows "$ASSETS_DIR/$1/PIN.md" > "$WORK_DIR/rows/$1"
+  pin_rows "$UPSTREAM_DIR/$1/PIN.md" > "$WORK_DIR/rows/$1"
 }
 
-# Sets commit and pinned for one asset in an upstream's rows file.
+# Sets commit and pinned for one upstream skill in an upstream's rows file.
 set_row() {   # slug skill commit pinned
   local rows="$WORK_DIR/rows/$1" tmp="$WORK_DIR/rows.tmp"
   awk -v s="$2" -v c="$3" -v p="$4" '$1 == s { $3 = c; $4 = p } { print }' "$rows" > "$tmp"
@@ -70,12 +70,12 @@ set_row() {   # slug skill commit pinned
 write_pin() {   # slug url rows-file
   {
     printf 'Upstream: %s\n\n' "$2"
-    printf 'Files under this folder are copied from the commits in the table by scripts/update-assets.sh.\n'
-    printf 'Edit only through scripts/update-assets.sh. Rows marked yes are skipped by the weekly update.\n\n'
+    printf 'Files under this folder are copied from the commits in the table by scripts/update-upstream.sh.\n'
+    printf 'Edit only through scripts/update-upstream.sh. Rows marked yes are skipped by the weekly update.\n\n'
     printf '| Skill | Upstream path | Commit | Pinned | Wrapper |\n'
     printf '| --- | --- | --- | --- | --- |\n'
     awk '{ printf "| %s | %s | %s | %s | %s |\n", $1, $2, $3, $4, $5 }' "$3"
-  } > "$ASSETS_DIR/$1/PIN.md"
+  } > "$UPSTREAM_DIR/$1/PIN.md"
 }
 
 # Clones an upstream once per run. Prints the clone directory.
@@ -114,7 +114,7 @@ export_folder() {   # clone commit upstream-path dest
 }
 
 # The name: value of a SKILL.md frontmatter block.
-asset_name() {   # SKILL.md
+skill_name() {   # SKILL.md
   awk 'NR > 1 && /^---$/ { exit } /^name:/ { sub(/^name: */, ""); print; exit }' "$1"
 }
 
@@ -123,13 +123,13 @@ frontmatter() {   # SKILL.md
   awk '{ print } NR > 1 && /^---$/ { exit }' "$1"
 }
 
-# Succeeds if a name is already used by an asset (folder name) or a wrapper (skill name).
+# Succeeds if a name is already used by an upstream skill (folder name) or a wrapper (skill name).
 skill_in_catalogue() {   # name
   local pin
   if [[ -e "$SKILLS_DIR/$1" ]]; then
     return 0
   fi
-  for pin in "$ASSETS_DIR"/*/PIN.md; do
+  for pin in "$UPSTREAM_DIR"/*/PIN.md; do
     [[ -f "$pin" ]] || continue
     if pin_rows "$pin" | awk -v s="$1" '$1 == s || $5 == s { found = 1 } END { exit !found }'; then
       return 0
@@ -138,21 +138,21 @@ skill_in_catalogue() {   # name
   return 1
 }
 
-# The wrapper name of an asset, from its upstream's rows file.
+# The wrapper name of an upstream skill, from its upstream's rows file.
 wrapper_for() {   # slug skill
   awk -v s="$2" '$1 == s { print $5; exit }' "$WORK_DIR/rows/$1"
 }
 
-# Writes the wrapper for an asset under its wrapper name. Frontmatter and pointer are
+# Writes the wrapper for an upstream skill under its wrapper name. Frontmatter and pointer are
 # regenerated (the name line is replaced when the wrapper name differs); the overlay is kept.
 write_wrapper() {   # slug skill wrapper-name
-  local asset="$ASSETS_DIR/$1/$2/SKILL.md"
+  local upstream_skill="$UPSTREAM_DIR/$1/$2/SKILL.md"
   local dir="$SKILLS_DIR/$3"
   local wrapper="$dir/SKILL.md"
   local overlay
   [[ -n "$3" ]] || die "no wrapper name for $1/$2"
-  [[ "$(head -n 1 "$asset")" == "---" ]] || die "$asset has no frontmatter"
-  [[ "$(asset_name "$asset")" == "$2" ]] || die "$asset: frontmatter name does not match folder $2"
+  [[ "$(head -n 1 "$upstream_skill")" == "---" ]] || die "$upstream_skill has no frontmatter"
+  [[ "$(skill_name "$upstream_skill")" == "$2" ]] || die "$upstream_skill: frontmatter name does not match folder $2"
   if [[ -f "$wrapper" ]]; then
     overlay="$(awk -v s="$OVERLAY_START" -v e="$OVERLAY_END" '$0 == s { on = 1 } on { print } $0 == e { exit }' "$wrapper")"
     [[ "$overlay" == *"$OVERLAY_END" ]] || die "$wrapper: overlay markers are missing; fix this file by hand"
@@ -163,12 +163,12 @@ $OVERLAY_END"
   mkdir -p "$dir"
   {
     if [[ "$3" == "$2" ]]; then
-      frontmatter "$asset"
+      frontmatter "$upstream_skill"
     else
-      frontmatter "$asset" | awk -v n="$3" '/^name:/ && !done { print "name: " n; done = 1; next } { print }'
+      frontmatter "$upstream_skill" | awk -v n="$3" '/^name:/ && !done { print "name: " n; done = 1; next } { print }'
     fi
-    printf '\nFollow the skill in full at `../../assets/%s/%s/SKILL.md`. Read it first and do what it says, using the reference files beside it.\n\n' "$1" "$2"
-    printf '<!-- Local additions go between the markers. scripts/update-assets.sh rewrites everything else. -->\n'
+    printf '\nFollow the skill in full at `../../upstream/%s/%s/SKILL.md`. Read it first and do what it says, using the reference files beside it.\n\n' "$1" "$2"
+    printf '<!-- Local additions go between the markers. scripts/update-upstream.sh rewrites everything else. -->\n'
     printf '%s\n' "$overlay"
   } > "$wrapper"
 }
@@ -188,7 +188,7 @@ fresh_license() {   # slug
 check_license() {   # slug
   if ! fresh_license "$1"; then
     printf 'warning: %s has no LICENSE on its default branch; kept the existing copy\n' "$1" >&2
-  elif ! cmp -s "$WORK_DIR/license.$1" "$ASSETS_DIR/$1/LICENSE"; then
+  elif ! cmp -s "$WORK_DIR/license.$1" "$UPSTREAM_DIR/$1/LICENSE"; then
     printf '%s\n' "$1" >> "$WORK_DIR/license_changes"
   fi
 }
@@ -201,12 +201,12 @@ check_overlay() {   # wrapper-name
   [[ "$overlay" == *"$OVERLAY_END" ]] || die "$wrapper: overlay markers are missing; fix this file by hand"
 }
 
-# Exports a changed asset to a staging folder and checks it.
-stage_asset() {   # clone commit upstream-path slug skill wrapper-name
+# Exports a changed upstream skill to a staging folder and checks it.
+stage_upstream() {   # clone commit upstream-path slug skill wrapper-name
   local stage="$WORK_DIR/stage/$4/$5"
   export_folder "$1" "$2" "$3" "$stage"
   [[ "$(head -n 1 "$stage/SKILL.md")" == "---" ]] || die "$4/$5: new revision has no frontmatter"
-  [[ "$(asset_name "$stage/SKILL.md")" == "$5" ]] || die "$4/$5: new revision's frontmatter name does not match"
+  [[ "$(skill_name "$stage/SKILL.md")" == "$5" ]] || die "$4/$5: new revision's frontmatter name does not match"
   check_overlay "$6"
 }
 
@@ -226,15 +226,15 @@ new_upstream_skills() {   # slug parent-path old new
 write_body() {   # plan-file body-file
   local slug skill upath old new pinned_new url found
   {
-    printf 'Moves assets to the revisions below. Generated by scripts/update-assets.sh.\n\n'
-    printf '| Asset | From | To | Pinned |\n| --- | --- | --- | --- |\n'
+    printf 'Moves upstream skills to the revisions below. Generated by scripts/update-upstream.sh.\n\n'
+    printf '| Upstream skill | From | To | Pinned |\n| --- | --- | --- | --- |\n'
     while read -r slug skill upath old new pinned_new; do
       printf '| %s/%s | %s | %s | %s |\n' "$slug" "$skill" "${old:0:7}" "${new:0:7}" "$pinned_new"
     done < "$1"
     printf '\nCompare upstream:\n\n'
     while read -r slug skill upath old new pinned_new; do
       if [[ "$old" != "$new" ]]; then
-        url="$(pin_url "$ASSETS_DIR/$slug/PIN.md")"
+        url="$(pin_url "$UPSTREAM_DIR/$slug/PIN.md")"
         printf -- '- %s/%s: %s/compare/%s...%s\n' "$slug" "$skill" "$url" "$old" "$new"
       fi
     done < "$1"
@@ -273,7 +273,7 @@ cmd_add() {
   [[ $# -ge 3 ]] || usage
   local slug="$1" url="$2" folder clone head path skill commit
   shift 2
-  folder="$ASSETS_DIR/$slug"
+  folder="$UPSTREAM_DIR/$slug"
   clone="$(clone_upstream "$slug" "$url")"
   head="$(default_head "$clone")"
   if [[ -f "$folder/PIN.md" ]]; then
@@ -304,7 +304,7 @@ cmd_add() {
     commit="$(git -C "$clone" log -1 --format=%H "$head" -- "$path")"
     [[ -n "$commit" ]] || die "$path has no commits on $url"
     export_folder "$clone" "$commit" "$path" "$folder/$skill"
-    [[ "$(asset_name "$folder/$skill/SKILL.md")" == "$skill" ]] || die "$path: frontmatter name does not match its folder"
+    [[ "$(skill_name "$folder/$skill/SKILL.md")" == "$skill" ]] || die "$path: frontmatter name does not match its folder"
     write_wrapper "$slug" "$skill" "$wname"
     printf '%s %s %s %s %s\n' "$skill" "$path" "$commit" no "$wname" >> "$WORK_DIR/rows/$slug"
     printf 'added %s/%s at %s as wrapper %s\n' "$slug" "$skill" "${commit:0:7}" "$wname"
@@ -340,11 +340,11 @@ cmd_update() {
   fi
 
   # Plan: which rows move, and which LICENSE files differ.
-  # Each changed asset is exported to a staging folder and checked before any file is replaced.
+  # Each changed upstream skill is exported to a staging folder and checked before any file is replaced.
   plan="$WORK_DIR/plan"
   : > "$plan"
   rm -f "$WORK_DIR/license_changes"
-  for pin in "$ASSETS_DIR"/*/PIN.md; do
+  for pin in "$UPSTREAM_DIR"/*/PIN.md; do
     [[ -f "$pin" ]] || continue
     slug="$(basename "$(dirname "$pin")")"
     url="$(pin_url "$pin")"
@@ -369,14 +369,14 @@ cmd_update() {
         printf '%s %s %s %s %s %s\n' "$slug" "$skill" "$upath" "$old" "$new" "$pinned_new" >> "$plan"
       fi
       if [[ "$new" != "$old" ]]; then
-        stage_asset "$clone" "$new" "$upath" "$slug" "$skill" "$(wrapper_for "$slug" "$skill")"
+        stage_upstream "$clone" "$new" "$upath" "$slug" "$skill" "$(wrapper_for "$slug" "$skill")"
       fi
     done < "$WORK_DIR/rows/$slug"
   done
-  [[ "$matched" -eq 1 || -z "$only" ]] || die "no asset named $only"
+  [[ "$matched" -eq 1 || -z "$only" ]] || die "no upstream skill named $only"
 
   if [[ ! -s "$plan" && ! -s "$WORK_DIR/license_changes" ]]; then
-    printf 'All selected assets are current.\n'
+    printf 'All selected upstream skills are current.\n'
     exit 0
   fi
   if [[ -s "$plan" ]]; then
@@ -393,22 +393,22 @@ cmd_update() {
     exit 0
   fi
 
-  # Apply: move staged assets into place, then wrappers, LICENSE files and pins.
+  # Apply: move staged upstream skills into place, then wrappers, LICENSE files and pins.
   while read -r slug skill upath old new pinned_new; do
     if [[ "$old" != "$new" ]]; then
-      rm -rf "$ASSETS_DIR/$slug/$skill"
-      mv "$WORK_DIR/stage/$slug/$skill" "$ASSETS_DIR/$slug/$skill"
+      rm -rf "$UPSTREAM_DIR/$slug/$skill"
+      mv "$WORK_DIR/stage/$slug/$skill" "$UPSTREAM_DIR/$slug/$skill"
       write_wrapper "$slug" "$skill" "$(wrapper_for "$slug" "$skill")"
     fi
     set_row "$slug" "$skill" "$new" "$pinned_new"
   done < "$plan"
   if [[ -s "$WORK_DIR/license_changes" ]]; then
     while read -r slug; do
-      cp "$WORK_DIR/license.$slug" "$ASSETS_DIR/$slug/LICENSE"
+      cp "$WORK_DIR/license.$slug" "$UPSTREAM_DIR/$slug/LICENSE"
     done < "$WORK_DIR/license_changes"
   fi
   while read -r slug; do
-    write_pin "$slug" "$(pin_url "$ASSETS_DIR/$slug/PIN.md")" "$WORK_DIR/rows/$slug"
+    write_pin "$slug" "$(pin_url "$UPSTREAM_DIR/$slug/PIN.md")" "$WORK_DIR/rows/$slug"
   done < <(cut -d' ' -f1 "$plan" | sort -u)
 
   if [[ -z "$(git -C "$REPO_DIR" status --porcelain -- plugins/alf)" ]]; then
@@ -424,7 +424,7 @@ cmd_update() {
     title="Update $only to latest"
   else
     count="$(wc -l < "$plan" | tr -d ' ')"
-    title="Update $count asset(s) to latest"
+    title="Update $count upstream skill(s) to latest"
   fi
   body="$WORK_DIR/body.md"
   write_body "$plan" "$body"
@@ -433,13 +433,13 @@ cmd_update() {
     cat "$body"
   } > "$WORK_DIR/commit.txt"
 
-  branch="${ASSETS_BRANCH:-assets/update-$(date -u +%Y%m%d-%H%M%S)}"
+  branch="${UPSTREAM_BRANCH:-upstream/update-$(date -u +%Y%m%d-%H%M%S)}"
   git -C "$REPO_DIR" checkout --quiet -B "$branch"
   git -C "$REPO_DIR" add -A -- plugins/alf
   git -C "$REPO_DIR" commit --quiet -F "$WORK_DIR/commit.txt"
   git -C "$REPO_DIR" checkout --quiet main
-  if [[ "${ASSETS_LOCAL_ONLY:-0}" == 1 ]]; then
-    printf 'Committed to %s and switched back to main. Push and PR skipped (ASSETS_LOCAL_ONLY=1).\n' "$branch"
+  if [[ "${UPSTREAM_LOCAL_ONLY:-0}" == 1 ]]; then
+    printf 'Committed to %s and switched back to main. Push and PR skipped (UPSTREAM_LOCAL_ONLY=1).\n' "$branch"
     exit 0
   fi
   git -C "$REPO_DIR" push --quiet --force -u origin "$branch"
