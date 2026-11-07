@@ -450,6 +450,9 @@ cmd_update() {
   else
     gh pr create --base main --head "$branch" --title "$title" --body-file "$body"
   fi
+  # A push made with GITHUB_TOKEN does not start pull_request workflows, so the scan the
+  # required `scan` check needs never runs on this PR. Start it here. workflow_dispatch is exempt.
+  gh workflow run skillspector.yml --ref "$branch"
 }
 
 case "${1:-}" in

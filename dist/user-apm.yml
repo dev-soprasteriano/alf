@@ -2,7 +2,7 @@ name: alf
 version: 1.0.0
 targets:
   - claude
-  # - copilot   # not tested yet
+  - copilot
 dependencies:
   apm:
     - olillevik/alf/dist/skills/ask-alf
