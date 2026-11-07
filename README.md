@@ -65,13 +65,13 @@ For example, the overlay in `src/skills/ask-alf/SKILL.md` points `/setup-matt-po
 
 ## Turn off skills
 
-Delete the skill's line from your `apm.yml`, then run `apm install -g`. The skill is removed from `~/.claude/skills/`.
+Delete the skill's line from your `apm.yml`, then run `apm install -g`.
 
 ## Install
 
 Install [APM](https://microsoft.github.io/apm/) first: `brew install apm`.
 
-**One user, Claude Code**
+**One user**
 
 Copy the manifest that lists every skill, then install:
 
@@ -108,10 +108,6 @@ A skill also installs the skills it calls by name. Its `apm.yml` lists them. For
 - **Float.** Leave out the commit. The skills come from the default branch, and `apm update` moves them to its newest commit.
 
 If a team pins a skill but not the skills it calls, those skills still come from the default branch.
-
-**GitHub Copilot CLI**
-
-Not tested in this build.
 
 ## Development
 
