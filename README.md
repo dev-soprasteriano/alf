@@ -2,7 +2,7 @@
 
 `alf` is a sound base of agent skills for the basics of a software flow. Install it into Claude Code or GitHub Copilot through [APM](https://microsoft.github.io/apm/), and your team starts from the same skills.
 
-- **Covers the flow.** Setup, planning, building, debugging, review, shipping and architecture each have at least one skill. See [Skills](#skills).
+- **Built for the full development lifecycle.** Start a project, plan it, build it, fix it, review it and ship it, with skills for each step. See [Skills](#skills).
 - **Reviewed and scanned.** Each skill records its upstream commit. Every skill is scanned for security risks. All upstream changes go through a security scan and a human review.
 - **You control updates.** Pin a commit, and the team runs the same skills until someone moves the pin.
 - **Flexible.** Install every skill from one manifest, or only the skills you need.
