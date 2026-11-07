@@ -1,6 +1,6 @@
 # Agentic Lifecycle Foundation
 
-`alf` is a sound base of agent skills for the basics of a software flow. Install it into Claude Code or GitHub Copilot through [APM](https://microsoft.github.io/apm/), and your team starts from the same skills.
+`alf` is a sound base of agent skills for the core of the software development lifecycle. Install it into Claude Code or GitHub Copilot through [APM](https://microsoft.github.io/apm/), and your team starts from the same skills.
 
 - **Built for the full development lifecycle.** Start a project, plan it, build it, fix it, review it and ship it, with skills for each step. See [Skills](#skills).
 - **Reviewed and scanned.** Each skill records its upstream commit. Every skill is scanned for security risks. All upstream changes go through a security scan and a human review.
