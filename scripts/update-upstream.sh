@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Copies upstream skills into upstream, records each upstream skill's commit in PIN.md,
-# and writes the wrapper skills under skills. Then rebuilds dist/ with build-apm.sh.
+# Copies upstream skills into src/upstream, records each upstream skill's commit in PIN.md,
+# and writes the wrapper skills under src/skills. Then rebuilds dist/ with build-apm.sh.
 # Run by `task update-upstream`, by the weekly workflow, and by agents. See AGENTS.md.
 #
 # Written for bash 3.2 (macOS /bin/bash): plain variables, loops and case only.
@@ -8,8 +8,8 @@
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-UPSTREAM_DIR="$REPO_DIR/upstream"
-SKILLS_DIR="$REPO_DIR/skills"
+UPSTREAM_DIR="$REPO_DIR/src/upstream"
+SKILLS_DIR="$REPO_DIR/src/skills"
 OVERLAY_START='<!-- overlay:start -->'
 OVERLAY_END='<!-- overlay:end -->'
 REVIEW_NOTE='Reviewer: check LICENSE changes, and check for missing upstream skills if an updated upstream skill links other skills. See AGENTS.md.'
@@ -413,7 +413,7 @@ cmd_update() {
   # Rebuild the APM bundles from the changed copies. A failing build stops the update here.
   "$REPO_DIR/scripts/build-apm.sh"
 
-  if [[ -z "$(git -C "$REPO_DIR" status --porcelain -- skills upstream dist)" ]]; then
+  if [[ -z "$(git -C "$REPO_DIR" status --porcelain -- src dist)" ]]; then
     printf 'Files already match; skipped the commit.\n'
     exit 0
   fi
@@ -437,7 +437,7 @@ cmd_update() {
 
   branch="${UPSTREAM_BRANCH:-upstream/update-$(date -u +%Y%m%d-%H%M%S)}"
   git -C "$REPO_DIR" checkout --quiet -B "$branch"
-  git -C "$REPO_DIR" add -A -- skills upstream dist
+  git -C "$REPO_DIR" add -A -- src dist
   git -C "$REPO_DIR" commit --quiet -F "$WORK_DIR/commit.txt"
   git -C "$REPO_DIR" checkout --quiet main
   if [[ "${UPSTREAM_LOCAL_ONLY:-0}" == 1 ]]; then

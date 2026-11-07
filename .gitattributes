@@ -1,2 +1,2 @@
-# Generated bundles: review the source under skills/ and upstream/, not these copies.
+# Generated bundles: review the source under src/skills/ and src/upstream/, not these copies.
 dist/** linguist-generated=true

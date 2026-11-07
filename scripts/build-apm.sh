@@ -9,9 +9,9 @@
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-UPSTREAM_DIR="$REPO_DIR/upstream"
-SKILLS_DIR="$REPO_DIR/skills"
-DEPS_FILE="$REPO_DIR/skill-dependencies.txt"
+UPSTREAM_DIR="$REPO_DIR/src/upstream"
+SKILLS_DIR="$REPO_DIR/src/skills"
+DEPS_FILE="$REPO_DIR/src/skill-dependencies.txt"
 DIST_DIR="$REPO_DIR/dist"
 ALF_REPO="olillevik/alf"
 OVERLAY_START='<!-- overlay:start -->'
@@ -51,7 +51,7 @@ upstream_ref() {  # SKILL.md
     | sed 's#^`\.\./\.\./upstream/##; s#/SKILL\.md`$##' || true
 }
 
-# Names of the skills in skills/, sorted.
+# Names of the skills in src/skills/, sorted.
 list_skills() {
   local d
   for d in "$SKILLS_DIR"/*/; do
@@ -61,7 +61,7 @@ list_skills() {
   done
 }
 
-# The names listed under a key in skill-dependencies.txt, space-separated.
+# The names listed under a key in src/skill-dependencies.txt, space-separated.
 # Key is a skill (its dependencies) or "<skill> mentions" (its mentions).
 names_for() {  # key
   [[ -f "$DEPS_FILE" ]] || return 0

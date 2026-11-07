@@ -1,4 +1,4 @@
-# Skills that a skill names. Names are wrapper names, the folders under skills/.
+# Skills that a skill names. Names are wrapper names, the folders under src/skills/.
 #
 # <skill>: <dependency> ...         The skill calls these skills by name. scripts/build-apm.sh writes
 #                                   them into dist/skills/<skill>/apm.yml, so APM installs them too.
