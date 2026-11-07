@@ -17,7 +17,7 @@ The set of all upstream skills, grouped by upstream.
 _Avoid_: Library, registry
 
 **Pin**:
-The revision an upstream skill is fixed at. A pinned upstream skill is skipped by the weekly update until it is moved to latest.
+The revision a dependency is fixed at. An upstream skill is pinned in the catalogue, and a team pins an ALF release in its `apm.yml`. A pinned upstream skill is skipped by the weekly update until it is moved to latest.
 _Avoid_: Lock, freeze
 
 **Latest**:

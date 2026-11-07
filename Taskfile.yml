@@ -9,14 +9,20 @@ tasks:
     cmds:
       - scripts/update-upstream.sh update {{if .DRY_RUN}}--dry-run {{end}}{{if .REF}}--ref {{.REF}} {{end}}{{if .SKILL}}{{.SKILL}}{{end}}
 
+  build-apm:
+    desc: Build the APM skill bundles and dist/user-apm.yml from plugins/alf. Commit dist/ with the change.
+    cmds:
+      - scripts/build-apm.sh
+
   ci:
-    desc: Scan the alf skills and upstream skills with SkillSpector, static only (no LLM). CI runs this same task.
+    desc: Check dist/ matches a fresh build, then scan the alf skills and upstream skills with SkillSpector, static only (no LLM). CI runs this same task.
     preconditions:
       - sh: command -v uvx
         msg: "uvx not found. Install uv with: brew install uv"
       - sh: command -v jq
         msg: "jq not found. Install it with: brew install jq"
     cmds:
+      - scripts/build-apm.sh --check
       - sh scripts/skillspector-ci.sh
 
   hooks:install:

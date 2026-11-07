@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Copies upstream skills into plugins/alf/upstream, records each upstream skill's commit in PIN.md,
-# and writes the wrapper skills under plugins/alf/skills. Run by `task update-upstream`,
-# by the weekly workflow, and by agents. See AGENTS.md.
+# and writes the wrapper skills under plugins/alf/skills. Then rebuilds dist/ with build-apm.sh.
+# Run by `task update-upstream`, by the weekly workflow, and by agents. See AGENTS.md.
 #
 # Written for bash 3.2 (macOS /bin/bash): plain variables, loops and case only.
 
@@ -411,7 +411,10 @@ cmd_update() {
     write_pin "$slug" "$(pin_url "$UPSTREAM_DIR/$slug/PIN.md")" "$WORK_DIR/rows/$slug"
   done < <(cut -d' ' -f1 "$plan" | sort -u)
 
-  if [[ -z "$(git -C "$REPO_DIR" status --porcelain -- plugins/alf)" ]]; then
+  # Rebuild the APM bundles from the changed copies. A failing build stops the update here.
+  "$REPO_DIR/scripts/build-apm.sh"
+
+  if [[ -z "$(git -C "$REPO_DIR" status --porcelain -- plugins/alf dist)" ]]; then
     printf 'Files already match; skipped the commit.\n'
     exit 0
   fi
@@ -435,7 +438,7 @@ cmd_update() {
 
   branch="${UPSTREAM_BRANCH:-upstream/update-$(date -u +%Y%m%d-%H%M%S)}"
   git -C "$REPO_DIR" checkout --quiet -B "$branch"
-  git -C "$REPO_DIR" add -A -- plugins/alf
+  git -C "$REPO_DIR" add -A -- plugins/alf dist
   git -C "$REPO_DIR" commit --quiet -F "$WORK_DIR/commit.txt"
   git -C "$REPO_DIR" checkout --quiet main
   if [[ "${UPSTREAM_LOCAL_ONLY:-0}" == 1 ]]; then
