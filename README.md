@@ -11,7 +11,7 @@
 
 Install APM first: `brew install apm`.
 
-**One user.** Copy the manifest that lists every skill, then install:
+To install every foundation skill, copy the manifest and install it:
 
 ```sh
 mkdir -p ~/.apm
@@ -19,7 +19,7 @@ curl -fsSL -o ~/.apm/apm.yml https://raw.githubusercontent.com/dev-soprasteriano
 apm install -g
 ```
 
-**A team.** Add the skills to the team's `apm.yml`:
+To install only some skills, or to combine alf with other skills, write your own `apm.yml` and run `apm install`. Commit it to share the set with your team:
 
 ```yaml
 targets:
