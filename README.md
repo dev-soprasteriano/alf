@@ -19,7 +19,7 @@ curl -fsSL -o ~/.apm/apm.yml https://raw.githubusercontent.com/dev-soprasteriano
 apm install -g
 ```
 
-**A team.** Add the skills to the team's `apm.yml`. Set `targets`, or APM stops with "No harness detected":
+**A team.** Add the skills to the team's `apm.yml`:
 
 ```yaml
 targets:
