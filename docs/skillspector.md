@@ -8,7 +8,7 @@ When the check fails, read the log. Each line names the skill, the severity, the
 
 - `task ci:staged` runs on each commit through the pre-commit hook. It checks `dist/`, runs the scope tests, then scans only the skill folders of the staged files. It also scans a wrapper when the wrapper links to a changed upstream skill.
 - `task ci` scans every skill. CI runs it on every pull request and on each push to `main`.
-- `task ci:staged` scans every skill when the staged files include `.skillspector-baseline.yaml`, `Taskfile.yml`, `scripts/skillspector-ci.sh` or `scripts/changed-skills.sh`.
+- `task ci:staged` scans every skill when the staged files change `.skillspector-baseline.yaml`, or the SkillSpector pin in `Taskfile.yml` or `scripts/skillspector-ci.sh`. Other changes to those files scan no skill.
 
 ## Fix or accept
 

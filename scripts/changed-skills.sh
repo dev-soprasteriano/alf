@@ -1,6 +1,10 @@
 #!/bin/sh
-# Prints the skill folders to scan. Reads changed paths on stdin, one per line, repo-relative.
-# With --all, prints every skill folder. Run from the repo root.
+# Prints the skill folders to scan. Run from the repo root.
+#   --all: every skill folder.
+#   --staged: the skill folders of the staged files. Every skill folder when the staged files change the
+#     baseline, or the SkillSpector pin in Taskfile.yml or scripts/skillspector-ci.sh.
+#   no argument: the skill folders of the changed paths read from stdin, one per line, repo-relative.
+#     Every skill folder when the baseline is among them.
 set -eu
 
 # Succeeds when the folder $1 is a skill: it has a SKILL.md.
@@ -27,14 +31,27 @@ list_all() {
   done
 }
 
-# Succeeds when a changed path on stdin needs every skill scanned.
-full_scan_needed() {
+# Succeeds when a changed path on stdin is the baseline.
+baseline_changed() {
   while IFS= read -r p; do
-    case "$p" in
-      .skillspector-baseline.yaml|Taskfile.yml|scripts/skillspector-ci.sh|scripts/changed-skills.sh)
-        return 0
-        ;;
-    esac
+    if [ "$p" = ".skillspector-baseline.yaml" ]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+# Prints the SkillSpector source pin in a file revision, such as HEAD:Taskfile.yml or :Taskfile.yml for the index.
+pin_at() {  # revision:path
+  git show "$1" 2>/dev/null | grep -o 'skillspector\.git@[^"[:space:]]*' | head -n 1 || true
+}
+
+# Succeeds when the pin in Taskfile.yml or scripts/skillspector-ci.sh differs between the index and HEAD.
+pin_changed() {
+  for f in Taskfile.yml scripts/skillspector-ci.sh; do
+    if [ "$(pin_at ":$f")" != "$(pin_at "HEAD:$f")" ]; then
+      return 0
+    fi
   done
   return 1
 }
@@ -66,17 +83,32 @@ folders_to_scan() {
   done
 }
 
-main() {
-  if [ "${1:-}" = "--all" ]; then
-    list_all
-    return 0
-  fi
-  changed=$(cat)
-  if printf '%s\n' "$changed" | full_scan_needed; then
+# Prints the scan targets for the changed paths in $1: every skill when the baseline is among them, else their folders.
+targets_for() {  # changed paths, newline-separated
+  if printf '%s\n' "$1" | baseline_changed; then
     list_all
   else
-    printf '%s\n' "$changed" | folders_to_scan | sort -u
+    printf '%s\n' "$1" | folders_to_scan | sort -u
   fi
+}
+
+main() {
+  case "${1:-}" in
+    --all)
+      list_all
+      ;;
+    --staged)
+      changed=$(git diff --cached --no-renames --name-only)
+      if pin_changed; then
+        list_all
+      else
+        targets_for "$changed"
+      fi
+      ;;
+    *)
+      targets_for "$(cat)"
+      ;;
+  esac
 }
 
 main "$@"

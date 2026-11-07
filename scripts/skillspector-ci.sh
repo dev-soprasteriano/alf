@@ -18,8 +18,7 @@ BLOCKING="$WORK/blocking.tsv"
 status=0
 
 if [ "${1:-}" = "--staged" ]; then
-  changed=$(git diff --cached --no-renames --name-only)
-  targets=$(printf '%s\n' "$changed" | sh scripts/changed-skills.sh)
+  targets=$(sh scripts/changed-skills.sh --staged)
 else
   targets=$(sh scripts/changed-skills.sh --all)
 fi

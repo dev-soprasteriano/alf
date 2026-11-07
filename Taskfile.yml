@@ -27,7 +27,7 @@ tasks:
       - sh scripts/skillspector-ci.sh
 
   ci:staged:
-    desc: Pre-commit check. Checks dist/ matches a fresh build, runs the scope tests, then scans only the skill folders of the staged files. Scans every skill when the staged files include .skillspector-baseline.yaml, Taskfile.yml, scripts/skillspector-ci.sh or scripts/changed-skills.sh.
+    desc: Pre-commit check. Checks dist/ matches a fresh build, runs the scope tests, then scans only the skill folders of the staged files. Scans every skill when the staged files change the baseline or the SkillSpector pin in Taskfile.yml or scripts/skillspector-ci.sh.
     preconditions:
       - sh: command -v uvx
         msg: "uvx not found. Install uv with: brew install uv"
