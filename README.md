@@ -32,7 +32,7 @@ dependencies:
 
 A skill also installs the skills it calls by name. For `grill-with-docs`, those are `grilling` and `domain-modeling`. To pin a set, add `#<commit sha>` to every entry, including the skills it calls. A called skill without a pin comes from the default branch.
 
-**Turn off a skill.** Delete its line from your `apm.yml`, then run `apm install -g`.
+**Turn off a skill.** Delete its line from your `apm.yml`, then run `apm install`. For the global file at `~/.apm/apm.yml`, run `apm install -g`.
 
 ## Getting started
 
