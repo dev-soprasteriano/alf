@@ -7,8 +7,6 @@
 - **You control updates.** Pin a commit, and the team runs the same skills until someone moves the pin.
 - **Flexible.** Install every skill from one manifest, or only the skills you need.
 
-Teams get the most from it. A single developer can use the same set with the one-user manifest below.
-
 ## Install
 
 Install APM first: `brew install apm`.
