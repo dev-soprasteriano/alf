@@ -85,12 +85,14 @@ To update later, run `apm update -g`. To drop a skill, delete its line from `~/.
 
 **A team**
 
-List the skills in the team's `apm.yml`, pinned to a commit of this repo:
+List the skills in the team's `apm.yml`, each pinned to the same commit of this repo. List every skill that a listed skill calls by name too. `grill-with-docs` calls `grilling` and `domain-modeling`, so all three go in:
 
 ```yaml
 dependencies:
   apm:
     - olillevik/alf/dist/skills/grill-with-docs#<commit sha>
+    - olillevik/alf/dist/skills/grilling#<commit sha>
+    - olillevik/alf/dist/skills/domain-modeling#<commit sha>
 ```
 
 **GitHub Copilot CLI**
