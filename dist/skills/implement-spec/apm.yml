@@ -2,8 +2,8 @@ name: implement-spec
 version: 1.0.0
 dependencies:
   apm:
-    - olillevik/alf/dist/skills/tdd
-    - olillevik/alf/dist/skills/code-review
-    - olillevik/alf/dist/skills/to-spec
-    - olillevik/alf/dist/skills/to-tickets
-    - olillevik/alf/dist/skills/setup-alf
+    - dev-soprasteriano/alf/dist/skills/tdd
+    - dev-soprasteriano/alf/dist/skills/code-review
+    - dev-soprasteriano/alf/dist/skills/to-spec
+    - dev-soprasteriano/alf/dist/skills/to-tickets
+    - dev-soprasteriano/alf/dist/skills/setup-alf

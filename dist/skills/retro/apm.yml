@@ -2,4 +2,4 @@ name: retro
 version: 1.0.0
 dependencies:
   apm:
-    - olillevik/alf/dist/skills/writing-for-agents
+    - dev-soprasteriano/alf/dist/skills/writing-for-agents

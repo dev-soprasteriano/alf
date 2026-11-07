@@ -2,8 +2,8 @@ name: wayfinder
 version: 1.0.0
 dependencies:
   apm:
-    - olillevik/alf/dist/skills/research
-    - olillevik/alf/dist/skills/prototype
-    - olillevik/alf/dist/skills/grilling
-    - olillevik/alf/dist/skills/domain-modeling
-    - olillevik/alf/dist/skills/setup-alf
+    - dev-soprasteriano/alf/dist/skills/research
+    - dev-soprasteriano/alf/dist/skills/prototype
+    - dev-soprasteriano/alf/dist/skills/grilling
+    - dev-soprasteriano/alf/dist/skills/domain-modeling
+    - dev-soprasteriano/alf/dist/skills/setup-alf

@@ -2,4 +2,4 @@ name: code-review
 version: 1.0.0
 dependencies:
   apm:
-    - olillevik/alf/dist/skills/setup-alf
+    - dev-soprasteriano/alf/dist/skills/setup-alf

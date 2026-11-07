@@ -13,7 +13,7 @@ UPSTREAM_DIR="$REPO_DIR/src/upstream"
 SKILLS_DIR="$REPO_DIR/src/skills"
 DEPS_FILE="$REPO_DIR/src/skill-dependencies.txt"
 DIST_DIR="$REPO_DIR/dist"
-ALF_REPO="olillevik/alf"
+ALF_REPO="dev-soprasteriano/alf"
 OVERLAY_START='<!-- overlay:start -->'
 OVERLAY_END='<!-- overlay:end -->'
 
