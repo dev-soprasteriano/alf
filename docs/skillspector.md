@@ -4,6 +4,12 @@
 
 When the check fails, read the log. Each line names the skill, the severity, the rule ID, and the file and line.
 
+## Where the scan runs
+
+- `task ci:staged` runs on each commit through the pre-commit hook. It checks `dist/`, runs the scope tests, then scans only the skill folders of the staged files. It also scans a wrapper when the wrapper links to a changed upstream skill.
+- `task ci` scans every skill. CI runs it on every pull request and on each push to `main`.
+- `task ci:staged` scans every skill when the staged files include `.skillspector-baseline.yaml`, `Taskfile.yml`, `scripts/skillspector-ci.sh` or `scripts/changed-skills.sh`.
+
 ## Fix or accept
 
 - Fix the finding when the skill is yours, under `src/skills/`.
@@ -28,7 +34,7 @@ The generated file lists every finding in the skill. Copy only the entries you a
 
 ## When an accepted finding returns
 
-Each entry is tied to the SkillSpector version pinned in `Taskfile.yml` and to the exact file contents. A version bump or an edit to the file makes the finding active again. Repeat steps 2 to 5.
+Each entry is tied to the SkillSpector version pinned in `scripts/skillspector-ci.sh` and to the exact file contents. A version bump or an edit to the file makes the finding active again. Repeat steps 2 to 5.
 
 ## Reviewer checklist
 

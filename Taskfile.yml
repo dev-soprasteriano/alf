@@ -15,7 +15,7 @@ tasks:
       - scripts/build-apm.sh
 
   ci:
-    desc: Check dist/ matches a fresh build, then scan the alf skills and upstream skills with SkillSpector, static only (no LLM). CI runs this same task.
+    desc: Check dist/ matches a fresh build, run the scope tests, then scan every alf skill and upstream skill with SkillSpector, static only (no LLM). CI runs this same task.
     preconditions:
       - sh: command -v uvx
         msg: "uvx not found. Install uv with: brew install uv"
@@ -23,7 +23,20 @@ tasks:
         msg: "jq not found. Install it with: brew install jq"
     cmds:
       - scripts/build-apm.sh --check
+      - sh scripts/test-changed-skills.sh
       - sh scripts/skillspector-ci.sh
+
+  ci:staged:
+    desc: Pre-commit check. Checks dist/ matches a fresh build, runs the scope tests, then scans only the skill folders of the staged files. Scans every skill when the staged files include .skillspector-baseline.yaml, Taskfile.yml, scripts/skillspector-ci.sh or scripts/changed-skills.sh.
+    preconditions:
+      - sh: command -v uvx
+        msg: "uvx not found. Install uv with: brew install uv"
+      - sh: command -v jq
+        msg: "jq not found. Install it with: brew install jq"
+    cmds:
+      - scripts/build-apm.sh --check
+      - sh scripts/test-changed-skills.sh
+      - sh scripts/skillspector-ci.sh --staged
 
   hooks:install:
     desc: Point this clone's git hooks at .githooks. Run once per clone.

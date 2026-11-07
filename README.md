@@ -112,7 +112,8 @@ If a team pins a skill but not the skills it calls, those skills still come from
 ## Development
 
 - Install [go-task](https://taskfile.dev) (`brew install go-task`), [uv](https://docs.astral.sh/uv/) (`brew install uv`), and [jq](https://jqlang.github.io/jq/) (`brew install jq`).
-- Run `task hooks:install` once per clone. After that, `git commit` runs `task ci` first and stops the commit if the scan fails.
+- Run `task hooks:install` once per clone. After that, `git commit` runs `task ci:staged` first. It checks `dist/`, runs the scope tests, and scans the skill folders of the staged files. It stops the commit if a check fails. CI runs the full `task ci` on every pull request and on each push to `main`.
+- `scripts/test-changed-skills.sh` tests `scripts/changed-skills.sh`. `task ci` and `task ci:staged` run it.
 - Run `task update-upstream DRY_RUN=1` to print the plan for an update without changing files.
 - Run `task build-apm` after changing `src/skills/` or `src/upstream/`, and commit `dist/` with the change. `task ci` fails when `dist/` is out of date.
 - `src/skill-dependencies.txt` lists the skills each skill calls by name, and the names it only mentions. The build fails when a skill names another skill that the file does not list.

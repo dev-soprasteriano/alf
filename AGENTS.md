@@ -43,6 +43,7 @@ Write like a technical writer. State facts, steps and decisions. Cut anything el
 - `scripts/update-upstream.sh add <upstream> <url> <path>...` copies new upstream skills in and writes the files.
 - `task build-apm` rebuilds `dist/`.
 - `task ci` checks `dist/` matches a fresh build, then scans the skills and upstream skills with SkillSpector (static, no LLM). CI runs the same task. `dist/` is not scanned separately: it is a build of the scanned sources.
+- `task ci:staged` is the pre-commit check. It checks `dist/`, runs the scope tests, then scans only the skill folders of the staged files. `scripts/changed-skills.sh` picks those folders.
 - `task hooks:install` points this clone's git hooks at `.githooks`. Run it once per clone.
 
 Each update opens a PR. Its description tells the reviewer to check LICENSE changes and missing linked upstream skills.
