@@ -10,5 +10,5 @@ Follow the skill in full at `../../upstream/mattpocock/ask-matt/SKILL.md`. Read 
 <!-- overlay:start -->
 ## Setup skill name
 
-In this plugin the setup skill is `/setup-alf`. Wherever the instructions above name `/setup-matt-pocock-skills`, use `/setup-alf` instead.
+In this repo the setup skill is `/setup-alf`. Wherever the instructions above name `/setup-matt-pocock-skills`, use `/setup-alf` instead.
 <!-- overlay:end -->

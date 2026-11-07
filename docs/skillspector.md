@@ -1,14 +1,14 @@
 # SkillSpector checks
 
-`task ci` scans every skill under `plugins/alf/` with SkillSpector and fails on any active MEDIUM, HIGH, or CRITICAL finding. CI runs the same task on every pull request.
+`task ci` scans every skill under `skills/` and `upstream/` with SkillSpector and fails on any active MEDIUM, HIGH, or CRITICAL finding. CI runs the same task on every pull request.
 
 When the check fails, read the log. Each line names the skill, the severity, the rule ID, and the file and line.
 
 ## Fix or accept
 
-- Fix the finding when the skill is yours, under `plugins/alf/skills/`.
+- Fix the finding when the skill is yours, under `skills/`.
 - Accept the finding when it is a false positive or a risk you accept.
-- Don't edit files under `plugins/alf/upstream/`. They are upstream copies. Accept findings there.
+- Don't edit files under `upstream/`. They are upstream copies. Accept findings there.
 
 ## Accept a finding
 
@@ -19,7 +19,7 @@ When the check fails, read the log. Each line names the skill, the severity, the
    uvx --python 3.12 --from git+https://github.com/NVIDIA/skillspector.git@v2.13.4 skillspector baseline <skill-dir> -o <file-outside-repo> --no-llm --reason "<why it is safe>"
    ```
 
-   `<skill-dir>` is the skill folder, such as `plugins/alf/upstream/mattpocock/to-tickets`.
+   `<skill-dir>` is the skill folder, such as `upstream/mattpocock/to-tickets`.
 3. Open the output file. Copy only the entry whose `rule_id` and `file` match the finding into `.skillspector-baseline.yaml`. Set its `reason` to one or two sentences that say why the finding is safe.
 4. Run `task ci`. The finding no longer appears.
 5. Commit the baseline change with your pull request.

@@ -45,5 +45,5 @@ Communication to and from subagents should be sparse. Communicate primarily thro
 <!-- overlay:start -->
 ## Setup skill name
 
-In this plugin the setup skill is `/setup-alf`. Wherever the instructions above name `/setup-matt-pocock-skills`, use `/setup-alf` instead.
+In this repo the setup skill is `/setup-alf`. Wherever the instructions above name `/setup-matt-pocock-skills`, use `/setup-alf` instead.
 <!-- overlay:end -->

@@ -31,7 +31,7 @@ The `alf` skills give coding agents a baseline for software work. It covers sett
 | Improve how you work with agents | `retro`, `writing-for-agents` |
 | Find your way | `ask-alf` |
 
-`git-commit` is the only in-house skill. The rest are upstream skills. The full list is in `plugins/alf/skills/`.
+`git-commit` is the only in-house skill. The rest are upstream skills. The full list is in `skills/`.
 
 ## Automated documentation
 
@@ -56,11 +56,11 @@ The scanner catches known risky patterns. It does not replace a reviewer.
 
 A wrapper is a skill that points at one upstream skill. To extend it, add your instructions between the `overlay:start` and `overlay:end` markers in the wrapper's `SKILL.md`. The update script keeps the overlay when it updates the upstream copy.
 
-For example, the overlay in `plugins/alf/skills/ask-alf/SKILL.md` points `/setup-matt-pocock-skills` at `/setup-alf`.
+For example, the overlay in `skills/ask-alf/SKILL.md` points `/setup-matt-pocock-skills` at `/setup-alf`.
 
 ## Add a skill
 
-- **In-house skill:** create `plugins/alf/skills/<name>/SKILL.md` with `name` and `description` in its frontmatter. No upstream is needed. If the skill calls other skills by name, list them in `plugins/alf/skill-dependencies.txt`.
+- **In-house skill:** create `skills/<name>/SKILL.md` with `name` and `description` in its frontmatter. No upstream is needed. If the skill calls other skills by name, list them in `skill-dependencies.txt`.
 - **Upstream skill:** run `scripts/update-upstream.sh add <upstream> <url> <path>[=wrapper]`. The upstream repo must have a LICENSE on its default branch. The script copies the skill at its latest commit and writes the wrapper. Run `task build-apm`, review the result with `git status`, then commit it.
 
 ## Turn off skills
@@ -118,8 +118,8 @@ Not tested in this build.
 - Install [go-task](https://taskfile.dev) (`brew install go-task`), [uv](https://docs.astral.sh/uv/) (`brew install uv`), and [jq](https://jqlang.github.io/jq/) (`brew install jq`).
 - Run `task hooks:install` once per clone. After that, `git commit` runs `task ci` first and stops the commit if the scan fails.
 - Run `task update-upstream DRY_RUN=1` to print the plan for an update without changing files.
-- Run `task build-apm` after changing `plugins/alf/`, and commit `dist/` with the change. `task ci` fails when `dist/` is out of date.
-- `plugins/alf/skill-dependencies.txt` lists the skills each skill calls by name, and the names it only mentions. The build fails when a skill names another skill that the file does not list.
+- Run `task build-apm` after changing `skills/` or `upstream/`, and commit `dist/` with the change. `task ci` fails when `dist/` is out of date.
+- `skill-dependencies.txt` lists the skills each skill calls by name, and the names it only mentions. The build fails when a skill names another skill that the file does not list.
 - If the scan fails, see [docs/skillspector.md](docs/skillspector.md) for how to fix or accept each finding.
 - `AGENTS.md` holds the rules agents follow when they change this repo.
 

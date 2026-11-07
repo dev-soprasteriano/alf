@@ -131,5 +131,5 @@ The user may run unblocked tickets in parallel, so expect other sessions to be e
 <!-- overlay:start -->
 ## Setup skill name
 
-In this plugin the setup skill is `/setup-alf`. Wherever the instructions above name `/setup-matt-pocock-skills`, use `/setup-alf` instead.
+In this repo the setup skill is `/setup-alf`. Wherever the instructions above name `/setup-matt-pocock-skills`, use `/setup-alf` instead.
 <!-- overlay:end -->

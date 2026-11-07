@@ -1,6 +1,6 @@
 # Upstream skills
 
-The plugin's catalogue of upstream skills. It keeps each upstream skill pinned and exposes it through a wrapper skill that can add local instructions.
+The catalogue of upstream skills in this repo. It keeps each upstream skill pinned and exposes it through a wrapper skill that can add local instructions.
 
 ## Copies and pins
 
@@ -26,11 +26,11 @@ The newest revision on an upstream's default branch that changes an upstream ski
 ## Skills
 
 **Wrapper**:
-A plugin skill that points at one upstream skill and adds the overlay. The upstream skill is the skill being wrapped.
+A skill that points at one upstream skill and adds the overlay. The upstream skill is the skill being wrapped.
 _Avoid_: Alias, proxy
 
 **In-house skill**:
-A plugin skill written in this repo, with no upstream skill behind it.
+A skill written in this repo, with no upstream skill behind it.
 _Avoid_: Full skill, standalone skill
 
 **Overlay**:

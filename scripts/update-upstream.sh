@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Copies upstream skills into plugins/alf/upstream, records each upstream skill's commit in PIN.md,
-# and writes the wrapper skills under plugins/alf/skills. Then rebuilds dist/ with build-apm.sh.
+# Copies upstream skills into upstream, records each upstream skill's commit in PIN.md,
+# and writes the wrapper skills under skills. Then rebuilds dist/ with build-apm.sh.
 # Run by `task update-upstream`, by the weekly workflow, and by agents. See AGENTS.md.
 #
 # Written for bash 3.2 (macOS /bin/bash): plain variables, loops and case only.
@@ -8,9 +8,8 @@
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-PLUGIN_DIR="$REPO_DIR/plugins/alf"
-UPSTREAM_DIR="$PLUGIN_DIR/upstream"
-SKILLS_DIR="$PLUGIN_DIR/skills"
+UPSTREAM_DIR="$REPO_DIR/upstream"
+SKILLS_DIR="$REPO_DIR/skills"
 OVERLAY_START='<!-- overlay:start -->'
 OVERLAY_END='<!-- overlay:end -->'
 REVIEW_NOTE='Reviewer: check LICENSE changes, and check for missing upstream skills if an updated upstream skill links other skills. See AGENTS.md.'
@@ -27,7 +26,7 @@ Usage:
       With SKILL, move that one upstream skill to latest. With SKILL and --ref REV, pin it to REV.
   scripts/update-upstream.sh add UPSTREAM URL PATH[=WRAPPER]...
       Copy upstream skills from an upstream into the catalogue. Writes the files; commit them yourself.
-      WRAPPER is the name of the plugin skill that points at the upstream skill (default: the folder name).
+      WRAPPER is the name of the skill that points at the upstream skill (default: the folder name).
 
 Environment for update:
   UPSTREAM_BRANCH        branch for the update (default: upstream/update-<UTC timestamp>)
@@ -414,7 +413,7 @@ cmd_update() {
   # Rebuild the APM bundles from the changed copies. A failing build stops the update here.
   "$REPO_DIR/scripts/build-apm.sh"
 
-  if [[ -z "$(git -C "$REPO_DIR" status --porcelain -- plugins/alf dist)" ]]; then
+  if [[ -z "$(git -C "$REPO_DIR" status --porcelain -- skills upstream dist)" ]]; then
     printf 'Files already match; skipped the commit.\n'
     exit 0
   fi
@@ -438,7 +437,7 @@ cmd_update() {
 
   branch="${UPSTREAM_BRANCH:-upstream/update-$(date -u +%Y%m%d-%H%M%S)}"
   git -C "$REPO_DIR" checkout --quiet -B "$branch"
-  git -C "$REPO_DIR" add -A -- plugins/alf dist
+  git -C "$REPO_DIR" add -A -- skills upstream dist
   git -C "$REPO_DIR" commit --quiet -F "$WORK_DIR/commit.txt"
   git -C "$REPO_DIR" checkout --quiet main
   if [[ "${UPSTREAM_LOCAL_ONLY:-0}" == 1 ]]; then
