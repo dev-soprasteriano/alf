@@ -8,7 +8,7 @@ The `alf` skills give coding agents a baseline for software work. It covers sett
 - **Vetted before use.** Each upstream skill is copied at a pinned commit, scanned, and reviewed before it ships.
 - **Updated without a full re-read.** A weekly job opens a pull request with what changed upstream. Reviewers read the diff, not the whole skill.
 - **Extended without touching the upstream copy.** A wrapper holds your local instructions in an overlay. Updates keep the overlay.
-- **Our own skills for the gaps.** `setup-github`, `git-commit`, and any in-house skills you add.
+- **Our own skills for the gaps.** `git-commit`, and any in-house skills you add.
 - **Flexible.** Install all of the skills, or only the ones you pick. Distributed with [APM](https://microsoft.github.io/apm/).
 
 ## Start here
@@ -21,7 +21,7 @@ The `alf` skills give coding agents a baseline for software work. It covers sett
 
 | Need | Skills |
 | --- | --- |
-| Set up a repo | `setup-alf`, `setup-github`, `wizard` for steps only a person can do |
+| Set up a repo | `setup-alf`, `wizard` for steps only a person can do |
 | Plan | `grill-with-docs`, `grill-me`, `to-spec`, `to-tickets`, `wayfinder` |
 | Build | `implement`, `implement-spec`, `tdd`, `prototype` |
 | Fix a bug | `diagnosing-bugs`, `tdd` |
@@ -31,7 +31,7 @@ The `alf` skills give coding agents a baseline for software work. It covers sett
 | Improve how you work with agents | `retro`, `writing-for-agents` |
 | Find your way | `ask-alf` |
 
-`git-commit` and `setup-github` are in-house skills. The rest are upstream skills. The full list is in `plugins/alf/skills/`.
+`git-commit` is the only in-house skill. The rest are upstream skills. The full list is in `plugins/alf/skills/`.
 
 ## Automated documentation
 
@@ -81,19 +81,33 @@ curl -fsSL -o ~/.apm/apm.yml https://raw.githubusercontent.com/olillevik/alf/mai
 apm install -g
 ```
 
-To update later, run `apm update -g`. To drop a skill, delete its line from `~/.apm/apm.yml` and run `apm install -g` again.
+The manifest follows the default branch, so `apm update -g` moves the skills to its newest commit. To pin, add `#<commit sha>` to each line. To drop a skill, delete its line from `~/.apm/apm.yml` and run `apm install -g` again.
 
 **A team**
 
-List the skills in the team's `apm.yml`, each pinned to the same commit of this repo. List every skill that a listed skill calls by name too. `grill-with-docs` calls `grilling` and `domain-modeling`, so all three go in:
+List the skills in the team's `apm.yml`:
 
 ```yaml
 dependencies:
   apm:
-    - olillevik/alf/dist/skills/grill-with-docs#<commit sha>
-    - olillevik/alf/dist/skills/grilling#<commit sha>
-    - olillevik/alf/dist/skills/domain-modeling#<commit sha>
+    - olillevik/alf/dist/skills/grill-with-docs
 ```
+
+A skill also installs the skills it calls by name. Its `apm.yml` lists them. For `grill-with-docs` those are `grilling` and `domain-modeling`. Their source depends on how the team lists them:
+
+- **Pin.** Add `#<commit sha>` to each entry, the skill and the skills it calls. All of them then come from that commit:
+
+  ```yaml
+  dependencies:
+    apm:
+      - olillevik/alf/dist/skills/grill-with-docs#<commit sha>
+      - olillevik/alf/dist/skills/grilling#<commit sha>
+      - olillevik/alf/dist/skills/domain-modeling#<commit sha>
+  ```
+
+- **Float.** Leave out the commit. The skills come from the default branch, and `apm update` moves them to its newest commit.
+
+If a team pins a skill but not the skills it calls, those skills still come from the default branch.
 
 **GitHub Copilot CLI**
 
