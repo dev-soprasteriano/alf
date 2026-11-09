@@ -23,6 +23,7 @@ dependencies:
     - dev-soprasteriano/alf/dist/skills/research
     - dev-soprasteriano/alf/dist/skills/retro
     - dev-soprasteriano/alf/dist/skills/setup-alf
+    - dev-soprasteriano/alf/dist/skills/setup-github
     - dev-soprasteriano/alf/dist/skills/show-me
     - dev-soprasteriano/alf/dist/skills/tdd
     - dev-soprasteriano/alf/dist/skills/teach

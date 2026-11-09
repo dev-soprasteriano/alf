@@ -27,14 +27,13 @@ When the check fails, read the log. Each line names the skill, the severity, the
 
    `<skill-dir>` is the skill folder, such as `src/upstream/mattpocock/to-tickets`.
 3. Open the output file. Copy only the entry whose `rule_id` and `file` match the finding into `.skillspector-baseline.yaml`. Set its `reason` to one or two sentences that say why the finding is safe.
-4. Run `task ci`. The finding no longer appears.
-5. Commit the baseline change with your pull request.
+4. Commit the baseline change with your pull request. The pre-commit hook runs `task ci:staged` and stops the commit while the finding is still active.
 
 The generated file lists every finding in the skill. Copy only the entries you accept.
 
 ## When an accepted finding returns
 
-Each entry is tied to the SkillSpector version pinned in `scripts/skillspector-ci.sh` and to the exact file contents. A version bump or an edit to the file makes the finding active again. Repeat steps 2 to 5.
+Each entry is tied to the SkillSpector version pinned in `scripts/skillspector-ci.sh` and to the exact file contents. A version bump or an edit to the file makes the finding active again. Repeat steps 2 to 4.
 
 ## Reviewer checklist
 
