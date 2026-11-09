@@ -1,5 +1,9 @@
 #!/bin/sh
-# Scans each alf skill with SkillSpector, static only (no LLM).
+# Scans alf skills with SkillSpector, static only (no LLM).
+# Usage: sh scripts/skillspector-ci.sh [--staged]
+#   No argument: scans every skill folder. CI runs this.
+#   --staged: scans only the skill folders of the staged files. The pre-commit hook runs this.
+#     scripts/changed-skills.sh picks those folders. It also decides which changes scan every skill.
 # Fails on any active MEDIUM, HIGH, or CRITICAL finding, and on any scan that errors or is incomplete.
 # A reviewer accepts a finding by adding it to .skillspector-baseline.yaml with a reason.
 set -eu
@@ -13,9 +17,21 @@ BLOCKING="$WORK/blocking.tsv"
 : > "$BLOCKING"
 status=0
 
+if [ "${1:-}" = "--staged" ]; then
+  targets=$(sh scripts/changed-skills.sh --staged)
+else
+  targets=$(sh scripts/changed-skills.sh --all)
+fi
+
+if [ -z "$targets" ]; then
+  echo "skillspector-ci: no skill folder changed. Nothing to scan."
+  exit 0
+fi
+
 # --baseline is rejected for recursive multi-skill scans, so each skill folder is scanned on its own.
-for skill in $(find plugins/alf/skills plugins/alf/assets/mattpocock plugins/alf/assets/humanlayer -mindepth 1 -maxdepth 1 -type d | sort); do
-  [ -f "$skill/SKILL.md" ] || continue
+# dist/ is not scanned here. Its bundles repeat these skills at shifted line numbers, and the
+# baseline does not match them. `task ci` checks that dist/ matches a fresh build of these sources.
+for skill in $targets; do
   report="$WORK/$(echo "$skill" | tr '/' '_').json"
 
   if ! uvx --python 3.12 --from "$SOURCE" skillspector scan "$skill" \

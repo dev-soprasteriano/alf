@@ -1,0 +1,5 @@
+name: grill-me
+version: 1.0.0
+dependencies:
+  apm:
+    - dev-soprasteriano/alf/dist/skills/grilling

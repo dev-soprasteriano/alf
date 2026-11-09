@@ -1,0 +1,30 @@
+name: ask-alf
+version: 1.0.0
+dependencies:
+  apm:
+    - dev-soprasteriano/alf/dist/skills/grill-with-docs
+    - dev-soprasteriano/alf/dist/skills/grill-me
+    - dev-soprasteriano/alf/dist/skills/grilling
+    - dev-soprasteriano/alf/dist/skills/handoff
+    - dev-soprasteriano/alf/dist/skills/prototype
+    - dev-soprasteriano/alf/dist/skills/to-spec
+    - dev-soprasteriano/alf/dist/skills/to-tickets
+    - dev-soprasteriano/alf/dist/skills/implement
+    - dev-soprasteriano/alf/dist/skills/implement-spec
+    - dev-soprasteriano/alf/dist/skills/tdd
+    - dev-soprasteriano/alf/dist/skills/code-review
+    - dev-soprasteriano/alf/dist/skills/pr
+    - dev-soprasteriano/alf/dist/skills/retro
+    - dev-soprasteriano/alf/dist/skills/triage
+    - dev-soprasteriano/alf/dist/skills/diagnosing-bugs
+    - dev-soprasteriano/alf/dist/skills/improve-codebase-architecture
+    - dev-soprasteriano/alf/dist/skills/wayfinder
+    - dev-soprasteriano/alf/dist/skills/research
+    - dev-soprasteriano/alf/dist/skills/to-questionnaire
+    - dev-soprasteriano/alf/dist/skills/wait-what
+    - dev-soprasteriano/alf/dist/skills/teach
+    - dev-soprasteriano/alf/dist/skills/wizard
+    - dev-soprasteriano/alf/dist/skills/writing-for-agents
+    - dev-soprasteriano/alf/dist/skills/domain-modeling
+    - dev-soprasteriano/alf/dist/skills/codebase-design
+    - dev-soprasteriano/alf/dist/skills/setup-alf

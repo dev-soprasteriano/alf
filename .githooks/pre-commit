@@ -1,5 +1,6 @@
 #!/bin/sh
-# Runs `task ci` before each commit. Activated by `task hooks:install`.
+# Runs `task ci:staged` before each commit: the dist/ check and a scan of the staged skill folders.
+# Activated by `task hooks:install`.
 set -eu
 
 if ! command -v task >/dev/null 2>&1; then
@@ -7,7 +8,7 @@ if ! command -v task >/dev/null 2>&1; then
   exit 1
 fi
 
-task ci
+task ci:staged
 
 # core.hooksPath in this repo hides the global hooks directory, so run the global pre-commit hook here.
 global_dir=$(git config --global --get core.hooksPath || true)

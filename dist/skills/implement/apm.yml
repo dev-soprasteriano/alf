@@ -1,0 +1,6 @@
+name: implement
+version: 1.0.0
+dependencies:
+  apm:
+    - dev-soprasteriano/alf/dist/skills/tdd
+    - dev-soprasteriano/alf/dist/skills/code-review
