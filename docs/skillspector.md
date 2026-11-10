@@ -34,9 +34,9 @@ The generated file lists every finding in the skill. Copy only the entries you a
 
 ## When an accepted finding returns
 
-Each entry is tied to the SkillSpector version pinned in `tools/skillspector/requirements.in` and to the exact file contents. A version bump or an edit to the file makes the finding active again. Repeat steps 2 to 4.
+Each entry is tied to the SkillSpector version pinned in `tools/skillspector/requirements.in` and to the exact file contents. An edit to the file makes the finding active again. Repeat steps 2 to 4.
 
-The pull request that updates SkillSpector carries over each entry that the new version reports unchanged, on unchanged text, with its reason. It lists the entries it drops. Repeat the steps for those only.
+The pull request that updates SkillSpector carries each entry over to the new version, with its reason, when the new version reports the finding unchanged. It lists the entries it drops. Repeat the steps for those, and for any new finding.
 
 ## Reviewer checklist
 

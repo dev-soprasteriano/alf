@@ -45,9 +45,9 @@ Each CI tool has a folder under `tools/`. `requirements.in` pins the tool's vers
 
 Update pull requests open daily. Dependabot opens them for apm, uv and the GitHub Actions, as `.github/dependabot.yml` sets. SkillSpector is not on PyPI, so `.github/workflows/update-skillspector.yml` opens its pull request.
 
-A SkillSpector update makes accepted findings active again. Its pull request carries over each one that the new version reports unchanged. Accept any other finding again as [docs/skillspector.md](skillspector.md) describes, and push the baseline change to the update branch.
+The SkillSpector pull request carries over each accepted finding that the new version reports unchanged, with its reason. Only a finding the new version reports differently, or a new finding, fails the check. Accept those as [docs/skillspector.md](skillspector.md) describes, and push the baseline change to the update branch.
 
-To update a tool by hand:
+To move SkillSpector to latest now, start its update workflow by hand from the Actions tab. It carries accepted findings over. To update a tool by hand:
 
 1. Change the version in `tools/<tool>/requirements.in`. For SkillSpector, change both version numbers in the release wheel URL.
 2. Run `task tools:lock TOOL=<tool>`.
