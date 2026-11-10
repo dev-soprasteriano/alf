@@ -6,9 +6,9 @@ set -eu
 HERE=$(cd "$(dirname "$0")" && pwd)
 SCRIPT="$HERE/apm-audit-ci.sh"
 REPO=$(mktemp -d)
-BASELINE_REPO=$(mktemp -d)
+REPORT_REPO=$(mktemp -d)
 WORK=$(mktemp -d)
-trap 'rm -rf "$REPO" "$BASELINE_REPO" "$WORK"' EXIT
+trap 'rm -rf "$REPO" "$REPORT_REPO" "$WORK"' EXIT
 failures=0
 PIN="apm-cli==0.35.0"
 NEWPIN="apm-cli==0.35.1"
@@ -108,10 +108,9 @@ report_with() {  # severity, line, codepoint
   printf '{"exit_code": 2, "summary": {}, "findings": [{"severity": "%s", "file": "SKILL.md", "line": %s, "column": 2, "codepoint": "%s", "category": "zero-width", "description": "Zero-width space"}]}' "$1" "$2" "$3"
 }
 
-# Fixture repo: the scan script's pin, an empty baseline, three dist/ files and two other files.
+# Fixture repo: the scan script's pin, three dist/ files and two other files.
 git_repo init -q
 write_repo scripts/apm-audit-ci.sh "APM_SOURCE=\"$PIN\""
-write_repo .apm-audit-baseline.json "[]"
 write_repo dist/skills/a/SKILL.md "# A"
 write_repo dist/skills/b/SKILL.md "# B"
 write_repo dist/user-apm.yml "name: user"
@@ -171,46 +170,18 @@ expect_scanned "scan script staged, other apm-cli text above the pin: nothing to
 stage scripts/apm-audit-ci.sh "APM_SOURCE=\"$NEWPIN\""
 expect_scanned "scan script staged, pin changed: every file in dist/" "$ALL" --staged
 
-# Baseline fixture: one dist/ file. Each case writes the baseline, then runs a report against that file.
-RUN_IN=$BASELINE_REPO
-mkdir -p "$BASELINE_REPO/dist/skills/a"
-printf '# A\n' > "$BASELINE_REPO/dist/skills/a/SKILL.md"
-baseline() {  # JSON array
-  printf '%s\n' "$1" > "$BASELINE_REPO/.apm-audit-baseline.json"
-}
+# Report fixture: one dist/ file. Each case runs a report against that file.
+RUN_IN=$REPORT_REPO
+mkdir -p "$REPORT_REPO/dist/skills/a"
+printf '# A\n' > "$REPORT_REPO/dist/skills/a/SKILL.md"
 
-baseline '[]'
-expect_result "warning without a baseline entry: blocks, logged with the scanned path" \
+expect_result "warning: blocks, logged with the scanned path" \
   "$(report_with warning 3 U+200B)" 2 1 \
   "dist/skills/a/SKILL.md	3	U+200B	warning	Zero-width space" "docs/apm-audit.md"
-
-baseline '[{"file": "dist/skills/a/SKILL.md", "line": 3, "codepoint": "U+200B", "reason": "Joins two words on purpose."}]'
-expect_result "warning with a matching baseline entry: passes" "$(report_with warning 3 U+200B)" 2 0 "passed"
-expect_result "line moved since the entry: blocks" "$(report_with warning 4 U+200B)" 2 1 \
-  "dist/skills/a/SKILL.md	4	U+200B	warning"
-expect_result "different codepoint on the entry's line: blocks" "$(report_with warning 3 U+200C)" 2 1 \
-  "dist/skills/a/SKILL.md	3	U+200C	warning"
-
-baseline '[{"file": "dist/skills/a/SKILL.md", "line": 3, "codepoint": "U+202E", "reason": "Shows a bidi example on purpose."}]'
-expect_result "critical with a matching baseline entry: passes" "$(report_with critical 3 U+202E)" 1 0 "passed"
-
-baseline '[]'
-expect_result "critical without a baseline entry: blocks" "$(report_with critical 3 U+202E)" 1 1 \
+expect_result "critical: blocks" "$(report_with critical 3 U+202E)" 1 1 \
   "dist/skills/a/SKILL.md	3	U+202E	critical"
-expect_result "info without a baseline entry: never blocks" "$(report_with info 3 U+FE0F)" 0 0 "passed"
+expect_result "info: never blocks" "$(report_with info 3 U+FE0F)" 0 0 "passed"
 
-baseline '[{"file": "dist/skills/a/SKILL.md", "line": 3, "codepoint": "U+200B", "reason": ""}]'
-expect_result "entry with an empty reason: fails" "$(report_with warning 3 U+200B)" 2 1 "reason" ".apm-audit-baseline.json"
-baseline '[{"file": "dist/skills/a/SKILL.md", "line": 3, "codepoint": "U+200B", "reason": "  "}]'
-expect_result "entry with a blank reason: fails" "$CLEAN" 0 1 "reason"
-baseline '[{"file": "dist/skills/a/SKILL.md", "line": 3, "codepoint": "U+200B"}]'
-expect_result "entry without a reason: fails" "$CLEAN" 0 1 "reason"
-baseline '{}'
-expect_result "baseline not a JSON array: fails" "$CLEAN" 0 1 "not a JSON array"
-rm "$BASELINE_REPO/.apm-audit-baseline.json"
-expect_result "baseline missing: fails" "$CLEAN" 0 1 ".apm-audit-baseline.json"
-
-baseline '[]'
 expect_result "apm exits 3 (configuration error): fails" "$CLEAN" 3 1 "dist/skills/a/SKILL.md" "docs/apm-audit.md"
 expect_result "apm exits with an unknown code: fails" "$CLEAN" 4 1 "dist/skills/a/SKILL.md" "docs/apm-audit.md"
 expect_result "apm prints no valid JSON: fails" "[x] File not found" 1 1 "dist/skills/a/SKILL.md" "docs/apm-audit.md"

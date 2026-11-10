@@ -53,5 +53,5 @@ jobs:
           {
             echo "### apm audit check failed"
             echo
-            echo "The log above lists each blocking finding or scan error. [How to fix or accept findings](https://github.com/${{ github.repository }}/blob/${{ github.sha }}/docs/apm-audit.md)."
+            echo "The log above lists each blocking finding or scan error. [How to fix findings](https://github.com/${{ github.repository }}/blob/${{ github.sha }}/docs/apm-audit.md)."
           } >> "$GITHUB_STEP_SUMMARY"
