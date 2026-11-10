@@ -7,7 +7,7 @@ Skills live in two places. `src/skills/` holds in-house skills and wrappers. `sr
 ## Set up a clone
 
 ```sh
-brew install go-task uv jq python@3.12
+brew install go-task jq python@3.12
 task hooks:install
 ```
 
@@ -39,17 +39,17 @@ The weekly workflow, `.github/workflows/update-upstream.yml`, runs `scripts/upda
 
 To hold a skill, pin it: `task update-upstream SKILL=<name> REF=<sha or tag>`. The weekly job skips pinned skills. To release it, run `task update-upstream SKILL=<name>`.
 
-## Update a CI tool
+## Update CI tools
 
 Each CI tool has a folder under `tools/`. `requirements.in` pins the tool's version. `requirements.txt` pins every dependency with its hash. CI installs from `requirements.txt` and refuses any file whose hash does not match.
 
-1. Change the version in `tools/<tool>/requirements.in`. For SkillSpector, change both version numbers in the release wheel URL.
-2. Run `task tools:lock TOOL=<tool>`.
-3. Commit both files. A SkillSpector update makes accepted findings active again. See [docs/skillspector.md](skillspector.md).
+Update pull requests open daily. Dependabot opens them for apm, uv and the GitHub Actions, as `.github/dependabot.yml` sets. SkillSpector is not on PyPI, so `.github/workflows/update-skillspector.yml` opens its pull request.
+
+The SkillSpector pull request carries over each accepted finding that the new version reports unchanged, with its reason. Only a finding the new version reports differently, or a new finding, fails the check. Accept those as [docs/skillspector.md](skillspector.md) describes, and push the baseline change to the update branch.
 
 ## Review an update pull request
 
-1. Check the LICENSE and linked skills in the pull request, as [AGENTS.md](../AGENTS.md) describes.
+1. For an upstream skill update, check the LICENSE and linked skills, as [AGENTS.md](../AGENTS.md) describes.
 2. Wait for the CI checks. A failing check links to how to fix or accept its findings.
 3. Approve after the last push. The branch rule below requires it.
 
