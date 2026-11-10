@@ -44,7 +44,7 @@ A skill also installs the skills it calls by name. For `grill-with-docs`, those 
 
 | Need | Skills |
 | --- | --- |
-| Set up a repo | `setup-alf`, `setup-github`, `wizard` for steps only a person can do |
+| Set up a repo | `setup-alf`, `repo-doctor`, `wizard` for steps only a person can do |
 | Plan | `grill-with-docs`, `grill-me`, `grilling`, `to-spec`, `to-tickets`, `wayfinder` |
 | Build | `implement`, `implement-spec`, `tdd`, `prototype` |
 | Fix a bug | `diagnosing-bugs`, `tdd` |
