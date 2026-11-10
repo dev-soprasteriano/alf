@@ -1,6 +1,6 @@
 #!/bin/sh
-# Tests scripts/apm-audit-ci.sh in a fixture git repo, with a stub uvx on PATH in place of apm. Run from any
-# directory: sh scripts/test-apm-audit-ci.sh
+# Tests scripts/apm-audit-ci.sh in a fixture git repo, with a stub apm installed at .tools/apm/bin/apm. Run from
+# any directory: sh scripts/test-apm-audit-ci.sh
 set -eu
 
 HERE=$(cd "$(dirname "$0")" && pwd)
@@ -10,13 +10,11 @@ REPORT_REPO=$(mktemp -d)
 WORK=$(mktemp -d)
 trap 'rm -rf "$REPO" "$REPORT_REPO" "$WORK"' EXIT
 failures=0
-PIN="apm-cli==0.35.0"
-NEWPIN="apm-cli==0.35.1"
 CLEAN='{"exit_code": 0, "summary": {}, "findings": []}'
 
-# The stub uvx logs each --file argument to $STUB_LOG, prints $STUB_REPORT, and exits with $STUB_EXIT.
-mkdir -p "$WORK/bin"
-cat > "$WORK/bin/uvx" <<'EOF'
+# The stub apm logs each --file argument to $STUB_LOG, prints $STUB_REPORT, and exits with $STUB_EXIT.
+STUB="$WORK/apm"
+cat > "$STUB" <<'EOF'
 #!/bin/sh
 while [ $# -gt 0 ]; do
   if [ "$1" = "--file" ] && [ $# -gt 1 ]; then
@@ -27,7 +25,7 @@ done
 printf '%s\n' "$STUB_REPORT"
 exit "$STUB_EXIT"
 EOF
-chmod +x "$WORK/bin/uvx"
+chmod +x "$STUB"
 STUB_LOG="$WORK/scanned.txt"
 export STUB_LOG
 
@@ -52,7 +50,13 @@ fail() {  # name, detail
   failures=$((failures + 1))
 }
 
-# Runs the script in the folder $RUN_IN with the stub uvx. Sets $code to its exit code, and $out to its stdout
+# Installs the stub apm into the folder $1, where scripts/install-tools.sh would install apm.
+install_stub() {  # folder
+  mkdir -p "$1/.tools/apm/bin"
+  cp "$STUB" "$1/.tools/apm/bin/apm"
+}
+
+# Runs the script in the folder $RUN_IN with the stub apm. Sets $code to its exit code, and $out to its stdout
 # and stderr.
 RUN_IN=$REPO
 run_script() {  # report, stub exit code, script arguments...
@@ -60,7 +64,7 @@ run_script() {  # report, stub exit code, script arguments...
   stub_exit=$2
   shift 2
   : > "$STUB_LOG"
-  if out=$(cd "$RUN_IN" && PATH="$WORK/bin:$PATH" STUB_REPORT="$report" STUB_EXIT="$stub_exit" sh "$SCRIPT" "$@" 2>&1); then
+  if out=$(cd "$RUN_IN" && STUB_REPORT="$report" STUB_EXIT="$stub_exit" sh "$SCRIPT" "$@" 2>&1); then
     code=0
   else
     code=$?
@@ -108,9 +112,11 @@ report_with() {  # severity, line, codepoint
   printf '{"exit_code": 2, "summary": {}, "findings": [{"severity": "%s", "file": "SKILL.md", "line": %s, "column": 2, "codepoint": "%s", "category": "zero-width", "description": "Zero-width space"}]}' "$1" "$2" "$3"
 }
 
-# Fixture repo: the scan script's pin, three dist/ files and two other files.
+# Fixture repo: the apm lock file, three dist/ files and two other files. .tools/ is ignored, as in the repo.
 git_repo init -q
-write_repo scripts/apm-audit-ci.sh "APM_SOURCE=\"$PIN\""
+write_repo .gitignore ".tools/"
+write_repo tools/apm/requirements.txt "apm-cli==0.35.0"
+write_repo scripts/apm-audit-ci.sh "# scan script"
 write_repo dist/skills/a/SKILL.md "# A"
 write_repo dist/skills/b/SKILL.md "# B"
 write_repo dist/user-apm.yml "name: user"
@@ -118,6 +124,7 @@ write_repo src/skills/a/SKILL.md "# A source"
 write_repo README.md "# Readme"
 git_repo add -A
 git_repo commit -q -m "fixture"
+install_stub "$REPO"
 
 ALL="dist/skills/a/SKILL.md
 dist/skills/b/SKILL.md
@@ -159,21 +166,17 @@ stage dist/skills/a/SKILL.md "# A, edited"
 rm "$REPO/dist/skills/a/SKILL.md"
 expect_scanned "staged dist/ file deleted since: skipped" "" --staged
 
-stage scripts/apm-audit-ci.sh "APM_SOURCE=\"$PIN\"
-# a comment"
-expect_scanned "scan script staged, pin unchanged: nothing to scan" "" --staged
+stage scripts/apm-audit-ci.sh "# scan script, edited"
+expect_scanned "scan script staged: nothing to scan" "" --staged
 
-stage scripts/apm-audit-ci.sh "# Was apm-cli==0.1.0 before.
-APM_SOURCE=\"$PIN\""
-expect_scanned "scan script staged, other apm-cli text above the pin: nothing to scan" "" --staged
-
-stage scripts/apm-audit-ci.sh "APM_SOURCE=\"$NEWPIN\""
-expect_scanned "scan script staged, pin changed: every file in dist/" "$ALL" --staged
+stage tools/apm/requirements.txt "apm-cli==0.35.1"
+expect_scanned "apm lock file staged: every file in dist/" "$ALL" --staged
 
 # Report fixture: one dist/ file. Each case runs a report against that file.
 RUN_IN=$REPORT_REPO
 mkdir -p "$REPORT_REPO/dist/skills/a"
 printf '# A\n' > "$REPORT_REPO/dist/skills/a/SKILL.md"
+install_stub "$REPORT_REPO"
 
 expect_result "warning: blocks, logged with the scanned path" \
   "$(report_with warning 3 U+200B)" 2 1 \
@@ -186,6 +189,9 @@ expect_result "apm exits 3 (configuration error): fails" "$CLEAN" 3 1 "dist/skil
 expect_result "apm exits with an unknown code: fails" "$CLEAN" 4 1 "dist/skills/a/SKILL.md" "docs/apm-audit.md"
 expect_result "apm prints no valid JSON: fails" "[x] File not found" 1 1 "dist/skills/a/SKILL.md" "docs/apm-audit.md"
 expect_result "apm prints JSON without findings: fails" '{"exit_code": 0}' 0 1 "dist/skills/a/SKILL.md"
+
+rm -r "$REPORT_REPO/.tools"
+expect_result "apm not installed: fails, names the install command" "$CLEAN" 0 1 "sh scripts/install-tools.sh apm"
 
 if [ "$failures" -eq 0 ]; then
   echo "all tests passed"

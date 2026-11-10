@@ -9,8 +9,6 @@ FIXTURE=$(mktemp -d)
 REPO=$(mktemp -d)
 trap 'rm -rf "$FIXTURE" "$REPO"' EXIT
 failures=0
-PIN="git+https://github.com/NVIDIA/skillspector.git@v2.13.4"
-NEWPIN="git+https://github.com/NVIDIA/skillspector.git@v2.13.5"
 
 # Writes a file into the fixture, creating its folder.
 write_fixture() {  # path, content
@@ -105,6 +103,7 @@ src/upstream/mattpocock/to-spec
 src/upstream/mattpocock/to-spec-extra"
 
 expect_changed "baseline changed: scan every skill" ".skillspector-baseline.yaml" "$ALL"
+expect_changed "SkillSpector lock file changed: scan every skill" "tools/skillspector/requirements.txt" "$ALL"
 expect_changed "Taskfile.yml alone, on the stdin path: no skill folder" "Taskfile.yml" ""
 expect_changed "scanner script alone, on the stdin path: no skill folder" "scripts/skillspector-ci.sh" ""
 
@@ -124,12 +123,11 @@ expect_changed "upstream file and the wrapper's own file: each folder once" \
 src/skills/wrap-a/SKILL.md" "src/upstream/mattpocock/to-spec
 src/skills/wrap-a"
 
-# Git repo for --staged: one skill, one other skill, the Taskfile, the scan script and the baseline.
+# Git repo for --staged: one skill, one other skill, the Taskfile, the scan script, the lock file and the baseline.
 git_repo init -q
-write_repo Taskfile.yml "version: '3'
-vars:
-  SKILLSPECTOR_SOURCE: \"$PIN\""
-write_repo scripts/skillspector-ci.sh "SOURCE=\"$PIN\""
+write_repo Taskfile.yml "version: '3'"
+write_repo scripts/skillspector-ci.sh "# scan script"
+write_repo tools/skillspector/requirements.txt "skillspector @ https://example.com/skillspector-2.13.4-py3-none-any.whl"
 write_repo .skillspector-baseline.yaml "version: 2"
 write_repo src/skills/inhouse/SKILL.md "# In-house skill"
 write_repo src/skills/other/SKILL.md "# Other skill"
@@ -150,23 +148,14 @@ stage src/skills/inhouse/SKILL.md "# In-house skill, edited"
 expect_staged "skill file staged: its folder only" "src/skills/inhouse"
 
 stage Taskfile.yml "version: '3'
-# a comment
-vars:
-  SKILLSPECTOR_SOURCE: \"$PIN\""
-expect_staged "Taskfile.yml staged, pin unchanged: nothing to scan" ""
-
-stage scripts/skillspector-ci.sh "SOURCE=\"$PIN\"
 # a comment"
-expect_staged "scan script staged, pin unchanged: nothing to scan" ""
+expect_staged "Taskfile.yml staged: nothing to scan" ""
 
-stage Taskfile.yml "version: '3'
-vars:
-  SKILLSPECTOR_SOURCE: \"$NEWPIN\""
-expect_staged "Taskfile.yml staged, pin changed: every skill" "src/skills/inhouse
-src/skills/other"
+stage scripts/skillspector-ci.sh "# scan script, edited"
+expect_staged "scan script staged: nothing to scan" ""
 
-stage scripts/skillspector-ci.sh "SOURCE=\"$NEWPIN\""
-expect_staged "scan script staged, pin changed: every skill" "src/skills/inhouse
+stage tools/skillspector/requirements.txt "skillspector @ https://example.com/skillspector-2.13.5-py3-none-any.whl"
+expect_staged "SkillSpector lock file staged: every skill" "src/skills/inhouse
 src/skills/other"
 
 stage .skillspector-baseline.yaml "version: 2

@@ -1,5 +1,8 @@
 name: CI
 
+# Each job runs the scripts that `task ci` runs locally. The tools come from the hash-locked
+# tools/<tool>/requirements.txt, installed with the runner's Python 3.12. No third-party actions.
+
 on:
   pull_request:
   push:
@@ -15,21 +18,24 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: arduino/setup-task@c0bc642852239c2689f73f4ea6459c29405f3c52 # v3.0.0
-      - name: Check dist/ and run the scope tests
-        run: task ci:build
+      - name: Check dist/ matches a fresh build
+        run: scripts/build-apm.sh --check
+      - name: Run the scope tests
+        run: |
+          sh scripts/test-changed-skills.sh
+          sh scripts/test-apm-audit-ci.sh
 
   skillspector:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: arduino/setup-task@c0bc642852239c2689f73f4ea6459c29405f3c52 # v3.0.0
-      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
+      - name: Install SkillSpector
+        run: sh scripts/install-tools.sh skillspector
       - name: Scan alf skills and upstream skills
-        run: task ci:skillspector
+        run: sh scripts/skillspector-ci.sh
       - name: Explain a failed scan
         if: failure()
         run: |
@@ -40,13 +46,13 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
   apm-audit:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: arduino/setup-task@c0bc642852239c2689f73f4ea6459c29405f3c52 # v3.0.0
-      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
+      - name: Install apm
+        run: sh scripts/install-tools.sh apm
       - name: Scan dist/ for hidden Unicode
-        run: task ci:apm-audit
+        run: sh scripts/apm-audit-ci.sh
       - name: Explain a failed scan
         if: failure()
         run: |

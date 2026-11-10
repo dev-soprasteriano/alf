@@ -1,6 +1,5 @@
 #!/bin/sh
-# Runs `task ci:staged` before each commit. `task ci` runs every CI check. CI runs the same task.
-# `task ci:staged` runs the same checks on the staged files.
+# Runs `task ci:staged` before each commit: the CI checks, on the staged files.
 # Activated by `task hooks:install`.
 set -eu
 

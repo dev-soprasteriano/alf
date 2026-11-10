@@ -3,12 +3,14 @@
 # Usage: sh scripts/apm-audit-ci.sh [--staged]
 #   No argument: scans every file in dist/. CI runs this.
 #   --staged: scans only the staged files under dist/ that still exist. The pre-commit hook runs this.
-#     Scans every file in dist/ when the staged changes alter the apm pin in APM_SOURCE below.
+#     Scans every file in dist/ when tools/apm/requirements.txt is staged.
 # Fails on any WARNING or CRITICAL finding, and on any apm run that exits 3 or higher or prints no valid JSON
 # report. Findings cannot be accepted: fix them. See docs/apm-audit.md.
+# Runs the apm that `sh scripts/install-tools.sh apm` installs from tools/apm/requirements.txt.
 set -eu
 
-APM_SOURCE="apm-cli==0.35.0"
+APM=".tools/apm/bin/apm"
+LOCK="tools/apm/requirements.txt"
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 
@@ -17,16 +19,10 @@ BLOCKING="$WORK/blocking.tsv"
 : > "$FINDINGS"
 status=0
 
-# Prints the apm pin in a revision of this script, such as HEAD:scripts/apm-audit-ci.sh, or
-# :scripts/apm-audit-ci.sh for the index.
-pin_at() {  # revision:path
-  git show "$1" 2>/dev/null | grep -o '^APM_SOURCE="[^"]*"' | head -n 1 || true
-}
-
-# Prints the staged files under dist/ that still exist. Prints every file in dist/ when the staged changes
-# alter the apm pin in this script.
+# Prints the staged files under dist/ that still exist. Prints every file in dist/ when the apm lock file is
+# staged: a new apm version can find what the old one missed.
 staged_targets() {
-  if [ "$(pin_at :scripts/apm-audit-ci.sh)" != "$(pin_at HEAD:scripts/apm-audit-ci.sh)" ]; then
+  if ! git diff --cached --quiet -- "$LOCK"; then
     find dist -type f | sort
     return 0
   fi
@@ -52,12 +48,17 @@ if [ -z "$targets" ]; then
   exit 0
 fi
 
+if [ ! -x "$APM" ]; then
+  echo "apm-audit-ci: $APM not found. Install it with: sh scripts/install-tools.sh apm" >&2
+  exit 1
+fi
+
 while IFS= read -r file; do
   [ -n "$file" ] || continue
   report="$WORK/report.json"
   # Exit codes 1 (CRITICAL) and 2 (WARNING) still print a report. The findings decide what blocks.
   # 3 is a configuration error. A higher code is unknown, so it fails too.
-  if uvx --from "$APM_SOURCE" apm audit --file "$file" --format json > "$report" 2> "$WORK/stderr"; then
+  if "$APM" audit --file "$file" --format json > "$report" 2> "$WORK/stderr"; then
     code=0
   else
     code=$?

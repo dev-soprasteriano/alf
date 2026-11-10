@@ -6,9 +6,11 @@
 #     scripts/changed-skills.sh picks those folders. It also decides which changes scan every skill.
 # Fails on any active MEDIUM, HIGH, or CRITICAL finding, and on any scan that errors or is incomplete.
 # A reviewer accepts a finding by adding it to .skillspector-baseline.yaml with a reason.
+# Runs the SkillSpector that `sh scripts/install-tools.sh skillspector` installs from
+# tools/skillspector/requirements.txt.
 set -eu
 
-SOURCE="git+https://github.com/NVIDIA/skillspector.git@v2.13.4"
+SKILLSPECTOR=".tools/skillspector/bin/skillspector"
 BASELINE=".skillspector-baseline.yaml"
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
@@ -28,13 +30,18 @@ if [ -z "$targets" ]; then
   exit 0
 fi
 
+if [ ! -x "$SKILLSPECTOR" ]; then
+  echo "skillspector-ci: $SKILLSPECTOR not found. Install it with: sh scripts/install-tools.sh skillspector" >&2
+  exit 1
+fi
+
 # --baseline is rejected for recursive multi-skill scans, so each skill folder is scanned on its own.
 # dist/ is not scanned here. Its bundles repeat these skills at shifted line numbers, and the
 # baseline does not match them. `task ci` checks that dist/ matches a fresh build of these sources.
 for skill in $targets; do
   report="$WORK/$(echo "$skill" | tr '/' '_').json"
 
-  if ! uvx --python 3.12 --from "$SOURCE" skillspector scan "$skill" \
+  if ! "$SKILLSPECTOR" scan "$skill" \
       --no-llm --fail-on-incomplete --baseline "$BASELINE" \
       --format json --output "$report"; then
     echo "skillspector-ci: scan failed or incomplete: $skill" >&2

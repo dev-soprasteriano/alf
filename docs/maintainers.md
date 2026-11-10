@@ -7,7 +7,7 @@ Skills live in two places. `src/skills/` holds in-house skills and wrappers. `sr
 ## Set up a clone
 
 ```sh
-brew install go-task uv jq
+brew install go-task uv jq python@3.12
 task hooks:install
 ```
 
@@ -35,9 +35,17 @@ Add instructions to the wrapper's `SKILL.md`, between `<!-- overlay:start -->` a
 
 ## Update upstream skills
 
-The weekly workflow, `.github/workflows/update-upstream.yml`, runs `task update-upstream` every Monday. It pushes `upstream/weekly-update` and opens or updates its pull request. To run it now, start the workflow by hand from the Actions tab.
+The weekly workflow, `.github/workflows/update-upstream.yml`, runs `scripts/update-upstream.sh update` every Monday. It pushes `upstream/weekly-update` and opens or updates its pull request. To run it now, start the workflow by hand from the Actions tab.
 
 To hold a skill, pin it: `task update-upstream SKILL=<name> REF=<sha or tag>`. The weekly job skips pinned skills. To release it, run `task update-upstream SKILL=<name>`.
+
+## Update a CI tool
+
+Each CI tool has a folder under `tools/`. `requirements.in` pins the tool's version. `requirements.txt` pins every dependency with its hash. CI installs from `requirements.txt` and refuses any file whose hash does not match.
+
+1. Change the version in `tools/<tool>/requirements.in`. For SkillSpector, change both version numbers in the release wheel URL.
+2. Run `task tools:lock TOOL=<tool>`.
+3. Commit both files. A SkillSpector update makes accepted findings active again. See [docs/skillspector.md](skillspector.md).
 
 ## Review an update pull request
 
