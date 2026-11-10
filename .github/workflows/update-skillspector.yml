@@ -1,7 +1,5 @@
 name: Update SkillSpector
 
-# Dependabot cannot update SkillSpector: it is not on PyPI. See scripts/update-skillspector.sh.
-
 on:
   schedule:
     - cron: '0 5 * * *'   # daily 05:00 UTC
