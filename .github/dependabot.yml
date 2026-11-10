@@ -1,0 +1,14 @@
+# Opens update pull requests for the CI tools under tools/ and for the GitHub Actions.
+# SkillSpector is not on PyPI, so Dependabot cannot update it. .github/workflows/update-skillspector.yml does.
+version: 2
+updates:
+  - package-ecosystem: uv
+    directories:
+      - /tools/apm
+      - /tools/uv
+    schedule:
+      interval: daily
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: daily

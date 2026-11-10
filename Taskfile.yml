@@ -57,13 +57,8 @@ tasks:
     desc: Regenerate tools/<TOOL>/requirements.txt, with hashes, from tools/<TOOL>/requirements.in. Run after editing requirements.in, and commit both files.
     requires:
       vars: [TOOL]
-    preconditions:
-      - sh: test -f "tools/{{.TOOL}}/requirements.in"
-        msg: "tools/{{.TOOL}}/requirements.in not found."
-      - sh: command -v uv
-        msg: "uv not found. Install it with: brew install uv"
     cmds:
-      - cd "tools/{{.TOOL}}" && uv pip compile --quiet --universal --generate-hashes --python-version 3.12 --output-file requirements.txt requirements.in
+      - sh scripts/lock-tool.sh "{{.TOOL}}"
 
   hooks:install:
     desc: Point this clone's git hooks at .githooks. Run once per clone.
