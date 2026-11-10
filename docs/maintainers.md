@@ -42,9 +42,9 @@ To hold a skill, pin it: `task update-upstream SKILL=<name> REF=<sha or tag>`. T
 ## Review an update pull request
 
 1. Check the LICENSE and linked skills in the pull request, as [AGENTS.md](../AGENTS.md) describes.
-2. Wait for the `scan` check. It runs `task ci` on the branch. For each finding, fix it, or accept it in `.skillspector-baseline.yaml`. See [docs/skillspector.md](skillspector.md).
+2. Wait for the CI checks. A failing check links to how to fix or accept its findings.
 3. Approve after the last push. The branch rule below requires it.
 
 ## Branch rule
 
-`main` requires the `scan` check to pass and one approving review, given after the last push. GitHub's repository settings hold this rule, not the repo. Check it again after a fork or a recreation of the repo.
+`main` requires the CI checks to pass and one approving review, given after the last push. GitHub's repository settings hold this rule, not the repo. Check it again after a fork or a recreation of the repo.

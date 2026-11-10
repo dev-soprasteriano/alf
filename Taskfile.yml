@@ -15,28 +15,46 @@ tasks:
       - scripts/build-apm.sh
 
   ci:
-    desc: Check dist/ matches a fresh build, run the scope tests, then scan every alf skill and upstream skill with SkillSpector, static only (no LLM). CI runs this same task.
-    preconditions:
-      - sh: command -v uvx
-        msg: "uvx not found. Install uv with: brew install uv"
-      - sh: command -v jq
-        msg: "jq not found. Install it with: brew install jq"
+    desc: Run every CI check. CI runs the same task.
     cmds:
-      - scripts/build-apm.sh --check
-      - sh scripts/test-changed-skills.sh
-      - sh scripts/skillspector-ci.sh
+      - task: ci:build
+      - task: ci:skillspector
+      - task: ci:apm-audit
 
   ci:staged:
-    desc: Pre-commit check. Checks dist/ matches a fresh build, runs the scope tests, then scans only the skill folders of the staged files. Scans every skill when the staged files change the baseline or the SkillSpector pin in Taskfile.yml or scripts/skillspector-ci.sh.
+    desc: Run the same checks on the staged files.
+    cmds:
+      - task: ci:build
+      - task: ci:skillspector
+        vars: {STAGED: "1"}
+      - task: ci:apm-audit
+        vars: {STAGED: "1"}
+
+  ci:build:
+    desc: Check dist/ matches a fresh build, and run the scope tests.
     preconditions:
-      - sh: command -v uvx
-        msg: "uvx not found. Install uv with: brew install uv"
       - sh: command -v jq
         msg: "jq not found. Install it with: brew install jq"
     cmds:
       - scripts/build-apm.sh --check
       - sh scripts/test-changed-skills.sh
-      - sh scripts/skillspector-ci.sh --staged
+      - sh scripts/test-apm-audit-ci.sh
+
+  ci:skillspector:
+    desc: Scan every alf skill and upstream skill with SkillSpector, static only (no LLM). STAGED=1 scans only the skill folders of the staged files.
+    preconditions: &scan-tools
+      - sh: command -v uvx
+        msg: "uvx not found. Install uv with: brew install uv"
+      - sh: command -v jq
+        msg: "jq not found. Install it with: brew install jq"
+    cmds:
+      - sh scripts/skillspector-ci.sh{{if .STAGED}} --staged{{end}}
+
+  ci:apm-audit:
+    desc: Scan every file in dist/ for hidden Unicode with apm audit. STAGED=1 scans only the staged files under dist/.
+    preconditions: *scan-tools
+    cmds:
+      - sh scripts/apm-audit-ci.sh{{if .STAGED}} --staged{{end}}
 
   hooks:install:
     desc: Point this clone's git hooks at .githooks. Run once per clone.
