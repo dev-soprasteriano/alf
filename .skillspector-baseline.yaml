@@ -17,15 +17,16 @@ fingerprints:
 - hash: sha256:82f9585fefc6d2cc9ed2e850ad650f2228217ba9e9fdf48a91d9009598a1c1ec
   rule_id: TM2
   file: SKILL.md
-  reason: Ticket-sequencing guidance for large refactors (expand, migrate in batches, contract).
-    It describes planning steps and does not direct the agent to run tools or change code
-    outside the tickets.
+  reason: Ticket-sequencing guidance for large refactors (expand, migrate in batches,
+    contract). It describes planning steps and does not direct the agent to run tools
+    or change code outside the tickets.
 - hash: sha256:5a30deb495191397b2cbbf3dd565821ecdad6bc55f3763b26728bf675144e540
   rule_id: PE3
   file: template.sh
-  reason: Setup template that reads an existing .env value only to prefill prompts that show
-    their input. The template uses those for public values only. Secret prompts use ask_secret,
-    which hides input and does not show the saved value. Changes no privileges.
+  reason: Setup template that reads an existing .env value only to prefill prompts
+    that show their input. The template uses those for public values only. Secret
+    prompts use ask_secret, which hides input and does not show the saved value. Changes
+    no privileges.
 - hash: sha256:d1123db36f7058b0929519160da5346cdb9136eb9c221b45cdd650657575574f
   rule_id: LP3
   file: SKILL.md
@@ -33,15 +34,19 @@ fingerprints:
 - hash: sha256:dd19e7ce07368916f7a2f48beb2393b1afc18cd1ebc020944c0c800252eab9b2
   rule_id: EA2
   file: SKILL.md
-  reason: Skill tells the agent to look up environment facts itself instead of asking the user, and to leave every decision to the user. Accepted as is.
+  reason: Skill tells the agent to look up environment facts itself instead of asking
+    the user, and to leave every decision to the user. Accepted as is.
 - hash: sha256:05bb89629efe8b7fca3c66f0b8ae9843bcddeec4eec7d7a1a8a7d566b50e5ca3
   rule_id: AS3
   file: SKILL.md
-  reason: Attribution URL in credits metadata pointing to the upstream skill source. It is not an instruction to read another skill.
+  reason: Attribution URL in credits metadata pointing to the upstream skill source.
+    It is not an instruction to read another skill.
 - hash: sha256:6801f7f746136e66192c89d16b963c20f80996a8ae6bcb293e3c966e3562a7b1
   rule_id: EA2
   file: SKILL.md
-  reason: Setup skill writes the default single-context domain-docs layout without asking. Label names and multi-context layouts are confirmed with the user. Accepted as is.
+  reason: Setup skill writes the default single-context domain-docs layout without
+    asking. Label names and multi-context layouts are confirmed with the user. Accepted
+    as is.
 - hash: sha256:480f11057db3ac65d9b79bd7ea0f80dac1e485f877fdfc0ed9b528e25f0d7ad1
   rule_id: AS3
   file: SKILL.md
