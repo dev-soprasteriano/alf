@@ -1,5 +1,5 @@
 #!/bin/sh
-# Runs `task ci:staged` before each commit: the dist/ check and a scan of the staged skill folders.
+# Runs `task ci:staged` before each commit: the CI checks, on the staged files.
 # Activated by `task hooks:install`.
 set -eu
 

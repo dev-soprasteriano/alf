@@ -1,0 +1,101 @@
+#!/bin/sh
+# Scans every file in dist/ for hidden Unicode with `apm audit`, one file at a time.
+# Usage: sh scripts/apm-audit-ci.sh [--staged]
+#   No argument: scans every file in dist/. CI runs this.
+#   --staged: scans only the staged files under dist/ that still exist. The pre-commit hook runs this.
+#     Scans every file in dist/ when tools/apm/requirements.txt is staged.
+# Fails on any WARNING or CRITICAL finding, and on any apm run that exits 3 or higher or prints no valid JSON
+# report. Findings cannot be accepted: fix them. See docs/apm-audit.md.
+# Runs the apm that `sh scripts/install-tools.sh apm` installs from tools/apm/requirements.txt.
+set -eu
+
+APM=".tools/apm/bin/apm"
+LOCK="tools/apm/requirements.txt"
+WORK=$(mktemp -d)
+trap 'rm -rf "$WORK"' EXIT
+
+FINDINGS="$WORK/findings.jsonl"
+BLOCKING="$WORK/blocking.tsv"
+: > "$FINDINGS"
+status=0
+
+# Prints the staged files under dist/ that still exist. Prints every file in dist/ when the apm lock file is
+# staged: a new apm version can find what the old one missed.
+staged_targets() {
+  if ! git diff --cached --quiet -- "$LOCK"; then
+    find dist -type f | sort
+    return 0
+  fi
+  git -c core.quotePath=false diff --cached --no-renames --name-only --diff-filter=d -- dist/ |
+    while IFS= read -r file; do
+      if [ -f "$file" ]; then
+        printf '%s\n' "$file"
+      fi
+    done
+}
+
+case "${1:-}" in
+  "") targets=$(find dist -type f | sort) ;;
+  --staged) targets=$(staged_targets) ;;
+  *)
+    echo "usage: sh scripts/apm-audit-ci.sh [--staged]" >&2
+    exit 2
+    ;;
+esac
+
+if [ -z "$targets" ]; then
+  echo "apm-audit-ci: no file under dist/ changed. Nothing to scan."
+  exit 0
+fi
+
+if [ ! -x "$APM" ]; then
+  echo "apm-audit-ci: $APM not found. Install it with: sh scripts/install-tools.sh apm" >&2
+  exit 1
+fi
+
+while IFS= read -r file; do
+  [ -n "$file" ] || continue
+  report="$WORK/report.json"
+  # Exit codes 1 (CRITICAL) and 2 (WARNING) still print a report. The findings decide what blocks.
+  # 3 is a configuration error. A higher code is unknown, so it fails too.
+  if "$APM" audit --file "$file" --format json > "$report" 2> "$WORK/stderr"; then
+    code=0
+  else
+    code=$?
+  fi
+  if [ "$code" -gt 2 ]; then
+    echo "apm-audit-ci: apm exited $code: $file" >&2
+    cat "$WORK/stderr" >&2
+    status=1
+    continue
+  fi
+  if ! jq -e '.findings | type == "array"' "$report" > /dev/null 2>&1; then
+    echo "apm-audit-ci: apm printed no valid JSON report (exit $code): $file" >&2
+    cat "$WORK/stderr" >&2
+    status=1
+    continue
+  fi
+  # findings[].file is not always the scanned path, so tag each finding with the path passed to --file.
+  jq -c --arg file "$file" '.findings[] | .file = $file' "$report" >> "$FINDINGS"
+done <<EOF
+$targets
+EOF
+
+# INFO never blocks. Any other severity blocks: the pinned apm reports only WARNING and CRITICAL besides INFO,
+# and a severity added by a later version should not pass unseen.
+jq -rs '.[] | select(.severity != "info") | [.file, .line, .codepoint, .severity, .description] | @tsv' \
+  "$FINDINGS" > "$BLOCKING"
+
+if [ -s "$BLOCKING" ]; then
+  echo "apm-audit-ci: blocking findings:" >&2
+  printf 'file\tline\tcodepoint\tseverity\tdescription\n' >&2
+  cat "$BLOCKING" >&2
+  status=1
+fi
+
+if [ "$status" -eq 0 ]; then
+  echo "apm-audit-ci: passed"
+else
+  echo "apm-audit-ci: failed. See docs/apm-audit.md for how to fix findings." >&2
+fi
+exit "$status"

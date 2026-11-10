@@ -1,10 +1,9 @@
 #!/bin/sh
 # Prints the skill folders to scan. Run from the repo root.
 #   --all: every skill folder.
-#   --staged: the skill folders of the staged files. Every skill folder when the staged files change the
-#     baseline, or the SkillSpector pin in Taskfile.yml or scripts/skillspector-ci.sh.
+#   --staged: the skill folders of the staged files.
 #   no argument: the skill folders of the changed paths read from stdin, one per line, repo-relative.
-#     Every skill folder when the baseline is among them.
+# Both scan every skill folder when the changed paths include the baseline or the SkillSpector lock file.
 set -eu
 
 # Succeeds when the folder $1 is a skill: it has a SKILL.md.
@@ -31,27 +30,13 @@ list_all() {
   done
 }
 
-# Succeeds when a changed path on stdin is the baseline.
-baseline_changed() {
+# Succeeds when a changed path on stdin is the baseline or the SkillSpector lock file. A new SkillSpector
+# version can find what the old one missed, and makes accepted findings active again.
+scan_all_changed() {
   while IFS= read -r p; do
-    if [ "$p" = ".skillspector-baseline.yaml" ]; then
-      return 0
-    fi
-  done
-  return 1
-}
-
-# Prints the SkillSpector source pin in a file revision, such as HEAD:Taskfile.yml or :Taskfile.yml for the index.
-pin_at() {  # revision:path
-  git show "$1" 2>/dev/null | grep -o 'skillspector\.git@[^"[:space:]]*' | head -n 1 || true
-}
-
-# Succeeds when the pin in Taskfile.yml or scripts/skillspector-ci.sh differs between the index and HEAD.
-pin_changed() {
-  for f in Taskfile.yml scripts/skillspector-ci.sh; do
-    if [ "$(pin_at ":$f")" != "$(pin_at "HEAD:$f")" ]; then
-      return 0
-    fi
+    case "$p" in
+      .skillspector-baseline.yaml | tools/skillspector/requirements.txt) return 0 ;;
+    esac
   done
   return 1
 }
@@ -83,9 +68,10 @@ folders_to_scan() {
   done
 }
 
-# Prints the scan targets for the changed paths in $1: every skill when the baseline is among them, else their folders.
+# Prints the scan targets for the changed paths in $1: every skill when the baseline or the lock file is among
+# them, else their folders.
 targets_for() {  # changed paths, newline-separated
-  if printf '%s\n' "$1" | baseline_changed; then
+  if printf '%s\n' "$1" | scan_all_changed; then
     list_all
   else
     printf '%s\n' "$1" | folders_to_scan | sort -u
@@ -98,12 +84,7 @@ main() {
       list_all
       ;;
     --staged)
-      changed=$(git diff --cached --no-renames --name-only)
-      if pin_changed; then
-        list_all
-      else
-        targets_for "$changed"
-      fi
+      targets_for "$(git diff --cached --no-renames --name-only)"
       ;;
     *)
       targets_for "$(cat)"

@@ -1,0 +1,63 @@
+name: CI
+
+# Each job runs the scripts that `task ci` runs locally. The tools come from the hash-locked
+# tools/<tool>/requirements.txt, installed with the runner's Python 3.12. No third-party actions.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Check dist/ matches a fresh build
+        run: scripts/build-apm.sh --check
+      - name: Run the scope tests
+        run: |
+          sh scripts/test-changed-skills.sh
+          sh scripts/test-apm-audit-ci.sh
+
+  skillspector:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install SkillSpector
+        run: sh scripts/install-tools.sh skillspector
+      - name: Scan alf skills and upstream skills
+        run: sh scripts/skillspector-ci.sh
+      - name: Explain a failed scan
+        if: failure()
+        run: |
+          {
+            echo "### SkillSpector check failed"
+            echo
+            echo "The log above lists each finding or scan error. [How to fix or accept findings](https://github.com/${{ github.repository }}/blob/${{ github.sha }}/docs/skillspector.md)."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  apm-audit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install apm
+        run: sh scripts/install-tools.sh apm
+      - name: Scan dist/ for hidden Unicode
+        run: sh scripts/apm-audit-ci.sh
+      - name: Explain a failed scan
+        if: failure()
+        run: |
+          {
+            echo "### apm audit check failed"
+            echo
+            echo "The log above lists each blocking finding or scan error. [How to fix findings](https://github.com/${{ github.repository }}/blob/${{ github.sha }}/docs/apm-audit.md)."
+          } >> "$GITHUB_STEP_SUMMARY"

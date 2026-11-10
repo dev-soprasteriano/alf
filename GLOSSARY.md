@@ -37,9 +37,13 @@ _Avoid_: Full skill, standalone skill
 Local instructions a wrapper adds after following its upstream skill.
 _Avoid_: Patch, customisation
 
-**Dependency**:
+**Skill dependency**:
 A skill that another skill calls by name or links to.
 _Avoid_: Requirement, related skill
+
+**Bundle**:
+The installable form of one skill, built from a wrapper and its upstream skill, or from an in-house skill. Teams install bundles.
+_Avoid_: Compiled result, build output
 
 **Flow**:
 A path through the skills from one starting situation to a result. The main flow runs from idea to ship.

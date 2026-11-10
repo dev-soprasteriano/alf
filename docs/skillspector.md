@@ -1,14 +1,14 @@
 # SkillSpector checks
 
-`task ci` scans every skill under `src/skills/` and `src/upstream/` with SkillSpector and fails on any active MEDIUM, HIGH, or CRITICAL finding. CI runs the same task on every pull request.
+`task ci` scans every skill under `src/skills/` and `src/upstream/` with SkillSpector and fails on any active MEDIUM, HIGH, or CRITICAL finding. CI runs the same scan on every pull request.
 
 When the check fails, read the log. Each line names the skill, the severity, the rule ID, and the file and line.
 
 ## Where the scan runs
 
 - `task ci:staged` runs on each commit through the pre-commit hook. It checks `dist/`, runs the scope tests, then scans only the skill folders of the staged files. It also scans a wrapper when the wrapper links to a changed upstream skill.
-- `task ci` scans every skill. CI runs it on every pull request and on each push to `main`.
-- `task ci:staged` scans every skill when the staged files change `.skillspector-baseline.yaml`, or the SkillSpector pin in `Taskfile.yml` or `scripts/skillspector-ci.sh`. Other changes to those files scan no skill.
+- `task ci` scans every skill. CI runs the same scan on every pull request and on each push to `main`.
+- `task ci:staged` scans every skill when the staged files change `.skillspector-baseline.yaml` or `tools/skillspector/requirements.txt`.
 
 ## Fix or accept
 
@@ -22,7 +22,8 @@ When the check fails, read the log. Each line names the skill, the severity, the
 2. Generate candidate entries outside the repo. Run this from the repo root:
 
    ```sh
-   uvx --python 3.12 --from git+https://github.com/NVIDIA/skillspector.git@v2.13.4 skillspector baseline <skill-dir> -o <file-outside-repo> --no-llm --reason "<why it is safe>"
+   sh scripts/install-tools.sh skillspector
+   .tools/skillspector/bin/skillspector baseline <skill-dir> -o <file-outside-repo> --no-llm --reason "<why it is safe>"
    ```
 
    `<skill-dir>` is the skill folder, such as `src/upstream/mattpocock/to-tickets`.
@@ -33,7 +34,7 @@ The generated file lists every finding in the skill. Copy only the entries you a
 
 ## When an accepted finding returns
 
-Each entry is tied to the SkillSpector version pinned in `scripts/skillspector-ci.sh` and to the exact file contents. A version bump or an edit to the file makes the finding active again. Repeat steps 2 to 4.
+Each entry is tied to the SkillSpector version pinned in `tools/skillspector/requirements.in` and to the exact file contents. A version bump or an edit to the file makes the finding active again. Repeat steps 2 to 4.
 
 ## Reviewer checklist
 
