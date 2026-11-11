@@ -9,6 +9,7 @@
 # a decision here.
 pr mentions: show-me
 setup-alf mentions: triage to-spec to-tickets pr research prototype grilling
+ci-doctor mentions: repo-doctor
 ask-alf: grill-with-docs grill-me grilling handoff prototype to-spec to-tickets implement implement-spec tdd code-review pr retro triage diagnosing-bugs improve-codebase-architecture wayfinder research to-questionnaire wait-what teach wizard writing-for-agents domain-modeling codebase-design setup-alf
 code-review: setup-alf
 implement: tdd code-review
