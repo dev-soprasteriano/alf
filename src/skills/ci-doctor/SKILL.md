@@ -22,6 +22,7 @@ The skill runs with the access of the person who runs it. It does not check acce
    - the stack, as the agent reads it from the repository's files: languages, package managers, and build, test and lint commands;
    - the local command and the pre-commit hook, if the repository has them;
    - the checks that ran on each of the last 10 pull requests, open or closed, opened since the CI config last changed, with their run times, from the platform's CLI;
+   - a check reports on a pull request when it finishes with a result on that pull request's head commit. A skipped check, and a check from a workflow no longer on the default branch, does not report;
    - every run on push to the default branch, and whether it repeats a pull request run on the same content;
    - the platform's settings for secret detection, push protection and dependency vulnerability alerts. A capability counts wherever it runs: a platform feature and a CI job both meet the advice.
    - Done when every advice item has a current value, or `unknown` with the reason. A read that fails is `unknown`, with the error.
@@ -59,7 +60,7 @@ Use the platform's own names for checks and config files.
 
 1. **Runs on every PR push.** The pipeline runs on each push to a pull request. A run on push to the default branch repeats the pull request run on the same content. The report shows that as a row, with removing the trigger as the suggested value. The person decides: remove the trigger, or ignore the row. Why: every change is checked once, before it merges, and a second run adds time without adding a check.
 2. **One check per stage.** Each stage is its own named check, such as build, test, lint, or a scan. Stages run in parallel where the platform allows. Why: a failing check names its cause, and parallel stages finish sooner.
-3. **No path filter.** Each check runs on every PR push, with no path or branch filter. Why: a check that skips some changes can't be required, and a required check that never reports blocks every pull request.
+3. **Required checks run on every PR.** A check the team requires runs on every PR push, with no path or branch filter. Other checks may use filters when the team chooses. Why: GitHub waits for a required check that doesn't run, which blocks the pull request.
 4. **Scans.** The repository detects secrets and known dependency vulnerabilities. The platform or CI can provide each one. A platform feature counts when it is on, and the report names where it runs. Where neither provides a capability, add a CI scan for it. The agent picks tools that suit the project's ecosystem and are open source, popular, and modern. Why: the advice asks for the capability, not for where it runs.
 5. **Repo-doctor's CI advice.** The pipeline follows repo-doctor items 10, 11 and 13: a read-only token, automated updates, and pinned components. Why: the pipeline gets the same protection as the repository's settings.
 
