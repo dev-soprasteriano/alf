@@ -21,7 +21,7 @@ The skill runs with the access of the person who runs it. It does not check acce
    - the CI config files on the default branch, from the clone;
    - the stack, as the agent reads it from the repository's files: languages, package managers, and build, test and lint commands;
    - the local command and the pre-commit hook, if the repository has them;
-   - the checks that ran on each of the last 10 pull requests, with their run times, from the platform's CLI;
+   - the checks that ran on each of the last 10 pull requests, open or closed, opened since the CI config last changed, with their run times, from the platform's CLI;
    - every run on push to the default branch, and whether it repeats a pull request run on the same content;
    - the platform's settings for secret detection, push protection and dependency vulnerability alerts. A capability counts wherever it runs: a platform feature and a CI job both meet the advice.
    - Done when every advice item has a current value, or `unknown` with the reason. A read that fails is `unknown`, with the error.
@@ -38,7 +38,7 @@ The skill runs with the access of the person who runs it. It does not check acce
    - `unknown`: the value couldn't be read. Give the reason.
    - `ignored`: the user chose to ignore this row in step 5. Nothing changes.
 
-   Below the table, list the warnings, including: no CI at all, a change that stops a job that other checks depend on, a check that reports on only some pull requests, and a gap that only a code change can close.
+   Below the table, list the warnings, including: no CI at all, a change that stops a job that other checks depend on, a required check that does not run on some pull requests, such as one behind a path filter, because GitHub then waits for it and blocks those pull requests; and a gap that only a code change can close.
    - Done when every advice item has a row.
 
 5. **Ask.** Ask which `change` rows to apply, and which to ignore. The user answers with row numbers to apply, `all` or `none`, and may name rows to ignore. Mark the ignored rows `ignored`. On `none`, stop.
