@@ -22,7 +22,7 @@ The skill runs with the access of the person who runs it. It does not check acce
    - the stack, as the agent reads it from the repository's files: languages, package managers, and build, test and lint commands;
    - the local command and the pre-commit hook, if the repository has them;
    - the checks that ran on each of the last 10 pull requests, open or closed, opened since the CI config last changed, with their run times, from the platform's CLI;
-   - a check reports on a pull request when it finishes with a result on that pull request's head commit. A skipped check, and a check from a workflow no longer on the default branch, does not report;
+   - a check has a result on a pull request when its run finishes, passed or failed, on that pull request's head commit. A skipped run has no result, and neither does a check from a workflow no longer on the default branch;
    - every run on push to the default branch, and whether it repeats a pull request run on the same content;
    - the platform's settings for secret detection, push protection and dependency vulnerability alerts. A capability counts wherever it runs: a platform feature and a CI job both meet the advice.
    - Done when every advice item has a current value, or `unknown` with the reason. A read that fails is `unknown`, with the error.
@@ -48,7 +48,7 @@ The skill runs with the access of the person who runs it. It does not check acce
    - Stop at the first failure. Report what was applied, what failed, and the error text. A failure for lack of access counts as a failure.
    - Done when every picked row is applied, or the run has stopped at a failure.
 
-7. **Verify.** Re-read each changed file. Check that it is valid for its platform. Run the local command once, if the agent can, and report the result. Report a second table: row, file, result (`verified` or `mismatch`), and the error if there is one. Tell the user to watch the first pull request: every check should report, and the pipeline should run on the push.
+7. **Verify.** Re-read each changed file. Check that it is valid for its platform. Run the local command once, if the agent can, and report the result. Report a second table: row, file, result (`verified` or `mismatch`), and the error if there is one. Tell the user to watch the first pull request: every check should run and finish, passed or failed, and the pipeline should run on the push.
    - If the user agreed to a pull request, open it after this step. Its body is this report: the applied rows, each changed file, and the verify results, in the same tables the user sees.
    - Done when every applied row has a result.
 
