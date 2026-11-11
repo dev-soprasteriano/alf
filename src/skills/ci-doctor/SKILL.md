@@ -22,7 +22,8 @@ The skill runs with the access of the person who runs it. It does not check acce
    - the stack, as the agent reads it from the repository's files: languages, package managers, and build, test and lint commands;
    - the local command and the pre-commit hook, if the repository has them;
    - the checks that ran on each of the last 10 pull requests, with their run times, from the platform's CLI;
-   - every run on push to the default branch, and the reason the config gives for it.
+   - every run on push to the default branch, and whether it repeats a pull request run on the same content;
+   - the platform's settings for secret detection, push protection and dependency vulnerability alerts. A capability counts wherever it runs: a platform feature and a CI job both meet the advice.
    - Done when every advice item has a current value, or `unknown` with the reason. A read that fails is `unknown`, with the error.
 
 3. **Find the impact.** For every item whose current value differs from the advice, name what the change affects: a check that becomes required, a job that stops running, a change in run time, or a release step.
@@ -35,11 +36,12 @@ The skill runs with the access of the person who runs it. It does not check acce
    - `n/a`: the item doesn't apply to this stack or repository.
    - `not available`: the platform has no such feature.
    - `unknown`: the value couldn't be read. Give the reason.
+   - `ignored`: the user chose to ignore this row in step 5. Nothing changes.
 
    Below the table, list the warnings, including: no CI at all, a change that stops a job that other checks depend on, a check that reports on only some pull requests, and a gap that only a code change can close.
    - Done when every advice item has a row.
 
-5. **Ask.** Ask which `change` rows to apply. The user answers with row numbers, `all` or `none`. On `none`, stop.
+5. **Ask.** Ask which `change` rows to apply, and which to ignore. The user answers with row numbers to apply, `all` or `none`, and may name rows to ignore. Mark the ignored rows `ignored`. On `none`, stop.
 
 6. **Apply.** Apply the picked rows on a new branch from the default branch. Change only the lines the picked rows cover, and keep the rest of each file as it is. Then offer to commit the changes and open a pull request.
    - Stop at the first failure. Report what was applied, what failed, and the error text. A failure for lack of access counts as a failure.
@@ -55,10 +57,10 @@ Use the platform's own names for checks and config files.
 
 ### Pipeline
 
-1. **Runs on every PR push.** The pipeline runs on each push to a pull request. It runs on push to the default branch only for a stated reason, which the report names. Why: every change is checked before it merges.
+1. **Runs on every PR push.** The pipeline runs on each push to a pull request. A run on push to the default branch repeats the pull request run on the same content. The report shows that as a row, with removing the trigger as the suggested value. The person decides: remove the trigger, or ignore the row. Why: every change is checked once, before it merges, and a second run adds time without adding a check.
 2. **One check per stage.** Each stage is its own named check, such as build, test, lint, or a scan. Stages run in parallel where the platform allows. Why: a failing check names its cause, and parallel stages finish sooner.
 3. **No path filter.** Each check runs on every PR push, with no path or branch filter. Why: a check that skips some changes can't be required, and a required check that never reports blocks every pull request.
-4. **Scans.** Each scan category that fits the stack runs in CI. At minimum, that is a secret scan and a dependency vulnerability scan. The agent picks tools that suit the project's ecosystem and are open source, popular, and modern. The platform's own scanning does not replace these. Why: a CI scan doesn't depend on the platform's settings, and it runs the same way on every PR.
+4. **Scans.** The repository detects secrets and known dependency vulnerabilities. The platform or CI can provide each one. A platform feature counts when it is on, and the report names where it runs. Where neither provides a capability, add a CI scan for it. The agent picks tools that suit the project's ecosystem and are open source, popular, and modern. Why: the advice asks for the capability, not for where it runs.
 5. **Repo-doctor's CI advice.** The pipeline follows repo-doctor items 10, 11 and 13: a read-only token, automated updates, and pinned components. Why: the pipeline gets the same protection as the repository's settings.
 
 Required checks are not set by this skill. The report lists the check names, and repo-doctor item 5 makes them required.
