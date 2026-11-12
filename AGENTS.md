@@ -54,7 +54,7 @@ Each update opens a PR. Its description tells the reviewer to check LICENSE chan
 
 ### Issue tracker
 
-Issues live in GitHub Issues for `olillevik/alf`, managed with the `gh` CLI. See `docs/agents/issue-tracker.md`.
+Issues live in GitHub Issues for `dev-soprasteriano/alf`, managed with the `gh` CLI. See `docs/agents/issue-tracker.md`.
 
 <!-- alf:issue-workflow start -->
 - **Spec from an existing ticket**: add the spec to that ticket's body under a `## Spec` heading, replacing any existing `## Spec` section. Apply the label for the `ready-for-agent` role (see `docs/agents/triage-labels.md`).

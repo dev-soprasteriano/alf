@@ -6,6 +6,7 @@ targets:
 dependencies:
   apm:
     - dev-soprasteriano/alf/dist/skills/ask-alf
+    - dev-soprasteriano/alf/dist/skills/ci-doctor
     - dev-soprasteriano/alf/dist/skills/code-review
     - dev-soprasteriano/alf/dist/skills/codebase-design
     - dev-soprasteriano/alf/dist/skills/diagnosing-bugs
