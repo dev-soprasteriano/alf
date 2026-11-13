@@ -1,9 +1,19 @@
-# Agentic Lifecycle Foundation
+<div align="center">
 
-`alf` is a sound base of agent skills for the core of the software development lifecycle. Install it into Claude Code or GitHub Copilot through [APM](https://microsoft.github.io/apm/), and your team starts from the same skills.
+<h1><img src="docs/assets/banner.svg" alt="alf: Agentic Lifecycle Foundation" width="720"></h1>
 
-- **Built for the full development lifecycle.** Start a project, plan it, build it, fix it, review it and ship it, with skills for each step. See [Skills](#skills).
-- **Reviewed and scanned.** Each skill records its upstream commit. Every skill is scanned for security risks. All upstream changes go through a security scan and a human review.
+**A sound base of agent skills for the core of the software development lifecycle.**<br>
+Install it into Claude Code or GitHub Copilot through [APM](https://microsoft.github.io/apm/), and your team starts from the same skills.
+
+[![CI](https://github.com/dev-soprasteriano/alf/actions/workflows/ci.yml/badge.svg)](https://github.com/dev-soprasteriano/alf/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+
+[Install](#install) · [First run](#first-run) · [Main flow](#main-flow) · [Skills](#skills) · [Update](#update) · [Maintain](docs/maintainers.md)
+
+</div>
+
+- **Built for the full development lifecycle.** Start a project, plan it, build it, fix it, review it and ship it, with skills for each step.
+- **Reviewed and scanned.** Each skill records its upstream commit. Every change passes a security scan and a human review.
 - **You control updates.** Pin a commit, and the team runs the same skills until someone moves the pin.
 - **Flexible.** Install every skill from one manifest, or only the skills you need.
 
@@ -11,7 +21,7 @@
 
 Install APM first: `brew install apm`.
 
-To install every foundation skill, copy the manifest and install it:
+**Every skill.** Copy the manifest and install it:
 
 ```sh
 mkdir -p ~/.apm
@@ -19,7 +29,7 @@ curl -fsSL -o ~/.apm/apm.yml https://raw.githubusercontent.com/dev-soprasteriano
 apm install -g
 ```
 
-To install only some skills, or to combine alf with other skills, write your own `apm.yml` and run `apm install`. Commit it to share the set with your team:
+**Only some skills.** Write your own `apm.yml` and run `apm install`. Commit it to share the set with your team:
 
 ```yaml
 targets:
@@ -30,21 +40,66 @@ dependencies:
     - dev-soprasteriano/alf/dist/skills/grill-with-docs
 ```
 
-A skill also installs the skills it calls by name. For `grill-with-docs`, those are `grilling` and `domain-modeling`. To pin a set, add `#<commit sha>` to every entry, including the skills it calls. A called skill without a pin comes from the default branch.
+A skill also installs the skills it calls by name:
+
+```text
+grill-with-docs
+├── grilling
+└── domain-modeling
+```
+
+**Pin a set.** Add `#<commit sha>` to every entry, including the skills it calls. A called skill without a pin comes from the default branch.
 
 **Turn off a skill.** Delete its line from your `apm.yml`, then run `apm install`. For the global file at `~/.apm/apm.yml`, run `apm install -g`.
 
-## Getting started
+## First run
 
-- New repo: run `/setup-alf` once.
-- Not sure which skill fits: run `/ask-alf`.
-- Idea to ship: `/grill-with-docs`, `/to-spec`, `/to-tickets`, `/implement`, `/code-review`, `/pr`. Then run `/retro`.
+Type `/<skill>` to run a skill. Run `/setup-alf` once in each repo, before the other skills. It asks about your issue tracker, triage labels and domain docs, then writes:
+
+```text
+AGENTS.md                # an "Agent skills" block that points at the files below
+docs/agents/
+├── issue-tracker.md     # where issues live and how to reach them
+├── triage-labels.md     # the label for each triage role, when triage is installed
+└── domain.md            # where the glossary and ADRs live
+```
+
+The other skills read these files.
+
+## Main flow
+
+Take an idea to ship:
+
+```mermaid
+flowchart TD
+    subgraph plan [Plan]
+        direction LR
+        grill["/grill-with-docs"] --> spec["/to-spec"] --> tickets["/to-tickets"]
+    end
+    subgraph ship [Build and ship]
+        direction LR
+        implement["/implement<br>/tdd + /code-review"] --> pr["/pr"] --> retro["/retro"]
+    end
+    plan --> ship
+```
+
+Work that fits in one session skips `/to-spec` and `/to-tickets`.
+
+Other starting points:
+
+| Starting from | Run |
+| --- | --- |
+| Incoming issues | `/triage` |
+| A hard bug | `/diagnosing-bugs` |
+| An effort too big for one session | `/wayfinder`, then `/to-spec` |
+
+Not sure which skill fits? Run `/ask-alf`.
 
 ## Skills
 
 | Need | Skills |
 | --- | --- |
-| Set up a repo | `setup-alf`, `repo-doctor`, `wizard` for steps only a person can do |
+| Set up a repo | `setup-alf`, `repo-doctor`, `ci-doctor`, `wizard` for steps only a person can do |
 | Plan | `grill-with-docs`, `grill-me`, `grilling`, `to-spec`, `to-tickets`, `wayfinder` |
 | Build | `implement`, `implement-spec`, `tdd`, `prototype` |
 | Fix a bug | `diagnosing-bugs`, `tdd` |
@@ -56,6 +111,27 @@ A skill also installs the skills it calls by name. For `grill-with-docs`, those 
 | Other | `handoff`, `to-questionnaire`, `wait-what` |
 
 `dist/user-apm.yml` lists every skill.
+
+The agent also starts these skills by itself when a task fits: `code-review`, `codebase-design`, `diagnosing-bugs`, `domain-modeling`, `git-commit`, `grilling`, `pr`, `prototype`, `research`, `tdd`, `wizard`, `writing-for-agents`. Every other skill runs only when you type it.
+
+## How a skill reaches you
+
+```mermaid
+flowchart LR
+    copy["Upstream skill<br>src/upstream/"] --> wrapper["Wrapper<br>src/skills/"]
+    wrapper --> bundle["Bundle<br>dist/skills/"]
+    inhouse["In-house skill<br>src/skills/"] --> bundle
+    bundle -->|"scan + review"| install(["apm install"])
+```
+
+Wrapped skills come from two upstreams:
+
+| Upstream | Skills | License |
+| --- | --- | --- |
+| [mattpocock/skills](https://github.com/mattpocock/skills) | All wrapped skills except `show-me` | MIT, © 2026 Matt Pocock |
+| [humanlayer/skills](https://github.com/humanlayer/skills) | `show-me` | MIT, © 2026 HumanLayer |
+
+`ci-doctor`, `git-commit` and `repo-doctor` are in-house. Each `src/upstream/<upstream>/PIN.md` records the commit of every upstream skill. [GLOSSARY.md](GLOSSARY.md) defines each term.
 
 ## Update
 

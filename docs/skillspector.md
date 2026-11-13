@@ -6,15 +6,22 @@ When the check fails, read the log. Each line names the skill, the severity, the
 
 ## Where the scan runs
 
-- `task ci:staged` runs on each commit through the pre-commit hook. It checks `dist/`, runs the scope tests, then scans only the skill folders of the staged files. It also scans a wrapper when the wrapper links to a changed upstream skill.
-- `task ci` scans every skill. CI runs the same scan on every pull request and on each push to `main`.
-- `task ci:staged` scans every skill when the staged files change `.skillspector-baseline.yaml` or `tools/skillspector/requirements.txt`.
+| Command | Runs | Scans |
+| --- | --- | --- |
+| `task ci:staged` | On each commit, through the pre-commit hook. It checks `dist/` and runs the scope tests first. | The skill folders of the staged files, and each wrapper that links to a changed upstream skill. Every skill when the staged files change `.skillspector-baseline.yaml` or `tools/skillspector/requirements.txt`. |
+| `task ci` | By hand. CI runs the same scan on every pull request and on each push to `main`. | Every skill. |
 
 ## Fix or accept
 
-- Fix the finding when the skill is yours, under `src/skills/`.
-- Accept the finding when it is a false positive or a risk you accept.
-- Don't edit files under `src/upstream/`. They are upstream copies. Accept findings there.
+```mermaid
+flowchart LR
+    where{Finding is under} -->|src/skills/| real{"False positive,<br>or a risk you accept?"}
+    where -->|src/upstream/| accept
+    real -->|no| fix[Fix the skill]
+    real -->|yes| accept[Accept the finding]
+```
+
+Don't edit files under `src/upstream/`. They are upstream copies.
 
 ## Accept a finding
 
@@ -40,6 +47,6 @@ The pull request that updates SkillSpector carries each entry over to the new ve
 
 ## Reviewer checklist
 
-- The `reason` says why the finding is safe, in one or two sentences.
-- The `rule_id` and `file` match the finding in the failing log.
-- The pull request adds no entry for a finding the author did not show.
+- [ ] The `reason` says why the finding is safe, in one or two sentences.
+- [ ] The `rule_id` and `file` match the finding in the failing log.
+- [ ] The pull request adds no entry for a finding the author did not show.

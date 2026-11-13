@@ -4,9 +4,16 @@
 
 ## What blocks
 
-Every WARNING or CRITICAL finding blocks. Findings cannot be accepted: fix them. INFO findings never block. The log lists each blocking finding with its file, line, codepoint, severity and description.
+| Severity | Blocks | Accept it? |
+| --- | --- | --- |
+| CRITICAL, WARNING | Yes | No. Fix it. |
+| INFO | Never | Not needed. |
+
+The log lists each blocking finding with its file, line, codepoint, severity and description.
 
 ## Fix a finding
 
-- In an in-house skill or an overlay: edit the source under `src/skills/`, then run `task build-apm`.
-- In an upstream skill: pin it at its last clean commit with `task update-upstream SKILL=<name> REF=<sha>`, or remove it.
+| Finding is in | Fix |
+| --- | --- |
+| An in-house skill or an overlay | Edit the source under `src/skills/`, then run `task build-apm`. |
+| An upstream skill | Pin it at its last clean commit with `task update-upstream SKILL=<name> REF=<sha>`, or remove it. |
