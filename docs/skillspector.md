@@ -15,11 +15,10 @@ When the check fails, read the log. Each line names the skill, the severity, the
 
 ```mermaid
 flowchart LR
-    fail([Active finding]) --> where{File is under}
-    where -->|src/skills/| real{"False positive,<br>or a risk you accept?"}
+    where{Finding is under} -->|src/skills/| real{"False positive,<br>or a risk you accept?"}
     where -->|src/upstream/| accept
     real -->|no| fix[Fix the skill]
-    real -->|yes| accept["Accept the finding in<br>.skillspector-baseline.yaml"]
+    real -->|yes| accept[Accept the finding]
 ```
 
 Don't edit files under `src/upstream/`. They are upstream copies.
