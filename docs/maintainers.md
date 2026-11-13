@@ -2,7 +2,17 @@
 
 For people who change this repo. To use the skills, read the [README](../README.md). Editing rules and the license check are in [AGENTS.md](../AGENTS.md).
 
-Skills live in two places. `src/skills/` holds in-house skills and wrappers. `src/upstream/` holds copies of upstream skills. `dist/` is generated: never edit it.
+## Layout
+
+```text
+src/
+├── skills/                  # in-house skills and wrappers: edit here
+├── upstream/                # copies of upstream skills: change with scripts/update-upstream.sh
+└── skill-dependencies.txt   # the skills each skill calls or mentions
+dist/                        # generated bundles: never edit
+tools/                       # CI tools, pinned with hashes
+scripts/                     # build, update and CI scripts
+```
 
 ## Set up a clone
 
@@ -15,35 +25,64 @@ Run `task --list` for the commands and their options. Once hooks are installed, 
 
 ## Build after a change
 
+```mermaid
+flowchart LR
+    skills[src/skills/] --> build{{task build-apm}}
+    upstream[src/upstream/] --> build
+    deps[src/skill-dependencies.txt] --> build
+    build --> bundles["dist/skills/<br>one bundle per skill"]
+    build --> manifest[dist/user-apm.yml]
+```
+
 After any change under `src/`, run `task build-apm` and commit `dist/` with it. `task ci` fails when `dist/` is stale.
 
-## Add an in-house skill
+## Change a skill
 
-1. Create `src/skills/<name>/SKILL.md` with `name` and `description` in its frontmatter.
-2. If it calls or names other skills, list them in `src/skill-dependencies.txt`. The build fails on any unlisted name.
-3. Build and commit (see above).
+| To | Do |
+| --- | --- |
+| Add an in-house skill | Create `src/skills/<name>/SKILL.md` with `name` and `description` in its frontmatter. |
+| Add an upstream skill | Run `scripts/update-upstream.sh add <upstream> <url> <path>[=<wrapper>]`. |
+| Extend an upstream skill | Add instructions to the wrapper's `SKILL.md`, between `<!-- overlay:start -->` and `<!-- overlay:end -->`. |
+| Pin an upstream skill | Run `task update-upstream SKILL=<name> REF=<sha or tag>`. |
+| Move a pinned skill to latest | Run `task update-upstream SKILL=<name>`. |
 
-## Add an upstream skill
+Then build and commit.
 
-1. Run `scripts/update-upstream.sh add <upstream> <url> <path>[=<wrapper>]`. `<path>` is the skill folder in the upstream repo. `=<wrapper>` sets the wrapper name when it differs from the folder name. The script stops if the upstream has no LICENSE on its default branch.
-2. Check the skill's LICENSE and linked skills, as [AGENTS.md](../AGENTS.md) describes. Add any missing skill the same way.
-3. Build and commit (see above).
+- **Dependencies.** If a skill calls or names other skills, list them in `src/skill-dependencies.txt`. The build fails on any unlisted name.
+- **Add an upstream skill.** `<path>` is the skill folder in the upstream repo. `=<wrapper>` sets the wrapper name when it differs from the folder name. The script stops if the upstream has no LICENSE on its default branch. Check the skill's LICENSE and linked skills, as [AGENTS.md](../AGENTS.md) describes. Add any missing skill the same way.
+- **Extend.** The update script keeps the overlay. For an example, see `src/skills/ask-alf/SKILL.md`.
 
-## Extend an upstream skill
+## Updates
 
-Add instructions to the wrapper's `SKILL.md`, between `<!-- overlay:start -->` and `<!-- overlay:end -->`. The update script keeps the overlay. For an example, see `src/skills/ask-alf/SKILL.md`. Then build and commit (see above).
+Three sources open update pull requests. Each one passes the same gate.
 
-## Update upstream skills
+```mermaid
+flowchart LR
+    weekly["update-upstream.yml<br>Mondays"] -->|upstream skills| pr
+    dependabot["Dependabot<br>daily"] -->|apm, uv, GitHub Actions| pr
+    skillspector["update-skillspector.yml<br>daily"] -->|SkillSpector| pr
+    pr[Update pull request] --> ci{{CI checks}}
+    ci --> review["Approving review<br>after the last push"]
+    review --> main[(main)]
+```
 
-The weekly workflow, `.github/workflows/update-upstream.yml`, runs `scripts/update-upstream.sh update` every Monday. It pushes `upstream/weekly-update` and opens or updates its pull request. To run it now, start the workflow by hand from the Actions tab.
+### Upstream skills
 
-To hold a skill, pin it: `task update-upstream SKILL=<name> REF=<sha or tag>`. The weekly job skips pinned skills. To release it, run `task update-upstream SKILL=<name>`.
+`.github/workflows/update-upstream.yml` runs `scripts/update-upstream.sh update` every Monday. It pushes `upstream/weekly-update` and opens or updates its pull request. It skips pinned skills. To run it now, start the workflow by hand from the Actions tab.
 
-## Update CI tools
+### CI tools
 
-Each CI tool has a folder under `tools/`. `requirements.in` pins the tool's version. `requirements.txt` pins every dependency with its hash. CI installs from `requirements.txt` and refuses any file whose hash does not match.
+Each CI tool has a folder under `tools/`:
 
-Update pull requests open daily. Dependabot opens them for apm, uv and the GitHub Actions, as `.github/dependabot.yml` sets. SkillSpector is not on PyPI, so `.github/workflows/update-skillspector.yml` opens its pull request.
+```text
+tools/<tool>/
+├── requirements.in    # pins the tool's version
+└── requirements.txt   # pins every dependency with its hash
+```
+
+CI installs from `requirements.txt` and refuses any file whose hash does not match.
+
+Dependabot opens the pull requests for apm, uv and the GitHub Actions, as `.github/dependabot.yml` sets. SkillSpector is not on PyPI, so `.github/workflows/update-skillspector.yml` opens its pull request.
 
 The SkillSpector pull request carries over each accepted finding that the new version reports unchanged, with its reason. Only a finding the new version reports differently, or a new finding, fails the check. Accept those as [docs/skillspector.md](skillspector.md) describes, and push the baseline change to the update branch.
 
@@ -52,6 +91,12 @@ The SkillSpector pull request carries over each accepted finding that the new ve
 1. For an upstream skill update, check the LICENSE and linked skills, as [AGENTS.md](../AGENTS.md) describes.
 2. Wait for the CI checks. A failing check links to how to fix or accept its findings.
 3. Approve after the last push. The branch rule below requires it.
+
+| CI check | Fails when | Fix |
+| --- | --- | --- |
+| `build` | `dist/` is stale, or a scope test fails | Run `task build-apm` and commit `dist/`. |
+| `skillspector` | A skill has an active MEDIUM, HIGH or CRITICAL finding | [docs/skillspector.md](skillspector.md) |
+| `apm-audit` | A file in `dist/` has hidden Unicode at WARNING or CRITICAL | [docs/apm-audit.md](apm-audit.md) |
 
 ## Branch rule
 

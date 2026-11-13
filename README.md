@@ -1,9 +1,19 @@
-# Agentic Lifecycle Foundation
+<div align="center">
 
-`alf` is a sound base of agent skills for the core of the software development lifecycle. Install it into Claude Code or GitHub Copilot through [APM](https://microsoft.github.io/apm/), and your team starts from the same skills.
+<h1><img src="docs/assets/banner.svg" alt="alf: Agentic Lifecycle Foundation" width="720"></h1>
 
-- **Built for the full development lifecycle.** Start a project, plan it, build it, fix it, review it and ship it, with skills for each step. See [Skills](#skills).
-- **Reviewed and scanned.** Each skill records its upstream commit. Every skill is scanned for security risks. All upstream changes go through a security scan and a human review.
+**A sound base of agent skills for the core of the software development lifecycle.**<br>
+Install it into Claude Code or GitHub Copilot through [APM](https://microsoft.github.io/apm/), and your team starts from the same skills.
+
+[![CI](https://github.com/dev-soprasteriano/alf/actions/workflows/ci.yml/badge.svg)](https://github.com/dev-soprasteriano/alf/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+
+[Install](#install) · [Main flow](#main-flow) · [Skills](#skills) · [Update](#update) · [Maintain](docs/maintainers.md)
+
+</div>
+
+- **Built for the full development lifecycle.** Start a project, plan it, build it, fix it, review it and ship it, with skills for each step.
+- **Reviewed and scanned.** Each skill records its upstream commit. Every change passes a security scan and a human review.
 - **You control updates.** Pin a commit, and the team runs the same skills until someone moves the pin.
 - **Flexible.** Install every skill from one manifest, or only the skills you need.
 
@@ -11,7 +21,7 @@
 
 Install APM first: `brew install apm`.
 
-To install every foundation skill, copy the manifest and install it:
+**Every skill.** Copy the manifest and install it:
 
 ```sh
 mkdir -p ~/.apm
@@ -19,7 +29,7 @@ curl -fsSL -o ~/.apm/apm.yml https://raw.githubusercontent.com/dev-soprasteriano
 apm install -g
 ```
 
-To install only some skills, or to combine alf with other skills, write your own `apm.yml` and run `apm install`. Commit it to share the set with your team:
+**Only some skills.** Write your own `apm.yml` and run `apm install`. Commit it to share the set with your team:
 
 ```yaml
 targets:
@@ -30,21 +40,48 @@ dependencies:
     - dev-soprasteriano/alf/dist/skills/grill-with-docs
 ```
 
-A skill also installs the skills it calls by name. For `grill-with-docs`, those are `grilling` and `domain-modeling`. To pin a set, add `#<commit sha>` to every entry, including the skills it calls. A called skill without a pin comes from the default branch.
+A skill also installs the skills it calls by name:
+
+```text
+grill-with-docs
+├── grilling
+└── domain-modeling
+```
+
+**Pin a set.** Add `#<commit sha>` to every entry, including the skills it calls. A called skill without a pin comes from the default branch.
 
 **Turn off a skill.** Delete its line from your `apm.yml`, then run `apm install`. For the global file at `~/.apm/apm.yml`, run `apm install -g`.
 
-## Getting started
+## Main flow
 
-- New repo: run `/setup-alf` once.
-- Not sure which skill fits: run `/ask-alf`.
-- Idea to ship: `/grill-with-docs`, `/to-spec`, `/to-tickets`, `/implement`, `/code-review`, `/pr`. Then run `/retro`.
+Run `/setup-alf` once in a new repo. Then take an idea to ship:
+
+```mermaid
+flowchart LR
+    idea([Idea]) --> grill["/grill-with-docs"]
+    grill -->|multi-session| spec["/to-spec"]
+    spec --> tickets["/to-tickets"]
+    tickets --> implement
+    grill -->|one session| implement["/implement<br>/tdd + /code-review"]
+    implement --> pr["/pr"]
+    pr --> retro["/retro"]
+```
+
+Three on-ramps join the flow:
+
+| Starting from | Run | Then |
+| --- | --- | --- |
+| Incoming issues | `/triage` | `/implement` |
+| A hard bug | `/diagnosing-bugs` | `/retro` |
+| An effort too big for one session | `/wayfinder` | `/to-spec` |
+
+Not sure which skill fits? Run `/ask-alf`.
 
 ## Skills
 
 | Need | Skills |
 | --- | --- |
-| Set up a repo | `setup-alf`, `repo-doctor`, `wizard` for steps only a person can do |
+| Set up a repo | `setup-alf`, `repo-doctor`, `ci-doctor`, `wizard` for steps only a person can do |
 | Plan | `grill-with-docs`, `grill-me`, `grilling`, `to-spec`, `to-tickets`, `wayfinder` |
 | Build | `implement`, `implement-spec`, `tdd`, `prototype` |
 | Fix a bug | `diagnosing-bugs`, `tdd` |
@@ -56,6 +93,20 @@ A skill also installs the skills it calls by name. For `grill-with-docs`, those 
 | Other | `handoff`, `to-questionnaire`, `wait-what` |
 
 `dist/user-apm.yml` lists every skill.
+
+## How a skill reaches you
+
+```mermaid
+flowchart LR
+    upstream[(Upstream repo)] -->|recorded commit| copy["Upstream skill<br>src/upstream/"]
+    copy --> wrapper["Wrapper + overlay<br>src/skills/"]
+    wrapper --> bundle["Bundle<br>dist/skills/"]
+    inhouse["In-house skill<br>src/skills/"] --> bundle
+    bundle --> checks{{"Security scan<br>+ human review"}}
+    checks -->|apm install| agent(["Claude Code<br>GitHub Copilot"])
+```
+
+[GLOSSARY.md](GLOSSARY.md) defines each term.
 
 ## Update
 

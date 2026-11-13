@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 180" width="880" height="180" role="img" aria-labelledby="title desc">
+  <title id="title">alf: Agentic Lifecycle Foundation</title>
+  <desc id="desc">The alf wordmark beside a track of five lifecycle phases: plan, build, review, ship and learn. An arrow loops from learn back to plan.</desc>
+  <style>
+    text { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; }
+    .ink { fill: #1f2328; }
+    .muted { fill: #59636e; }
+    .rail { stroke: #d1d9e0; }
+    .loop { stroke: #8c959f; }
+    .loop-head { fill: #8c959f; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #f0f6fc; }
+      .muted { fill: #9198a1; }
+      .rail { stroke: #3d444d; }
+      .loop { stroke: #656c76; }
+      .loop-head { fill: #656c76; }
+    }
+  </style>
+  <defs>
+    <linearGradient id="cycle" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6366f1"/>
+      <stop offset="1" stop-color="#14b8a6"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Mark: one turn of the lifecycle. -->
+  <path d="M 95.7 59.4 A 40 40 0 1 1 50 55.4" fill="none" stroke="url(#cycle)" stroke-width="10" stroke-linecap="round"/>
+  <polygon points="64.7,46.9 44,44.9 56,65.7" fill="#6366f1"/>
+  <circle class="ink" cx="70" cy="90" r="9"/>
+
+  <!-- Wordmark. -->
+  <text class="ink" x="138" y="104" font-size="78" font-weight="800" letter-spacing="-2">alf</text>
+  <text class="muted" x="141" y="136" font-size="17" font-weight="500">Agentic Lifecycle Foundation</text>
+
+  <!-- Phase track. -->
+  <line class="rail" x1="480" y1="76" x2="840" y2="76" stroke-width="3" stroke-linecap="round"/>
+  <path class="loop" d="M 840 120 C 840 164, 480 164, 480 126" fill="none" stroke-width="2" stroke-dasharray="2 7" stroke-linecap="round"/>
+  <polygon class="loop-head" points="480,116 474,128 486,128"/>
+  <g font-size="15" font-weight="600" text-anchor="middle">
+    <circle cx="480" cy="76" r="10" fill="#6366f1"/>
+    <text class="ink" x="480" y="110">Plan</text>
+    <circle cx="570" cy="76" r="10" fill="#4f7be0"/>
+    <text class="ink" x="570" y="110">Build</text>
+    <circle cx="660" cy="76" r="10" fill="#3b8fcf"/>
+    <text class="ink" x="660" y="110">Review</text>
+    <circle cx="750" cy="76" r="10" fill="#28a4bb"/>
+    <text class="ink" x="750" y="110">Ship</text>
+    <circle cx="840" cy="76" r="10" fill="#14b8a6"/>
+    <text class="ink" x="840" y="110">Learn</text>
+  </g>
+</svg>
