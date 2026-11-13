@@ -22,16 +22,16 @@ The checks need the platform's CLI, logged in. Applying settings needs admin rig
    - every branch rule that applies to the default branch, in every rule mechanism the platform has;
    - the CI config and the dependency update config, as they are on the default branch;
    - every check result, of every kind the platform records, on the head commit of each pull request merged since the CI config last changed, up to the last 10;
-   - automation that pushes to the default branch, or opens or approves pull requests;
+   - automation that pushes to the default branch, or opens or approves pull requests, and the token each one uses;
    - everyone who can push to the repository, other than the user, admins and team members included.
    - Done when every advice item has a current value, or `unknown` with the reason.
 
-3. **Find the impact.** For every item whose current value differs from the advice, find what the change would stop: a CI job, a bot, an integration, a release step, a person's way of working. Note any setting the platform's plan doesn't offer.
+3. **Find the impact.** For every item whose current value differs from the advice, find what the change would stop: a CI job, a bot, an integration, a release step, a person's way of working. Note any setting the platform's plan doesn't offer. A change that would stop a workflow from pushing, opening, approving or merging a pull request is `later`, not `change`: say what has to be true first.
    - Done when every differing item names its impact, or says `none found`.
 
 4. **Report.** Show one table: row, setting, status, current value, suggested value, why, and impact. Give each advice item one row, numbered as in the advice. When an item has more than one setting to change, give each its own row: 2a, 2b. Use one status per row:
    - `ok`: it already matches the advice.
-   - `change`: it differs, and the repository can meet the advice.
+   - `change`: it differs, the repository can meet the advice, and no workflow in the repository breaks.
    - `later`: the repository can't meet the advice yet. Say what has to be true first, and suggest nothing.
    - `n/a`: the item doesn't apply, such as a cooldown with no update tool.
    - `not available`: the platform or its plan has no such setting.
@@ -59,8 +59,10 @@ Use the platform's own names for these settings.
 
 ### Branch and merge rules
 
-1. **Pull requests only.** Every change to the default branch goes through a pull request. Direct pushes, force pushes and deleting the branch are blocked. Why: every change gets a review and a CI run, and nobody can rewrite or delete the history.
+1. **Pull requests only.** Every change to the default branch goes through a pull request. Direct pushes and force pushes are blocked. Why: every change gets a review and a CI run, and nobody can rewrite the history.
+   - Do not suggest `Restrict updates` (the `update` rule). With no bypass, it blocks pull request merges too.
 2. **Independent approval.** A pull request needs one approval, and the latest push must be approved by someone other than the person who pushed it. CI bots can't approve. Why: nobody merges code that only they have seen. This fits a repository with more than one contributor. When nobody but the user can push, mark it `later`.
+   - Do not suggest turning off the setting that lets Actions create and approve pull requests while a workflow opens pull requests with the workflow token. Mark it `later`, and say that the workflow needs its own token first.
 3. **Squash merges only.** Squash is the only merge method. The commit title is the pull request title, and the body is empty. Why: the default branch gets one commit per change, so each change reads and reverts as one unit.
 4. **Short-lived branches.** The source branch is deleted on merge. Authors can update a pull request branch from the default branch, and set a pull request to merge itself once it passes. Why: a branch lives only as long as its change.
 5. **CI gate.** The checks CI runs on every pull request must pass before merge. Each required check accepts results only from the CI system that runs it. Why: a broken change stays out of the default branch, and nobody can post a passing result by hand.
