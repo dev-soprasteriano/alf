@@ -24,6 +24,7 @@ The skill runs with the access of the person who runs it. It does not check acce
    - the checks that ran on each of the last 10 pull requests, open or closed, opened since the CI config last changed, with their run times, from the platform's CLI;
    - a check has a result on a pull request when its run finishes, passed or failed, on that pull request's head commit. A skipped run has no result, and neither does a check from a workflow no longer on the default branch;
    - every run on push to the default branch, and whether it repeats a pull request run on the same content;
+   - whether the default branch's rules block direct pushes, force pushes and deletion, which is repo-doctor item 1;
    - the platform's settings for secret detection, push protection and dependency vulnerability alerts. A capability counts wherever it runs: a platform feature and a CI job both meet the advice.
    - Done when every advice item has a current value, or `unknown` with the reason. A read that fails is `unknown`, with the error.
 
@@ -58,7 +59,7 @@ Use the platform's own names for checks and config files.
 
 ### Pipeline
 
-1. **Runs on every PR push.** The pipeline runs on each push to a pull request. A run on push to the default branch repeats the pull request run on the same content. The report shows that as a row, with removing the trigger as the suggested value. The person decides: remove the trigger, or ignore the row. Why: every change is checked once, before it merges, and a second run adds time without adding a check.
+1. **Runs on every PR push.** The pipeline runs on each push to a pull request. With repo-doctor item 1 in place, every change reaches the default branch through a pull request, so a run on push to the default branch repeats the pull request run on the same content. The report shows that as a row, with removing the trigger as the suggested value. The person decides: remove the trigger, or ignore the row. Without repo-doctor item 1, a direct push has no pull request run, so the push run is its only check. Mark the row `later`, and name repo-doctor item 1 as what has to be true first. Why: every change is checked once, before it merges, and a second run adds time without adding a check.
 2. **One check per stage.** Each stage is its own named check, such as build, test, lint, or a scan. Stages run in parallel where the platform allows. Why: a failing check names its cause, and parallel stages finish sooner.
 3. **Required checks run on every PR.** A check the team requires runs on every PR push, with no path or branch filter. Other checks may use filters when the team chooses. Why: GitHub waits for a required check that doesn't run, which blocks the pull request.
 4. **Scans.** The repository detects secrets and known dependency vulnerabilities. The platform or CI can provide each one. A platform feature counts when it is on, and the report names where it runs. Where neither provides a capability, add a CI scan for it. The agent picks tools that suit the project's ecosystem and are open source, popular, and modern. Why: the advice asks for the capability, not for where it runs.
