@@ -85,13 +85,13 @@ flowchart TD
 
 Work that fits in one session skips `/to-spec` and `/to-tickets`.
 
-Three on-ramps join the flow:
+Other starting points:
 
-| Starting from | Run | Then |
-| --- | --- | --- |
-| Incoming issues | `/triage` | `/implement` |
-| A hard bug | `/diagnosing-bugs` | `/retro` |
-| An effort too big for one session | `/wayfinder` | `/to-spec` |
+| Starting from | Run |
+| --- | --- |
+| Incoming issues | `/triage` |
+| A hard bug | `/diagnosing-bugs` |
+| An effort too big for one session | `/wayfinder`, then `/to-spec` |
 
 Not sure which skill fits? Run `/ask-alf`.
 
