@@ -264,6 +264,10 @@ write_body() {   # plan-file body-file
       printf '\nLICENSE changed upstream for:\n\n'
       sed 's/^/- /' "$WORK_DIR/license_changes"
     fi
+    if [[ -s "$WORK_DIR/readme_errors" ]]; then
+      printf '\nREADME.md differs from src/ after this update. The `build` check fails until it matches. Push the fix to this branch:\n\n'
+      sed 's/^/- /' "$WORK_DIR/readme_errors"
+    fi
     printf '\n%s\n' "$REVIEW_NOTE"
   } > "$2"
 }
@@ -314,7 +318,7 @@ cmd_add() {
 
 cmd_update() {
   local dry_run=0 ref="" only="" matched=0
-  local pin slug url skill upath old pinned new pinned_new clone plan body title count branch
+  local pin slug url skill upath old pinned new pinned_new clone plan body title count branch build_status
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --dry-run) dry_run=1 ;;
@@ -410,8 +414,19 @@ cmd_update() {
     write_pin "$slug" "$(pin_url "$UPSTREAM_DIR/$slug/PIN.md")" "$WORK_DIR/rows/$slug"
   done < <(cut -d' ' -f1 "$plan" | sort -u)
 
-  # Rebuild the APM bundles from the changed copies. A failing build stops the update here.
-  "$REPO_DIR/scripts/build-apm.sh"
+  # Rebuild the APM bundles from the changed copies. A failing build stops the update here, with
+  # one exception: status 3 means dist/ is built and only README.md differs from src/. The update
+  # then goes on, and the pull request body lists the differences for a person to fix.
+  build_status=0
+  "$REPO_DIR/scripts/build-apm.sh" 2> "$WORK_DIR/build.err" || build_status=$?
+  cat "$WORK_DIR/build.err" >&2
+  case "$build_status" in
+    0) ;;
+    3)
+      sed -n 's/^error: //p' "$WORK_DIR/build.err" > "$WORK_DIR/readme_errors"
+      ;;
+    *) exit "$build_status" ;;
+  esac
 
   if [[ -z "$(git -C "$REPO_DIR" status --porcelain -- src dist)" ]]; then
     printf 'Files already match; skipped the commit.\n'

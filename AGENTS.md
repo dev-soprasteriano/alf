@@ -18,6 +18,13 @@ Rules for agents working in this repo. Read them before changing `src/skills/` o
 - Change files under `src/upstream/` through `scripts/update-upstream.sh`.
 - Add local instructions to a wrapper between its `<!-- overlay:start -->` and `<!-- overlay:end -->` markers. The script regenerates the frontmatter and the pointer line.
 - Never edit `dist/` by hand. Run `task build-apm` after a change under `src/skills/` or `src/upstream/`, and commit `dist/` with it.
+- Keep `README.md` in step with `src/`. `task build-apm` and `task ci` fail when they differ, and name the difference.
+- Three skill lists in `README.md` sit between `<!-- readme:<block> start -->` and `<!-- readme:<block> end -->` lines. The code spans in each list name exactly these skills:
+  - `skills`: every skill.
+  - `agent-started`: the skills without `disable-model-invocation: true`.
+  - `in-house`: the skills that point at no upstream skill.
+- Every `/name` in a code span or a fenced block of `README.md` names a skill. Write a one-folder path with its closing slash, such as `/tmp/`.
+- `README.md` holds the URL of each upstream.
 - When a skill names another skill, list that name in `src/skill-dependencies.txt`: under the skill as a dependency if it calls the skill, or under `mentions` if it does not. The build fails on any unlisted name.
 
 ## Writing style

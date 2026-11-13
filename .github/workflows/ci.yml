@@ -21,12 +21,13 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Check dist/ matches a fresh build
+      - name: Check dist/ and README.md match src/
         run: scripts/build-apm.sh --check
-      - name: Run the scope tests
+      - name: Run the script tests
         run: |
           sh scripts/test-changed-skills.sh
           sh scripts/test-apm-audit-ci.sh
+          sh scripts/test-build-apm-readme.sh
 
   skillspector:
     runs-on: ubuntu-24.04
