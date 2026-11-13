@@ -97,18 +97,25 @@ Not sure which skill fits? Run `/ask-alf`.
 
 ## Skills
 
-| Need | Skills |
+### Software development lifecycle
+
+| Stage | Skills |
 | --- | --- |
-| Set up a repo | `setup-alf`, `repo-doctor`, `ci-doctor`, `wizard` for steps only a person can do |
 | Plan | `grill-with-docs`, `grill-me`, `grilling`, `to-spec`, `to-tickets`, `wayfinder` |
 | Build | `implement`, `implement-spec`, `tdd`, `prototype` |
 | Fix a bug | `diagnosing-bugs`, `tdd` |
 | Review and ship | `code-review`, `pr`, `git-commit`, `triage` |
-| Improve the architecture | `improve-codebase-architecture`, `codebase-design`, `domain-modeling` |
+| Design and architecture | `improve-codebase-architecture`, `codebase-design`, `domain-modeling` |
 | Research and learn | `research`, `teach`, `show-me` |
-| Improve how you work with agents | `retro`, `writing-for-agents` |
+
+### Meta skills
+
+| Purpose | Skills |
+| --- | --- |
+| Set up | `setup-alf`, `repo-doctor`, `ci-doctor`, `wizard` for steps only a person can do |
 | Find your way | `ask-alf` |
-| Other | `handoff`, `to-questionnaire`, `wait-what` |
+| Work better with agents | `retro`, `writing-for-agents`, `wait-what` |
+| Hand over and ask | `handoff`, `to-questionnaire` |
 
 `dist/user-apm.yml` lists every skill.
 
@@ -143,4 +150,6 @@ If you wish to contribute, read [docs/maintainers.md](docs/maintainers.md).
 
 ## License
 
-MIT. See [LICENSE](LICENSE). Each upstream folder keeps its own LICENSE.
+MIT. See [LICENSE](LICENSE).
+
+Some skills are provided by third parties under their own licenses. See [NOTICE.md](NOTICE.md) for the full license attribution.
