@@ -8,7 +8,7 @@ Install it into Claude Code or GitHub Copilot through [APM](https://microsoft.gi
 [![CI](https://github.com/dev-soprasteriano/alf/actions/workflows/ci.yml/badge.svg)](https://github.com/dev-soprasteriano/alf/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-[Install](#install) · [Main flow](#main-flow) · [Skills](#skills) · [Update](#update) · [Maintain](docs/maintainers.md)
+[Install](#install) · [First run](#first-run) · [Main flow](#main-flow) · [Skills](#skills) · [Update](#update) · [Maintain](docs/maintainers.md)
 
 </div>
 
@@ -52,9 +52,23 @@ grill-with-docs
 
 **Turn off a skill.** Delete its line from your `apm.yml`, then run `apm install`. For the global file at `~/.apm/apm.yml`, run `apm install -g`.
 
+## First run
+
+Type `/<skill>` to run a skill. Run `/setup-alf` once in each repo, before the other skills. It asks about your issue tracker, triage labels and domain docs, then writes:
+
+```text
+AGENTS.md                # an "Agent skills" block that points at the files below
+docs/agents/
+├── issue-tracker.md     # where issues live and how to reach them
+├── triage-labels.md     # the label for each triage role, when triage is installed
+└── domain.md            # where the glossary and ADRs live
+```
+
+The other skills read these files.
+
 ## Main flow
 
-Run `/setup-alf` once in a new repo. Then take an idea to ship:
+Take an idea to ship:
 
 ```mermaid
 flowchart TD
@@ -98,6 +112,8 @@ Not sure which skill fits? Run `/ask-alf`.
 
 `dist/user-apm.yml` lists every skill.
 
+The agent also starts these skills by itself when a task fits: `code-review`, `codebase-design`, `diagnosing-bugs`, `domain-modeling`, `git-commit`, `grilling`, `pr`, `prototype`, `research`, `tdd`, `wizard`, `writing-for-agents`. Every other skill runs only when you type it.
+
 ## How a skill reaches you
 
 ```mermaid
@@ -108,7 +124,14 @@ flowchart LR
     bundle -->|"scan + review"| install(["apm install"])
 ```
 
-[GLOSSARY.md](GLOSSARY.md) defines each term.
+Wrapped skills come from two upstreams:
+
+| Upstream | Skills | License |
+| --- | --- | --- |
+| [mattpocock/skills](https://github.com/mattpocock/skills) | All wrapped skills except `show-me` | MIT, © 2026 Matt Pocock |
+| [humanlayer/skills](https://github.com/humanlayer/skills) | `show-me` | MIT, © 2026 HumanLayer |
+
+`ci-doctor`, `git-commit` and `repo-doctor` are in-house. Each `src/upstream/<upstream>/PIN.md` records the commit of every upstream skill. [GLOSSARY.md](GLOSSARY.md) defines each term.
 
 ## Update
 
