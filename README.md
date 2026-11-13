@@ -57,15 +57,19 @@ grill-with-docs
 Run `/setup-alf` once in a new repo. Then take an idea to ship:
 
 ```mermaid
-flowchart LR
-    idea([Idea]) --> grill["/grill-with-docs"]
-    grill -->|multi-session| spec["/to-spec"]
-    spec --> tickets["/to-tickets"]
-    tickets --> implement
-    grill -->|one session| implement["/implement<br>/tdd + /code-review"]
-    implement --> pr["/pr"]
-    pr --> retro["/retro"]
+flowchart TD
+    subgraph plan [Plan]
+        direction LR
+        grill["/grill-with-docs"] --> spec["/to-spec"] --> tickets["/to-tickets"]
+    end
+    subgraph ship [Build and ship]
+        direction LR
+        implement["/implement<br>/tdd + /code-review"] --> pr["/pr"] --> retro["/retro"]
+    end
+    plan --> ship
 ```
+
+Work that fits in one session skips `/to-spec` and `/to-tickets`.
 
 Three on-ramps join the flow:
 
@@ -98,12 +102,10 @@ Not sure which skill fits? Run `/ask-alf`.
 
 ```mermaid
 flowchart LR
-    upstream[(Upstream repo)] -->|recorded commit| copy["Upstream skill<br>src/upstream/"]
-    copy --> wrapper["Wrapper + overlay<br>src/skills/"]
+    copy["Upstream skill<br>src/upstream/"] --> wrapper["Wrapper<br>src/skills/"]
     wrapper --> bundle["Bundle<br>dist/skills/"]
     inhouse["In-house skill<br>src/skills/"] --> bundle
-    bundle --> checks{{"Security scan<br>+ human review"}}
-    checks -->|apm install| agent(["Claude Code<br>GitHub Copilot"])
+    bundle -->|"scan + review"| install(["apm install"])
 ```
 
 [GLOSSARY.md](GLOSSARY.md) defines each term.
