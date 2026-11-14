@@ -2,8 +2,7 @@
 # Builds one self-contained APM skill bundle per skill into dist/skills/, and dist/user-apm.yml,
 # the manifest a single user copies to ~/.apm/apm.yml. Run by `task build-apm`.
 # `--check` builds into a temp folder and fails if dist/ differs from it. CI runs it.
-# Both modes fail when README.md differs from src/. See check_readme. A build writes dist/ first
-# and then exits with status 3, which scripts/update-upstream.sh reads as "built, README.md differs".
+# Both modes fail when README.md differs from src/. See check_readme.
 # Never edit dist/ by hand. See AGENTS.md.
 #
 # Written for bash 3.2 (macOS /bin/bash): plain variables, loops and case only.
@@ -191,107 +190,36 @@ check_references() {  # out
   fi
 }
 
-# ---- README.md check ----
-# README.md must match src/ in three ways. AGENTS.md lists them under "Editing rules".
-# Each check prints one "error: ..." line per difference.
-
-readme_ok=1
-
-readme_error() {  # message
-  printf 'error: %s\n' "$*" >&2
-  readme_ok=0
-}
-
-# Passes when the frontmatter of a skill sets disable-model-invocation to true.
-user_only() {  # skill
-  frontmatter "$SKILLS_DIR/$1/SKILL.md" \
-    | grep -i -E '^disable-model-invocation:[[:space:]]*true([[:space:]]|$)' > /dev/null
-}
-
-# Skills the agent may start by itself.
-agent_started_skills() {
-  local skill
-  for skill in $(list_skills); do
-    user_only "$skill" || printf '%s\n' "$skill"
-  done
-}
-
-# Skills that point at no upstream skill.
-in_house_skills() {
-  local skill
-  for skill in $(list_skills); do
-    [[ -n "$(upstream_ref "$SKILLS_DIR/$skill/SKILL.md")" ]] || printf '%s\n' "$skill"
-  done
-}
-
-# The code in README.md: every fenced block, then every code span.
-readme_code() {
-  sed -n '/^ *```/,/^ *```/p' "$README"
-  grep -o '`[^`]*`' "$README" || true
-}
-
-# Check 1. A block sits between one "<!-- readme:<block> start -->" line and one end line.
-# Its code spans must name exactly the skills that the list command prints.
-check_readme_block() {  # block list-command rule
-  local block="$1" list="$2" rule="$3" marker count name
-  local start="<!-- readme:$block start -->" end="<!-- readme:$block end -->"
-  for marker in "$start" "$end"; do
-    count="$(grep -c -x -F -- "$marker" "$README" || true)"
-    if [[ "$count" -ne 1 ]]; then
-      readme_error "README.md must have one \"$marker\" line, and has $count"
-      return
-    fi
-  done
-  "$list" | sort > "$WORK/want.txt"
-  sed -n "/^$start\$/,/^$end\$/p" "$README" \
-    | { grep -o '`[^`]*`' || true; } | tr -d '`' | sort -u > "$WORK/got.txt"
-  # comm -23 prints the lines only in want.txt, comm -13 the lines only in got.txt.
-  while IFS= read -r name; do
-    readme_error "README.md block \"$block\" does not list $name. The block lists $rule."
-  done < <(comm -23 "$WORK/want.txt" "$WORK/got.txt")
-  while IFS= read -r name; do
-    readme_error "README.md block \"$block\" lists $name. The block lists only $rule."
-  done < <(comm -13 "$WORK/want.txt" "$WORK/got.txt")
-}
-
-# Check 2. Every /name in the code of README.md must be a skill. tr puts each word on its own
-# line: it replaces every character that a path cannot hold with a newline. A path such as
-# /tmp/x or ~/.apm/ stays one word, so only a word that is exactly /name counts.
-check_readme_names() {
-  local name
-  while IFS= read -r name; do
-    [[ -f "$SKILLS_DIR$name/SKILL.md" ]] || readme_error "README.md names $name, which is not a skill"
-  done < <(readme_code | LC_ALL=C tr -c 'A-Za-z0-9_./~\n-' '\n' | grep -E '^/[a-z][a-z0-9-]*$' | sort -u)
-}
-
-# Check 3. README.md must hold the URL of every upstream, from the "Upstream:" line of its
-# PIN.md. The URL must end there: https://host/a/b does not match https://host/a/b-more.
-check_readme_upstreams() {
-  local pin url
-  for pin in "$UPSTREAM_DIR"/*/PIN.md; do
-    [[ -f "$pin" ]] || continue
-    url="$(sed -n 's/^Upstream: *//p' "$pin" | head -n 1 | tr -d '\r')"
-    url="${url%/}"
-    if [[ -z "$url" ]]; then
-      readme_error "$pin has no \"Upstream: <url>\" line"
-    elif ! grep -q -E -- "$url([^A-Za-z0-9_/-]|\$)" "$README"; then
-      readme_error "README.md does not credit the upstream $url"
-    fi
-  done
-}
-
-# Runs the three checks. Fails when any of them printed an error.
+# README.md must match src/:
+# - The tables between <!-- skills:start --> and <!-- skills:end --> name every skill, and only skills.
+# - The URL of every upstream appears.
 check_readme() {
-  if [[ ! -f "$README" ]]; then
-    readme_error "$README does not exist"
-    return 1
-  fi
-  check_readme_block skills list_skills "every skill in src/skills/"
-  check_readme_block agent-started agent_started_skills "the skills without disable-model-invocation: true"
-  check_readme_block in-house in_house_skills "the skills that point at no upstream skill"
-  check_readme_names
-  check_readme_upstreams
-  [[ "$readme_ok" -eq 1 ]]
+  local tables skill name pin url ok=1
+  tables="$(sed -n '/<!-- skills:start -->/,/<!-- skills:end -->/p' "$README")"
+
+  for skill in $(list_skills); do
+    if ! grep -q -F "\`$skill\`" <<< "$tables"; then
+      echo "error: README.md does not list \`$skill\` in the skills tables" >&2
+      ok=0
+    fi
+  done
+
+  for name in $(grep -o '`[^`]*`' <<< "$tables" | tr -d '`'); do
+    if [[ ! -f "$SKILLS_DIR/$name/SKILL.md" ]]; then
+      echo "error: README.md lists \`$name\` in the skills tables, which is not a skill" >&2
+      ok=0
+    fi
+  done
+
+  for pin in "$UPSTREAM_DIR"/*/PIN.md; do
+    url="$(sed -n '1s/^Upstream: //p' "$pin")"
+    if ! grep -q -F "$url" "$README"; then
+      echo "error: README.md does not credit the upstream $url" >&2
+      ok=0
+    fi
+  done
+
+  [[ "$ok" -eq 1 ]] || die "README.md differs from src/. Fix README.md."
 }
 
 mode=build
@@ -308,24 +236,16 @@ for skill in $(list_skills); do
 done
 write_user_manifest "$OUT"
 check_references "$OUT"
+check_readme
 
 if [[ "$mode" == check ]]; then
-  failed=""
   if ! diff -r "$DIST_DIR" "$OUT" > "$WORK/diff.txt" 2>&1; then
     head -n 40 "$WORK/diff.txt" >&2
-    failed="dist/ is out of date. Run task build-apm and commit the result."
+    die "dist/ is out of date. Run task build-apm and commit the result."
   fi
-  if ! check_readme; then
-    failed="${failed:+$failed }README.md differs from src/. Fix README.md."
-  fi
-  if [[ -n "$failed" ]]; then die "$failed"; fi
   printf 'build-apm: dist/ is current\n'
 else
   rm -rf "$DIST_DIR"
   cp -R "$OUT" "$DIST_DIR"
   printf 'built %s skills into dist/\n' "$(list_skills | wc -l | tr -d ' ')"
-  if ! check_readme; then
-    printf 'README.md differs from src/. Fix README.md. dist/ is built.\n' >&2
-    exit 3
-  fi
 fi

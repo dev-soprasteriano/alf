@@ -71,8 +71,6 @@ flowchart LR
 
 `.github/workflows/update-upstream.yml` runs `scripts/update-upstream.sh update` every Monday. It pushes `upstream/weekly-update` and opens or updates its pull request. It skips pinned skills. To run it now, start the workflow by hand from the Actions tab.
 
-An update can leave `README.md` different from `src/`, for example when an upstream skill changes its `disable-model-invocation`. The script still commits and opens the pull request. The description lists the differences, and `build` fails until someone pushes the README change to the branch. On a clone with the hooks installed, the commit stops instead: fix `README.md`, then commit and push by hand.
-
 ### CI tools
 
 Each CI tool has a folder under `tools/`:
