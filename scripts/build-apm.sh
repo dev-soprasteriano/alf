@@ -2,7 +2,6 @@
 # Builds one self-contained APM skill bundle per skill into dist/skills/, and dist/user-apm.yml,
 # the manifest a single user copies to ~/.apm/apm.yml. Run by `task build-apm`.
 # `--check` builds into a temp folder and fails if dist/ differs from it. CI runs it.
-# Both modes fail when README.md differs from src/. See check_readme.
 # Never edit dist/ by hand. See AGENTS.md.
 #
 # Written for bash 3.2 (macOS /bin/bash): plain variables, loops and case only.
@@ -190,36 +189,19 @@ check_references() {  # out
   fi
 }
 
-# README.md must match src/:
-# - The tables between <!-- skills:start --> and <!-- skills:end --> name every skill, and only skills.
-# - The URL of every upstream appears.
 check_readme() {
-  local tables skill name pin url ok=1
+  local tables skill name pin url
   tables="$(sed -n '/<!-- skills:start -->/,/<!-- skills:end -->/p' "$README")"
-
   for skill in $(list_skills); do
-    if ! grep -q -F "\`$skill\`" <<< "$tables"; then
-      echo "error: README.md does not list \`$skill\` in the skills tables" >&2
-      ok=0
-    fi
+    grep -q -F "\`$skill\`" <<< "$tables" || die "README.md does not list \`$skill\` in the skills tables"
   done
-
   for name in $(grep -o '`[^`]*`' <<< "$tables" | tr -d '`'); do
-    if [[ ! -f "$SKILLS_DIR/$name/SKILL.md" ]]; then
-      echo "error: README.md lists \`$name\` in the skills tables, which is not a skill" >&2
-      ok=0
-    fi
+    [[ -f "$SKILLS_DIR/$name/SKILL.md" ]] || die "README.md lists \`$name\` in the skills tables, which is not a skill"
   done
-
   for pin in "$UPSTREAM_DIR"/*/PIN.md; do
     url="$(sed -n '1s/^Upstream: //p' "$pin")"
-    if ! grep -q -F "$url" "$README"; then
-      echo "error: README.md does not credit the upstream $url" >&2
-      ok=0
-    fi
+    grep -q -F "$url" "$README" || die "README.md does not credit the upstream $url"
   done
-
-  [[ "$ok" -eq 1 ]] || die "README.md differs from src/. Fix README.md."
 }
 
 mode=build
@@ -229,6 +211,8 @@ case "${1:-}" in
   *) usage ;;
 esac
 
+check_readme
+
 OUT="$WORK/out"
 mkdir -p "$OUT/skills"
 for skill in $(list_skills); do
@@ -236,7 +220,6 @@ for skill in $(list_skills); do
 done
 write_user_manifest "$OUT"
 check_references "$OUT"
-check_readme
 
 if [[ "$mode" == check ]]; then
   if ! diff -r "$DIST_DIR" "$OUT" > "$WORK/diff.txt" 2>&1; then
