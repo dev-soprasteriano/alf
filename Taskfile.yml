@@ -7,7 +7,7 @@ tasks:
       - scripts/update-upstream.sh update {{if .DRY_RUN}}--dry-run {{end}}{{if .REF}}--ref {{.REF}} {{end}}{{if .SKILL}}{{.SKILL}}{{end}}
 
   build-apm:
-    desc: Build the APM skill bundles and dist/user-apm.yml from src/skills and src/upstream. Commit dist/ with the change.
+    desc: Build the APM skill bundles and dist/user-apm.yml from src/skills and src/upstream. Fails when README.md differs from src/. Commit dist/ with the change.
     cmds:
       - scripts/build-apm.sh
 
@@ -28,7 +28,7 @@ tasks:
         vars: {STAGED: "1"}
 
   ci:build:
-    desc: Check dist/ matches a fresh build, and run the scope tests.
+    desc: Check dist/ and README.md match src/, and run the script tests.
     preconditions:
       - sh: command -v jq
         msg: "jq not found. Install it with: brew install jq"
@@ -36,6 +36,7 @@ tasks:
       - scripts/build-apm.sh --check
       - sh scripts/test-changed-skills.sh
       - sh scripts/test-apm-audit-ci.sh
+      - sh scripts/test-build-apm-readme.sh
 
   ci:skillspector:
     desc: Scan every alf skill and upstream skill with SkillSpector, static only (no LLM). STAGED=1 scans only the skill folders of the staged files.

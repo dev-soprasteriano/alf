@@ -8,7 +8,7 @@ When the check fails, read the log. Each line names the skill, the severity, the
 
 | Command | Runs | Scans |
 | --- | --- | --- |
-| `task ci:staged` | On each commit, through the pre-commit hook. It checks `dist/` and runs the scope tests first. | The skill folders of the staged files, and each wrapper that links to a changed upstream skill. Every skill when the staged files change `.skillspector-baseline.yaml` or `tools/skillspector/requirements.txt`. |
+| `task ci:staged` | On each commit, through the pre-commit hook. It checks `dist/` and `README.md`, and runs the script tests first. | The skill folders of the staged files, and each wrapper that links to a changed upstream skill. Every skill when the staged files change `.skillspector-baseline.yaml` or `tools/skillspector/requirements.txt`. |
 | `task ci` | By hand. CI runs the same scan on every pull request and on each push to `main`. | Every skill. |
 
 ## Fix or accept

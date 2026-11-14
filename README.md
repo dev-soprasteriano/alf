@@ -97,6 +97,8 @@ Not sure which skill fits? Run `/ask-alf`.
 
 ## Skills
 
+<!-- skills:start -->
+
 ### Software development lifecycle
 
 | Stage | Skills |
@@ -117,9 +119,11 @@ Not sure which skill fits? Run `/ask-alf`.
 | Work better with agents | `retro`, `writing-for-agents`, `wait-what` |
 | Hand over and ask | `handoff`, `to-questionnaire` |
 
+<!-- skills:end -->
+
 `dist/user-apm.yml` lists every skill.
 
-The agent also starts these skills by itself when a task fits: `code-review`, `codebase-design`, `diagnosing-bugs`, `domain-modeling`, `git-commit`, `grilling`, `pr`, `prototype`, `research`, `tdd`, `wizard`, `writing-for-agents`. Every other skill runs only when you type it.
+A skill whose `SKILL.md` sets `disable-model-invocation: true` runs only when you type it. The agent also starts the other skills by itself when a task fits.
 
 ## How a skill reaches you
 
@@ -138,7 +142,7 @@ Wrapped skills come from two upstreams:
 | [mattpocock/skills](https://github.com/mattpocock/skills) | All wrapped skills except `show-me` | MIT, © 2026 Matt Pocock |
 | [humanlayer/skills](https://github.com/humanlayer/skills) | `show-me` | MIT, © 2026 HumanLayer |
 
-`ci-doctor`, `git-commit` and `repo-doctor` are in-house. Each `src/upstream/<upstream>/PIN.md` records the commit of every upstream skill. [GLOSSARY.md](GLOSSARY.md) defines each term.
+[NOTICE.md](NOTICE.md) lists the skills from each upstream and the in-house skills. Each `src/upstream/<upstream>/PIN.md` records the commit of every upstream skill. [GLOSSARY.md](GLOSSARY.md) defines each term.
 
 ## Update
 
