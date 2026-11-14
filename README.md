@@ -117,7 +117,7 @@ Not sure which skill fits? Run `/ask-alf`.
 | Work better with agents | `retro`, `writing-for-agents`, `wait-what` |
 | Hand over and ask | `handoff`, `to-questionnaire` |
 
-`dist/user-apm.yml` lists every skill.
+`dist/user-apm.yml` lists every skill. [docs/harness-equivalents.md](docs/harness-equivalents.md) says when to run a skill and when to run a built-in command of Claude Code or Copilot CLI. [docs/agent-instructions.md](docs/agent-instructions.md) lists the rules that belong in your repo's instruction file, such as the commit message format.
 
 The agent also starts these skills by itself when a task fits: `code-review`, `codebase-design`, `diagnosing-bugs`, `domain-modeling`, `git-commit`, `grilling`, `pr`, `prototype`, `research`, `tdd`, `wizard`, `writing-for-agents`. Every other skill runs only when you type it.
 
