@@ -21,7 +21,7 @@ The checks need the platform's CLI, logged in. Applying settings needs admin rig
    - repository settings, and policy set above the repository, such as the organisation, group or enterprise. When policy above the repository can't be read, say so once in the report, and use the repository's value;
    - every branch rule that applies to the default branch, in every rule mechanism the platform has;
    - the CI config and the dependency update config, as they are on the default branch;
-   - every check result, of every kind the platform records, on the head commit of each pull request merged since the CI config last changed, up to the last 10;
+   - every check result, of every kind the platform records, on the head commit of each pull request merged since the CI config last changed, including the pull request that changed it, up to the last 10;
    - automation that pushes to the default branch, or opens or approves pull requests;
    - everyone who can push to the repository, other than the user, admins and team members included.
    - Done when every advice item has a current value, or `unknown` with the reason.
@@ -69,6 +69,7 @@ Use the platform's own names for these settings.
    - Suggest a check when the CI config runs it on every pull request, with no path or branch filter, and it reported on every pull request read in step 2. List the other checks with how often they reported. Keep every required check that still qualifies.
    - A required check that never reports blocks every pull request.
    - With no CI, mark it `later`: it fits once the repository has CI.
+   - Where the platform gates merges on the whole pipeline rather than on named checks, such as a "pipeline must succeed" setting or a build validation policy, turn that gate on for the default branch.
 6. **Tested as merged.** A pull request is tested against the current default branch before it merges: the branch must be up to date, or the platform's merge queue runs the checks. Why: what was tested is what merges. When item 5 requires no check, mark it `later`.
 7. **No bypass.** The rules apply to everyone, admins and bots included. Why: there is one path to the default branch. Automation that pushes to the default branch conflicts with this rule. Report it, and let the user choose.
 

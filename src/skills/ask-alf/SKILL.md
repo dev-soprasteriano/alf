@@ -14,8 +14,8 @@ In this repo the setup skill is `/setup-alf`. Wherever the instructions above na
 
 ## Repository and CI setup
 
-Two more standalone skills, both run by hand in a clone of the repository:
+Two more skills off the main flow, both run by hand in a clone of the repository:
 
-- **No CI pipeline, or one with gaps** → **`/ci-doctor`**. It checks the pipeline against alf's advice (build, test, lint, scans, a run on every pull request), and sets one up where there is none.
-- **Merge rules and repository settings** → **`/repo-doctor`**. It checks the hosting platform's settings, such as pull requests only, required checks and secret scanning. Run it after `/ci-doctor`, so the checks it makes required exist.
+- **No CI pipeline, or one with gaps** → **`/ci-doctor`**. It checks the pipeline against alf's advice, and sets one up where there is none.
+- **Merge rules and repository settings** → **`/repo-doctor`**. It checks the hosting platform's settings, such as required checks and secret scanning. When both apply, run `/ci-doctor` first: `/repo-doctor` can only require checks that already exist.
 <!-- overlay:end -->
