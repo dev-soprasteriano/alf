@@ -2,6 +2,8 @@ name: ask-alf
 version: 1.0.0
 dependencies:
   apm:
+    - dev-soprasteriano/alf/dist/skills/ci-doctor
+    - dev-soprasteriano/alf/dist/skills/repo-doctor
     - dev-soprasteriano/alf/dist/skills/grill-with-docs
     - dev-soprasteriano/alf/dist/skills/grill-me
     - dev-soprasteriano/alf/dist/skills/grilling
