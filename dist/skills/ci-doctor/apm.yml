@@ -1,0 +1,5 @@
+name: ci-doctor
+version: 1.0.0
+dependencies:
+  apm:
+    - dev-soprasteriano/alf/dist/skills/repo-doctor

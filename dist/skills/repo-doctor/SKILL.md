@@ -21,7 +21,7 @@ The checks need the platform's CLI, logged in. Applying settings needs admin rig
    - repository settings, and policy set above the repository, such as the organisation, group or enterprise. When policy above the repository can't be read, say so once in the report, and use the repository's value;
    - every branch rule that applies to the default branch, in every rule mechanism the platform has;
    - the CI config and the dependency update config, as they are on the default branch;
-   - every check result, of every kind the platform records, on the head commit of each pull request merged since the CI config last changed, up to the last 10;
+   - every check result, of every kind the platform records, on the head commit of each pull request merged since the CI config last changed, including the pull request that changed it, up to the last 10;
    - automation that pushes to the default branch, or opens or approves pull requests;
    - everyone who can push to the repository, other than the user, admins and team members included.
    - Done when every advice item has a current value, or `unknown` with the reason.
@@ -59,14 +59,17 @@ Use the platform's own names for these settings.
 
 ### Branch and merge rules
 
-1. **Pull requests only.** Every change to the default branch goes through a pull request. Direct pushes, force pushes and deleting the branch are blocked. Why: every change gets a review and a CI run, and nobody can rewrite or delete the history.
+1. **Pull requests only.** Every change to the default branch goes through a pull request. Direct pushes and force pushes are blocked. Why: every change gets a review and a CI run, and nobody can rewrite the history.
+   - Do not suggest `Restrict updates` (the `update` rule). With no bypass, it blocks pull request merges too.
 2. **Independent approval.** A pull request needs one approval, and the latest push must be approved by someone other than the person who pushed it. CI bots can't approve. Why: nobody merges code that only they have seen. This fits a repository with more than one contributor. When nobody but the user can push, mark it `later`.
+   - Do not suggest turning off the setting that lets Actions create and approve pull requests while a workflow opens pull requests. Mark it `later`, and say that the workflow needs its own token first.
 3. **Squash merges only.** Squash is the only merge method. The commit title is the pull request title, and the body is empty. Why: the default branch gets one commit per change, so each change reads and reverts as one unit.
 4. **Short-lived branches.** The source branch is deleted on merge. Authors can update a pull request branch from the default branch, and set a pull request to merge itself once it passes. Why: a branch lives only as long as its change.
 5. **CI gate.** The checks CI runs on every pull request must pass before merge. Each required check accepts results only from the CI system that runs it. Why: a broken change stays out of the default branch, and nobody can post a passing result by hand.
    - Suggest a check when the CI config runs it on every pull request, with no path or branch filter, and it reported on every pull request read in step 2. List the other checks with how often they reported. Keep every required check that still qualifies.
    - A required check that never reports blocks every pull request.
    - With no CI, mark it `later`: it fits once the repository has CI.
+   - Where the platform gates merges on the whole pipeline rather than on named checks, such as a "pipeline must succeed" setting or a build validation policy, turn that gate on for the default branch.
 6. **Tested as merged.** A pull request is tested against the current default branch before it merges: the branch must be up to date, or the platform's merge queue runs the checks. Why: what was tested is what merges. When item 5 requires no check, mark it `later`.
 7. **No bypass.** The rules apply to everyone, admins and bots included. Why: there is one path to the default branch. Automation that pushes to the default branch conflicts with this rule. Report it, and let the user choose.
 
