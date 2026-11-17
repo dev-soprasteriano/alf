@@ -27,6 +27,10 @@ fingerprints:
     that show their input. The template uses those for public values only. Secret
     prompts use ask_secret, which hides input and does not show the saved value. Changes
     no privileges.
+- hash: sha256:15c11122286b0164907da0c5fa1ec44c51917c752eb730c37a1a9366ede2cb84
+  rule_id: LP3
+  file: SKILL.md
+  reason: Upstream skill declares no allowed-tools list. Accepted as is.
 - hash: sha256:cbfe995ca39bf2204f2a68ab32c520ccde9b1ad827f5d186c66ef9dbd91203ca
   rule_id: EA2
   file: SKILL.md
