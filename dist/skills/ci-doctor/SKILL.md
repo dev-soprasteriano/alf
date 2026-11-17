@@ -22,7 +22,6 @@ The skill runs with the access of the person who runs it. It does not check acce
    - the stack, as the agent reads it from the repository's files: languages, package managers, and build, test and lint commands, whether or not CI runs them;
    - the local command and the pre-commit hook, if the repository has them;
    - the checks that ran on each of the last 10 pull requests, open or closed, opened since the CI config last changed, with their run times, from the CLI. A check has a result on a pull request when its run finishes, passed or failed, on that pull request's head commit. A skipped run has no result, and neither does a check from a config no longer on the default branch;
-   - every run on push to the default branch, and whether it repeats a pull request run on the same content;
    - the platform's settings for secret detection, push protection and dependency vulnerability alerts. A capability counts wherever it runs: a platform feature and a CI job both meet the advice;
    - the default permission of the CI token, any rule that rejects unpinned CI components, and the checks the default branch already requires.
    - Done when every advice item has a current value, or `unknown` with the reason and the error.
@@ -69,7 +68,7 @@ Use the platform's and the CI system's own names for checks, settings and config
 
 ### Pipeline
 
-1. **Runs on every PR push.** The pipeline runs on each push to a pull request. A run on push to the default branch repeats the pull request run on the same content. The report shows that as a row, with removing the trigger as the suggested value. The person decides: remove the trigger, or ignore the row. Why: every change is checked once, before it merges, and a second run adds time without adding a check.
+1. **Runs on every PR push.** The pipeline runs on each push to a pull request. Why: every change is checked before it merges.
 2. **Build, test and lint.** The pipeline builds the project, runs its tests and lints it, each with the command the stack already has, and each as its own named check. Stages run in parallel where the CI system allows. Why: a broken build, a failing test and a lint error each stop the change, a failing check names its cause, and parallel stages finish sooner.
    - A stack with nothing to build, such as an interpreted project with no compile step: mark the build row `n/a`.
    - A repository with no tests, or no linter set up: mark that row `later`, and say what has to exist first. Writing tests and picking a linter are the team's work.
