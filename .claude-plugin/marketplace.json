@@ -1,0 +1,12 @@
+{
+  "name": "alf",
+  "owner": { "name": "dev-soprasteriano" },
+  "metadata": { "description": "Agent skills for the core of the software development lifecycle." },
+  "plugins": [
+    {
+      "name": "alf",
+      "source": "./dist",
+      "description": "Every alf skill, from setup to ship."
+    }
+  ]
+}

@@ -3,7 +3,7 @@
 <h1><img src="docs/assets/banner.svg" alt="alf: Agentic Lifecycle Foundation" width="720"></h1>
 
 **A sound base of agent skills for the core of the software development lifecycle.**<br>
-Install it into Claude Code or GitHub Copilot through [APM](https://microsoft.github.io/apm/), and your team starts from the same skills.
+Install it into Claude Code or GitHub Copilot through [APM](https://microsoft.github.io/apm/) or as a plugin, and your team starts from the same skills.
 
 [![CI](https://github.com/dev-soprasteriano/alf/actions/workflows/ci.yml/badge.svg)](https://github.com/dev-soprasteriano/alf/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
@@ -15,9 +15,11 @@ Install it into Claude Code or GitHub Copilot through [APM](https://microsoft.gi
 - **Built for the full development lifecycle.** Start a project, plan it, build it, fix it, review it and ship it, with skills for each step.
 - **Reviewed and scanned.** Each skill records its upstream commit. Every change passes a security scan and a human review.
 - **You control updates.** Pin a commit, and the team runs the same skills until someone moves the pin.
-- **Flexible.** Install every skill from one manifest, or only the skills you need.
+- **Flexible.** The plugin installs every skill. APM installs every skill or only the ones you pick.
 
 ## Install
+
+### With APM
 
 Install APM first: `brew install apm`.
 
@@ -51,6 +53,35 @@ grill-with-docs
 **Pin a set.** Add `#<commit sha>` to every entry, including the skills it calls. A called skill without a pin comes from the default branch.
 
 **Turn off a skill.** Delete its line from your `apm.yml`, then run `apm install`. For the global file at `~/.apm/apm.yml`, run `apm install -g`.
+
+### As a plugin
+
+The plugin installs every skill.
+
+**Claude Code.** Run these in a session. `/plugin install` opens the plugin's details, where you choose a scope:
+
+```text
+/plugin marketplace add dev-soprasteriano/alf
+/plugin install alf@alf
+```
+
+**Copilot CLI.** Run these in your shell:
+
+```sh
+copilot plugin marketplace add dev-soprasteriano/alf
+copilot plugin install alf@alf
+```
+
+**Team.** Run both lines in the repo, then commit `.claude/settings.json`. Each teammate runs both lines once in their clone:
+
+```sh
+claude plugin marketplace add dev-soprasteriano/alf --scope project
+claude plugin install alf@alf --scope project
+```
+
+**Pin.** Add `#<commit sha>` to the marketplace source: `/plugin marketplace add dev-soprasteriano/alf#<commit sha>`. To move the pin, remove the marketplace, add it again with the new SHA, and install the plugin again.
+
+**Pick one channel.** With both APM and the plugin, Claude Code loads every skill twice, once as `alf:<skill>`. Copilot CLI keeps the APM copy and ignores the plugin copy, so the plugin never updates.
 
 ## First run
 
@@ -133,6 +164,7 @@ flowchart LR
     wrapper --> bundle["Bundle<br>dist/skills/"]
     inhouse["In-house skill<br>src/skills/"] --> bundle
     bundle -->|"scan + review"| install(["apm install"])
+    bundle -->|"scan + review"| plugin(["/plugin install"])
 ```
 
 Wrapped skills come from two upstreams:
@@ -146,7 +178,23 @@ Wrapped skills come from two upstreams:
 
 ## Update
 
-Skills follow the default branch unless you pin them. Run `apm update -g` for one user, or `apm update` for a team, to move to the newest commit. Pin a commit to keep a skill fixed until you change the pin.
+**APM.** Skills follow the default branch unless you pin them. Run `apm update -g` for one user, or `apm update` for a team, to move to the newest commit. Pin a commit to keep a skill fixed until you change the pin.
+
+**Plugin in Claude Code.** Refresh the marketplace, then update the plugin:
+
+```sh
+claude plugin marketplace update alf
+claude plugin update alf@alf
+```
+
+Or turn on auto-update: run `/plugin`, open the **Marketplaces** tab, select `alf`, and choose **Enable auto-update**.
+
+**Plugin in Copilot CLI.** Refresh the marketplace, then update the plugin:
+
+```sh
+copilot plugin marketplace update alf
+copilot plugin update alf
+```
 
 ## Maintainers
 

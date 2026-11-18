@@ -9,6 +9,7 @@ src/
 ├── skills/                  # in-house skills and wrappers: edit here
 ├── upstream/                # copies of upstream skills: change with scripts/update-upstream.sh
 └── skill-dependencies.txt   # the skills each skill calls or mentions
+.claude-plugin/              # marketplace.json: hand-written, one plugin, alf, at ./dist
 dist/                        # generated bundles: never edit
 tools/                       # CI tools, pinned with hashes
 scripts/                     # build, update and CI scripts
@@ -32,9 +33,12 @@ flowchart LR
     deps[src/skill-dependencies.txt] --> build
     build --> bundles["dist/skills/<br>one bundle per skill"]
     build --> manifest[dist/user-apm.yml]
+    build --> plugin["dist/.claude-plugin/plugin.json"]
 ```
 
 After any change under `src/`, run `task build-apm` and commit `dist/` with it. `task ci` fails when `dist/` is stale.
+
+Check the plugin with `claude plugin validate .` and `claude plugin validate dist`, and try it with `claude --plugin-dir dist`. Expect a warning about the missing `version`, and one about the missing icon for `dist`. Leave `version` out: plugin users then get every commit to `main`.
 
 ## Change a skill
 
