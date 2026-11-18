@@ -7,7 +7,7 @@ tasks:
       - scripts/update-upstream.sh update {{if .DRY_RUN}}--dry-run {{end}}{{if .REF}}--ref {{.REF}} {{end}}{{if .SKILL}}{{.SKILL}}{{end}}
 
   build-apm:
-    desc: Build the APM skill bundles and dist/user-apm.yml from src/skills and src/upstream. Fails when README.md differs from src/. Commit dist/ with the change.
+    desc: Build the APM skill bundles, dist/user-apm.yml and the plugin manifest dist/.claude-plugin/plugin.json from src/skills and src/upstream. Fails when README.md differs from src/. Commit dist/ with the change.
     cmds:
       - scripts/build-apm.sh
 

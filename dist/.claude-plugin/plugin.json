@@ -1,0 +1,8 @@
+{
+  "name": "alf",
+  "description": "Agent skills for the core of the software development lifecycle.",
+  "author": { "name": "dev-soprasteriano" },
+  "homepage": "https://github.com/dev-soprasteriano/alf",
+  "repository": "https://github.com/dev-soprasteriano/alf",
+  "license": "MIT"
+}
