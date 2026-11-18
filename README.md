@@ -79,7 +79,7 @@ claude plugin marketplace add dev-soprasteriano/alf --scope project
 claude plugin install alf@alf --scope project
 ```
 
-**Pin.** Add `#<commit sha>` to the marketplace source: `/plugin marketplace add dev-soprasteriano/alf#<commit sha>`. Claude Code takes a SHA from version 2.1.324. Copilot CLI documents `#<ref>` for a branch or tag only. To move the pin, remove the marketplace, add it again with the new SHA, and install the plugin again.
+**Pin.** Add `#<commit sha>` to the marketplace source: `/plugin marketplace add dev-soprasteriano/alf#<commit sha>`. To move the pin, remove the marketplace, add it again with the new SHA, and install the plugin again.
 
 **Pick one channel.** With both APM and the plugin, Claude Code loads every skill twice, once as `alf:<skill>`. Copilot CLI keeps the APM copy and ignores the plugin copy, so the plugin never updates.
 
