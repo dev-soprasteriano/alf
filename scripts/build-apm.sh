@@ -13,6 +13,7 @@ UPSTREAM_DIR="$REPO_DIR/src/upstream"
 SKILLS_DIR="$REPO_DIR/src/skills"
 DEPS_FILE="$REPO_DIR/src/skill-dependencies.txt"
 DIST_DIR="$REPO_DIR/dist"
+README="$REPO_DIR/README.md"
 ALF_REPO="dev-soprasteriano/alf"
 OVERLAY_START='<!-- overlay:start -->'
 OVERLAY_END='<!-- overlay:end -->'
@@ -188,12 +189,29 @@ check_references() {  # out
   fi
 }
 
+check_readme() {
+  local tables skill name pin url
+  tables="$(sed -n '/<!-- skills:start -->/,/<!-- skills:end -->/p' "$README")"
+  for skill in $(list_skills); do
+    grep -q -F "\`$skill\`" <<< "$tables" || die "README.md does not list \`$skill\` in the skills tables"
+  done
+  for name in $(grep -o '`[^`]*`' <<< "$tables" | tr -d '`'); do
+    [[ -f "$SKILLS_DIR/$name/SKILL.md" ]] || die "README.md lists \`$name\` in the skills tables, which is not a skill"
+  done
+  for pin in "$UPSTREAM_DIR"/*/PIN.md; do
+    url="$(sed -n '1s/^Upstream: //p' "$pin")"
+    grep -q -F "$url" "$README" || die "README.md does not credit the upstream $url"
+  done
+}
+
 mode=build
 case "${1:-}" in
   "") ;;
   --check) mode=check ;;
   *) usage ;;
 esac
+
+check_readme
 
 OUT="$WORK/out"
 mkdir -p "$OUT/skills"
