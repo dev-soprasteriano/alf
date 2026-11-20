@@ -9,4 +9,6 @@
 | `schemas/jsf-0.82.schema.json` | https://cyclonedx.org/schema/jsf-0.82.schema.json (the CycloneDX schema references it) | `2faf5eb3651f2ae5f46091a131770d8d847bbd121139d19c85fc7051bfa58c46` |
 | `schemas/spdx-3.0.1.schema.json` | https://spdx.org/schema/3.0.1/spdx-json-schema.json | `582c64e809d5b3ef9bd0c4de13a32391b47b0284a3e8d199569fb96f649234b1` |
 
-The CycloneDX files come from the CycloneDX specification repository, which is Apache-2.0. The SPDX file comes from the SPDX specification repository. GitHub reports no license for that repository, so confirm its license before a release.
+The CycloneDX files come from the CycloneDX specification repository, which is Apache-2.0. Its license text is in `schemas/LICENSE-APACHE-2.0`.
+
+The SPDX file comes from the SPDX specification repository. That repository's LICENSE file names three licenses: the Community Specification License 1.0 for the specification, CC-BY-3.0 for older portions, and MIT for one script. Which of them applies to this schema file is not settled. The full text is in `schemas/LICENSE-SPDX`. Confirm the license with legal before a release.
