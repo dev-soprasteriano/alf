@@ -17,8 +17,8 @@ CHECK=.tools/check-jsonschema/bin/check-jsonschema
 PIP_AUDIT=.tools/pip-audit/bin/pip-audit
 SPDX_SCHEMA_URL="${SBOM_SPDX_SCHEMA_URL:-https://spdx.org/schema/3.0.1/spdx-json-schema.json}"
 SPDX_SCHEMA_SHA256="${SBOM_SPDX_SCHEMA_SHA256:-582c64e809d5b3ef9bd0c4de13a32391b47b0284a3e8d199569fb96f649234b1}"
-# The licenses a shipped bundle may carry.
-SHIP_ALLOWED="MIT Apache-2.0 BSD-2-Clause BSD-3-Clause ISC Unlicense CC0-1.0 PSF-2.0 0BSD Zlib"
+# The licenses a shipped bundle may carry. Add one here, with review, when a skill needs it.
+SHIP_ALLOWED="MIT"
 TAB=$(printf '\t')
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT

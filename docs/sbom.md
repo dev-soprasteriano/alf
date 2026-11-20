@@ -28,7 +28,7 @@ CI uploads `sbom/` as the workflow artifact `sbom`, including when the check fai
 | A bundle license is not on `SHIP_ALLOWED`, or is not recognized (`UNKNOWN`) | Yes. Licenses cannot be accepted in the baseline. |
 | A known vulnerability in a build tool's pin | Yes, unless accepted |
 
-`SHIP_ALLOWED` is set in `scripts/build-sbom.sh`: MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC, Unlicense, CC0-1.0, PSF-2.0, 0BSD and Zlib. An expression such as `MIT OR Apache-2.0` passes only when every license in it is on the list.
+`SHIP_ALLOWED` is set in `scripts/build-sbom.sh`, and it allows MIT only. Add a license there, with review, when a skill needs it. An expression such as `MIT OR Apache-2.0` passes only when every license in it is on the list.
 
 Bundles get no vulnerability check. A Markdown skill has no package version to match against an advisory.
 
