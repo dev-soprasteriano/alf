@@ -29,11 +29,3 @@ CI uploads `sbom/` as the workflow artifact `sbom`, including when the check fai
 `SHIP_ALLOWED` is set in `scripts/build-sbom.sh`, and it allows MIT only. Add a license there, with review, when a skill needs it. An expression such as `MIT OR Apache-2.0` passes only when every license in it is on the list.
 
 Licenses and schemas are decided in code. No finding can be accepted.
-
-## Limits
-
-- The SBOM covers pull requests only. Pushes to `main` produce no SBOM.
-- The job does not check for known vulnerabilities. Dependabot alerts on the build tools' pins.
-- Build tools are not in the SBOM.
-- The CycloneDX schemas are vendored. The SPDX schema is fetched from spdx.org at check time and must match `SPDX_SCHEMA_SHA256` in `scripts/build-sbom.sh`. Sources are listed in `tools/check-jsonschema/SOURCES.md`.
-- A bundle's license is read from the first line of its `LICENSE` file. Only the names that `map_license` lists are recognized.
