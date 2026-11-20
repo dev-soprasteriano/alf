@@ -7,6 +7,11 @@ set -eu
 HERE=$(cd "$(dirname "$0")" && pwd)
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
+# The SPDX schema is fetched by URL. The tests use a fixture file with its own SHA-256, so they run offline.
+printf '{"title": "fixture"}\n' > "$WORK/spdx-schema.json"
+SBOM_SPDX_SCHEMA_URL="file://$WORK/spdx-schema.json"
+SBOM_SPDX_SCHEMA_SHA256=$(if command -v sha256sum > /dev/null 2>&1; then sha256sum "$WORK/spdx-schema.json" | cut -d ' ' -f 1; else shasum -a 256 "$WORK/spdx-schema.json" | cut -d ' ' -f 1; fi)
+export SBOM_SPDX_SCHEMA_URL SBOM_SPDX_SCHEMA_SHA256
 failures=0
 UPSTREAM_COMMIT=1111111111111111111111111111111111111111
 
@@ -57,7 +62,7 @@ fail() {  # name, detail
 make_fixture() {  # dir
   dir="$1"
   mkdir -p "$dir/scripts" "$dir/src/upstream/example" "$dir/dist/skills/wrapped" "$dir/dist/skills/inhouse"
-  cp "$HERE/build-sbom.sh" "$HERE/sbom-cyclonedx.jq" "$dir/scripts/"
+  cp "$HERE/build-sbom.sh" "$HERE/sbom-cyclonedx.jq" "$HERE/sbom-spdx.jq" "$dir/scripts/"
   mkdir -p "$dir/.tools/check-jsonschema/bin" "$dir/.tools/pip-audit/bin"
   cp "$STUB_CHECK" "$dir/.tools/check-jsonschema/bin/check-jsonschema"
   cp "$STUB_AUDIT" "$dir/.tools/pip-audit/bin/pip-audit"
@@ -134,6 +139,9 @@ head_sha=$(git -C "$d" rev-parse HEAD)
 unset STUB_SCHEMA_FAIL STUB_AUDIT_FAIL
 run_in "$d"
 expect_code "happy path exits 0" 0 "$code"
+if [ ! -f "$d/sbom/alf.spdx.json" ]; then
+  fail "happy: SPDX file is written" "sbom/alf.spdx.json is missing"
+fi
 expect_json "happy: wrapped bundle has its upstream commit" "$d" \
   '.components[] | select(.name == "wrapped") | .version == "1111111111111111111111111111111111111111"'
 expect_json "happy: in-house bundle has the ALF commit" "$d" \
@@ -224,6 +232,17 @@ expect_code "pip-audit error exits 1" 1 "$code"
 case "$out" in
   *"pip-audit failed"*) ;;
   *) fail "pip-audit error is reported" "$out" ;;
+esac
+
+# Case 10: an SPDX schema that does not match its pinned SHA-256 is a generation error.
+d="$WORK/bad-schema-hash"
+make_fixture "$d"
+code=0
+out=$(cd "$d" && SBOM_SPDX_SCHEMA_SHA256=0000 sh scripts/build-sbom.sh 2>&1) || code=$?
+expect_code "schema hash mismatch exits 1" 1 "$code"
+case "$out" in
+  *"does not match"*) ;;
+  *) fail "schema hash mismatch is reported" "$out" ;;
 esac
 
 if [ "$failures" -gt 0 ]; then

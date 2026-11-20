@@ -57,7 +57,7 @@ tasks:
       - sh scripts/apm-audit-ci.sh{{if .STAGED}} --staged{{end}}
 
   sbom:
-    desc: Generate the SBOM in sbom/ (CycloneDX) and check it. Checks the schema, the licenses and known vulnerabilities. See docs/sbom.md.
+    desc: Generate the SBOM in sbom/ (CycloneDX and SPDX) and check it. Checks the schemas, the licenses and known vulnerabilities. See docs/sbom.md.
     preconditions: *jq
     cmds:
       - sh scripts/install-tools.sh apm skillspector uv check-jsonschema pip-audit
