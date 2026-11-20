@@ -9,6 +9,7 @@ src/
 ├── skills/                  # in-house skills and wrappers: edit here
 ├── upstream/                # copies of upstream skills: change with scripts/update-upstream.sh
 └── skill-dependencies.txt   # the skills each skill calls or mentions
+.claude-plugin/              # marketplace.json: hand-written, one plugin, alf, at ./dist
 dist/                        # generated bundles: never edit
 tools/                       # CI tools, pinned with hashes
 scripts/                     # build, update and CI scripts
@@ -32,9 +33,12 @@ flowchart LR
     deps[src/skill-dependencies.txt] --> build
     build --> bundles["dist/skills/<br>one bundle per skill"]
     build --> manifest[dist/user-apm.yml]
+    build --> plugin["dist/.claude-plugin/plugin.json"]
 ```
 
 After any change under `src/`, run `task build-apm` and commit `dist/` with it. `task ci` fails when `dist/` is stale.
+
+Check the plugin with `claude plugin validate .` and `claude plugin validate dist`, and try it with `claude --plugin-dir dist`. Expect a warning about the missing `version`, and one about the missing icon for `dist`. Leave `version` out: plugin users then get every commit to `main`.
 
 ## Change a skill
 
@@ -48,6 +52,7 @@ After any change under `src/`, run `task build-apm` and commit `dist/` with it. 
 
 Then build and commit.
 
+- **README.** `task build-apm` fails when `README.md` differs from `src/`, and names the difference. [AGENTS.md](../AGENTS.md) lists the rules.
 - **Dependencies.** If a skill calls or names other skills, list them in `src/skill-dependencies.txt`. The build fails on any unlisted name.
 - **Add an upstream skill.** `<path>` is the skill folder in the upstream repo. `=<wrapper>` sets the wrapper name when it differs from the folder name. The script stops if the upstream has no LICENSE on its default branch. Check the skill's LICENSE and linked skills, as [AGENTS.md](../AGENTS.md) describes. Add any missing skill the same way.
 - **Extend.** The update script keeps the overlay. For an example, see `src/skills/ask-alf/SKILL.md`.
@@ -94,7 +99,7 @@ The SkillSpector pull request carries over each accepted finding that the new ve
 
 | CI check | Fails when | Fix |
 | --- | --- | --- |
-| `build` | `dist/` is stale, or a scope test fails | Run `task build-apm` and commit `dist/`. |
+| `build` | `dist/` is stale, `README.md` differs from `src/`, or a script test fails | Run `task build-apm`, fix what it reports, and commit. |
 | `skillspector` | A skill has an active MEDIUM, HIGH or CRITICAL finding | [docs/skillspector.md](skillspector.md) |
 | `apm-audit` | A file in `dist/` has hidden Unicode at WARNING or CRITICAL | [docs/apm-audit.md](apm-audit.md) |
 

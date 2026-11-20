@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Builds one self-contained APM skill bundle per skill into dist/skills/, and dist/user-apm.yml,
-# the manifest a single user copies to ~/.apm/apm.yml. Run by `task build-apm`.
+# Builds one self-contained APM skill bundle per skill into dist/skills/, dist/user-apm.yml,
+# the manifest a single user copies to ~/.apm/apm.yml, and dist/.claude-plugin/plugin.json,
+# which makes dist/ a Claude Code and Copilot CLI plugin. Run by `task build-apm`.
 # `--check` builds into a temp folder and fails if dist/ differs from it. CI runs it.
 # Never edit dist/ by hand. See AGENTS.md.
 #
@@ -13,6 +14,7 @@ UPSTREAM_DIR="$REPO_DIR/src/upstream"
 SKILLS_DIR="$REPO_DIR/src/skills"
 DEPS_FILE="$REPO_DIR/src/skill-dependencies.txt"
 DIST_DIR="$REPO_DIR/dist"
+README="$REPO_DIR/README.md"
 ALF_REPO="dev-soprasteriano/alf"
 OVERLAY_START='<!-- overlay:start -->'
 OVERLAY_END='<!-- overlay:end -->'
@@ -139,6 +141,20 @@ write_user_manifest() {  # out
   } > "$out/user-apm.yml"
 }
 
+# Writes dist/.claude-plugin/plugin.json, which makes dist/ the plugin alf for Claude Code and
+# Copilot CLI. It leaves out version: a version that is not bumped would block updates.
+write_plugin_manifest() {  # out
+  local out="$1" url="https://github.com/$ALF_REPO"
+  mkdir -p "$out/.claude-plugin"
+  {
+    printf '{\n  "name": "alf",\n'
+    printf '  "description": "Agent skills for the core of the software development lifecycle.",\n'
+    printf '  "author": { "name": "dev-soprasteriano" },\n'
+    printf '  "homepage": "%s",\n  "repository": "%s",\n' "$url" "$url"
+    printf '  "license": "MIT"\n}\n'
+  } > "$out/.claude-plugin/plugin.json"
+}
+
 # Fails when a skill names another skill by name and does not declare it, or declares a name
 # that is not a skill. Scans the built .md files of each skill.
 check_references() {  # out
@@ -188,6 +204,21 @@ check_references() {  # out
   fi
 }
 
+check_readme() {
+  local tables skill name pin url
+  tables="$(sed -n '/<!-- skills:start -->/,/<!-- skills:end -->/p' "$README")"
+  for skill in $(list_skills); do
+    grep -q -F "\`$skill\`" <<< "$tables" || die "README.md does not list \`$skill\` in the skills tables"
+  done
+  for name in $(grep -o '`[^`]*`' <<< "$tables" | tr -d '`'); do
+    [[ -f "$SKILLS_DIR/$name/SKILL.md" ]] || die "README.md lists \`$name\` in the skills tables, which is not a skill"
+  done
+  for pin in "$UPSTREAM_DIR"/*/PIN.md; do
+    url="$(sed -n '1s/^Upstream: //p' "$pin")"
+    grep -q -F "$url" "$README" || die "README.md does not credit the upstream $url"
+  done
+}
+
 mode=build
 case "${1:-}" in
   "") ;;
@@ -195,12 +226,15 @@ case "${1:-}" in
   *) usage ;;
 esac
 
+check_readme
+
 OUT="$WORK/out"
 mkdir -p "$OUT/skills"
 for skill in $(list_skills); do
   build_skill "$skill" "$OUT"
 done
 write_user_manifest "$OUT"
+write_plugin_manifest "$OUT"
 check_references "$OUT"
 
 if [[ "$mode" == check ]]; then

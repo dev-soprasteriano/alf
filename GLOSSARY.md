@@ -45,5 +45,9 @@ _Avoid_: Requirement, related skill
 The installable form of one skill, built from a wrapper and its upstream skill, or from an in-house skill. Teams install bundles.
 _Avoid_: Compiled result, build output
 
+**Plugin**:
+The form of alf that installs every bundle at once in Claude Code or Copilot CLI. `dist/` is the plugin.
+_Avoid_: Extension
+
 **Flow**:
 A path through the skills from one starting situation to a result. The main flow runs from idea to ship.
