@@ -1,6 +1,6 @@
 # Software bill of materials
 
-The `sbom` job in CI generates the SBOM of ALF's shipped bundles and checks it. It runs on every pull request. Run `task sbom` to do the same locally. `task ci` includes it.
+The `sbom` job checks the SBOM of ALF's shipped bundles on every pull request, and writes no files. The SBOM workflow (`.github/workflows/sbom.yml`) generates the SBOM on each push to `main`. Run `task sbom` to generate it locally, or `task ci:sbom` to check it the way the pull request does. `task ci` includes the check.
 
 ## Outputs
 
@@ -11,7 +11,7 @@ The `sbom` job in CI generates the SBOM of ALF's shipped bundles and checks it. 
 | `sbom/components.tsv` | The rows both SBOM files are built from |
 | `sbom/findings.tsv` | Every finding. The job fails when there is one. |
 
-CI uploads `sbom/` as the workflow artifact `sbom`, including when the check fails.
+The SBOM workflow uploads `sbom/` as the workflow artifact `sbom-<commit>` on each push to `main`. The pull request check uploads nothing.
 
 ## What is listed
 

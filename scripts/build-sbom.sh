@@ -3,13 +3,23 @@
 # (SPDX 3.0.1). Build tools are not in the SBOM. Checks each output against its schema, and checks that each bundle's
 # license is on SHIP_ALLOWED. Fails on a generation error, on an invalid file, and on a bundle license outside
 # SHIP_ALLOWED. See docs/sbom.md.
-# Usage: sh scripts/build-sbom.sh
+# Usage: sh scripts/build-sbom.sh          writes sbom/. The SBOM workflow runs this on each push to main.
+#        sh scripts/build-sbom.sh --check  runs the same checks and writes no files. The pull request check runs this.
 # Needs jq, curl, and the tool that `sh scripts/install-tools.sh check-jsonschema` installs.
 # SBOM_SPDX_SCHEMA_URL and SBOM_SPDX_SCHEMA_SHA256 override the SPDX schema source. The tests use them.
 set -eu
 
 cd "$(dirname "$0")/.."
 
+MODE=write
+case "${1:-}" in
+  "") ;;
+  --check) MODE=check ;;
+  *)
+    echo "usage: sh scripts/build-sbom.sh [--check]" >&2
+    exit 2
+    ;;
+esac
 OUT=sbom
 CHECK=.tools/check-jsonschema/bin/check-jsonschema
 SPDX_SCHEMA_URL="${SBOM_SPDX_SCHEMA_URL:-https://spdx.org/schema/3.0.1/spdx-json-schema.json}"
@@ -19,6 +29,9 @@ SHIP_ALLOWED="MIT"
 TAB=$(printf '\t')
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
+if [ "$MODE" = check ]; then
+  OUT="$WORK/sbom"
+fi
 
 if [ ! -x "$CHECK" ]; then
   echo "build-sbom: $CHECK not found. Install it with: sh scripts/install-tools.sh check-jsonschema" >&2
@@ -161,4 +174,8 @@ if [ -s "$FINDINGS" ]; then
   echo "build-sbom: failed. See docs/sbom.md for the checks." >&2
   exit 1
 fi
-echo "build-sbom: wrote $OUT/alf.cdx.json and $OUT/alf.spdx.json. Passed."
+if [ "$MODE" = check ]; then
+  echo "build-sbom: check passed. No files written."
+else
+  echo "build-sbom: wrote $OUT/alf.cdx.json and $OUT/alf.spdx.json. Passed."
+fi

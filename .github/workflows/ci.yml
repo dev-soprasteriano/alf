@@ -68,20 +68,13 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install CI tools
         run: sh scripts/install-tools.sh check-jsonschema
-      - name: Generate the SBOM and check it
-        run: sh scripts/build-sbom.sh
-      - name: Upload the SBOM
-        if: always()
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: sbom
-          path: sbom/
-          if-no-files-found: warn
+      - name: Check the SBOM would pass
+        run: sh scripts/build-sbom.sh --check
       - name: Explain a failed check
         if: failure()
         run: |
           {
             echo "### SBOM check failed"
             echo
-            echo "The log above lists each finding that is not accepted. [How to accept a finding](https://github.com/${{ github.repository }}/blob/${{ github.sha }}/docs/sbom.md)."
+            echo "The log above lists each finding. [How the SBOM check works](https://github.com/${{ github.repository }}/blob/${{ github.sha }}/docs/sbom.md)."
           } >> "$GITHUB_STEP_SUMMARY"

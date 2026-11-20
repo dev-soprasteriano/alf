@@ -1,0 +1,32 @@
+name: SBOM
+
+# Generates the SBOM of ALF's shipped bundles for each commit on main, and uploads it as a workflow artifact named
+# after the commit. The pull request check is the sbom job in ci.yml. It writes no files.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sbom-main
+  cancel-in-progress: false
+
+jobs:
+  sbom:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install CI tools
+        run: sh scripts/install-tools.sh check-jsonschema
+      - name: Generate the SBOM
+        run: sh scripts/build-sbom.sh
+      - name: Upload the SBOM
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: sbom-${{ github.sha }}
+          path: sbom/
+          if-no-files-found: error

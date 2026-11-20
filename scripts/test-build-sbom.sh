@@ -132,6 +132,28 @@ case "$out" in
   *) fail "schema hash mismatch is reported" "$out" ;;
 esac
 
+# Case 11: check mode passes and writes nothing to sbom/.
+d="$WORK/check-happy"
+make_fixture "$d"
+code=0
+out=$(cd "$d" && sh scripts/build-sbom.sh --check 2>&1) || code=$?
+expect_code "check mode passes" 0 "$code"
+if [ -e "$d/sbom" ]; then
+  fail "check mode writes no files" "sbom/ exists"
+fi
+
+# Case 12: check mode fails on a denied bundle license, and still writes nothing.
+d="$WORK/check-mpl"
+make_fixture "$d"
+printf 'Mozilla Public License 2.0 (MPL 2.0)\n\nCopyright (c) Example\n' > "$d/src/upstream/example/LICENSE"
+code=0
+out=$(cd "$d" && sh scripts/build-sbom.sh --check 2>&1) || code=$?
+expect_code "check mode fails on a denied license" 1 "$code"
+expect_line "check mode reports the denied license" "$(printf 'license\twrapped\t%s\tMPL-2.0' "$UPSTREAM_COMMIT")"
+if [ -e "$d/sbom" ]; then
+  fail "check mode writes no files on failure" "sbom/ exists"
+fi
+
 if [ "$failures" -gt 0 ]; then
   echo "test-build-sbom: $failures failure(s)" >&2
   exit 1
