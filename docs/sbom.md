@@ -1,6 +1,6 @@
 # Software bill of materials
 
-The `sbom` job in CI generates ALF's software bill of materials (SBOM) and checks it. It runs on every pull request. Run `task sbom` to do the same locally. `task ci` includes it.
+The `sbom` job in CI generates the SBOM of ALF's shipped bundles and checks it. It runs on every pull request. Run `task sbom` to do the same locally. `task ci` includes it.
 
 ## Outputs
 
@@ -16,8 +16,8 @@ CI uploads `sbom/` as the workflow artifact `sbom`, including when the check fai
 
 ## What is listed
 
-- **Bundles:** each folder in `dist/skills/`. A wrapper's version is the upstream commit in `src/upstream/*/PIN.md`. An in-house skill's version is the commit being built.
-- **Packages:** each package pinned in `tools/*/requirements.txt`. They are build-only. A package pinned by two tools is listed once, with both tools.
+- **Bundles:** each folder in `dist/skills/`. A wrapper's version is the upstream commit in `src/upstream/*/PIN.md`. An in-house skill's version is the commit being built. A bundle's license comes from its upstream `LICENSE`, or from the repository `LICENSE` for an in-house skill.
+- **Build tools are not listed.** They do not ship. Their pins in `tools/*/requirements.txt` are checked by pip-audit instead.
 
 ## What blocks
 
@@ -25,23 +25,22 @@ CI uploads `sbom/` as the workflow artifact `sbom`, including when the check fai
 | --- | --- |
 | The generator fails, or pip-audit fails | Yes |
 | An output fails its schema | Yes. It cannot be accepted. |
-| A license outside the allow list | Yes, unless accepted |
-| A license the script does not recognize, shown as `UNKNOWN` | Yes, unless accepted |
-| A known vulnerability in a pinned package | Yes, unless accepted |
+| A bundle license is not on `SHIP_ALLOWED`, or is not recognized (`UNKNOWN`) | Yes, unless accepted |
+| A known vulnerability in a build tool's pin | Yes, unless accepted |
 
-Two allow lists apply, both set in `scripts/build-sbom.sh`. Bundles, which ALF ships, must have a license on `SHIP_ALLOWED`: MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC, Unlicense, CC0-1.0, PSF-2.0, 0BSD and Zlib. Packages, which only CI runs, must have a license on `BUILD_ALLOWED`: the ship list plus MPL-2.0 and CNRI-Python. An expression such as `MIT OR Apache-2.0` passes only when every license in it is on the list.
-
-The script reads a package's license in this order: `License-Expression`, then `License`, then a `License ::` classifier. It reads a package from the installed `.tools/<tool>` venv. If the runner does not install the package, it reads the package from PyPI for the pinned version.
+`SHIP_ALLOWED` is set in `scripts/build-sbom.sh`: MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC, Unlicense, CC0-1.0, PSF-2.0, 0BSD and Zlib. An expression such as `MIT OR Apache-2.0` passes only when every license in it is on the list.
 
 Bundles get no vulnerability check. A Markdown skill has no package version to match against an advisory.
+
+Build tools get no license check. They are not shipped, so their licenses do not reach ALF's users.
 
 ## Fix a finding
 
 | Finding | Fix |
 | --- | --- |
-| A license outside the allow list | Replace the package, or accept it with a reason. |
-| `UNKNOWN` | Read the license file in the package. Accept it with a reason that names the license. |
-| A vulnerability | Raise the pin in `tools/<tool>/requirements.in`, run `task tools:lock TOOL=<tool>`, and commit both lock files. If no fix exists, accept it with a reason. |
+| A bundle license is not on `SHIP_ALLOWED` | Replace the skill, or accept it with a reason. |
+| `UNKNOWN` | Read the bundle's `LICENSE` file. If it names a license on the list, add the wording to `map_license` in `scripts/build-sbom.sh`. Otherwise accept it with a reason. |
+| A vulnerability in a build tool's pin | Raise the pin in `tools/<tool>/requirements.in`, run `task tools:lock TOOL=<tool>`, and commit both lock files. If no fix exists, accept it with a reason. |
 | A schema failure | Fix `scripts/sbom-cyclonedx.jq` or `scripts/sbom-spdx.jq`. |
 
 ## Accept a finding
@@ -53,10 +52,10 @@ Add an entry to `accepted` in `.sbom-baseline.json`. A finding passes only when 
   "accepted": [
     {
       "kind": "license",
-      "package": "example",
-      "version": "1.0.0",
+      "package": "example-skill",
+      "version": "1111111111111111111111111111111111111111",
       "license": "MPL-2.0",
-      "reason": "Used only at build time. Not shipped in dist/."
+      "reason": "Reviewed by the licensing contact. The file is unchanged from upstream."
     },
     {
       "kind": "vulnerability",
@@ -69,13 +68,14 @@ Add an entry to `accepted` in `.sbom-baseline.json`. A finding passes only when 
 }
 ```
 
-- `license` is the value the finding reports: the expression, or `UNKNOWN`.
-- `id` is the advisory ID that `sbom/findings.tsv` lists.
+- For a `license` entry, `package` is the bundle name and `version` is its commit. `license` is the value the finding reports.
+- For a `vulnerability` entry, `package` and `version` are the build tool's pinned package. `id` is the advisory ID that `sbom/findings.tsv` lists.
 - Every entry needs a non-empty `reason`. Reviewers check the reason in the pull request.
 - A schema finding cannot be accepted.
 
 ## Limits
 
 - The SBOM covers pull requests only. Pushes to `main` produce no SBOM.
-- Build-only packages carry `scope: excluded` in the CycloneDX file. SPDX 3.0.1 has no build-only relationship, so a build-only package says so in its `comment`.
+- Build tools are not in the SBOM. Dependabot also alerts on their pins.
 - The CycloneDX schemas are vendored. The SPDX schema is fetched from spdx.org at check time and must match `SPDX_SCHEMA_SHA256` in `scripts/build-sbom.sh`. Sources are listed in `tools/check-jsonschema/SOURCES.md`.
+- A bundle's license is read from the first line of its `LICENSE` file. Only the names that `map_license` lists are recognized.

@@ -67,7 +67,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install CI tools
-        run: sh scripts/install-tools.sh apm skillspector uv check-jsonschema pip-audit
+        run: sh scripts/install-tools.sh check-jsonschema pip-audit
       - name: Generate the SBOM and check it
         run: sh scripts/build-sbom.sh
       - name: Upload the SBOM

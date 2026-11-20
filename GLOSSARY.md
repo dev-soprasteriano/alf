@@ -55,9 +55,9 @@ A path through the skills from one starting situation to a result. The main flow
 ## Bill of materials
 
 **SBOM**:
-The machine-readable list of every component in ALF, both shipped and build-time.
+The machine-readable list of the components ALF ships.
 _Avoid_: BOM, inventory
 
 **Component**:
-One entry in the SBOM: a Bundle, or a package pinned in `tools/*/requirements.txt`.
+One entry in the SBOM: a Bundle.
 _Avoid_: Module, part

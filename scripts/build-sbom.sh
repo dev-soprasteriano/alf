@@ -1,13 +1,12 @@
 #!/bin/sh
-# Generates the SBOM for ALF in sbom/, then checks it. Writes sbom/alf.cdx.json (CycloneDX 1.6) and
-# sbom/alf.spdx.json (SPDX 3.0.1). The CycloneDX schema is in tools/check-jsonschema/schemas/. The SPDX schema
-# is fetched at check time and must match SPDX_SCHEMA_SHA256. It is not kept in the repo.
-# A bundle license must be on SHIP_ALLOWED. A package license must be on BUILD_ALLOWED. pip-audit checks each
-# tools/<tool>/requirements.txt for known vulnerabilities. Fails on a generation error, on an invalid file,
-# and on each finding that .sbom-baseline.json does not accept with a reason. See docs/sbom.md.
+# Generates the SBOM for ALF's shipped bundles in sbom/: sbom/alf.cdx.json (CycloneDX 1.6) and sbom/alf.spdx.json
+# (SPDX 3.0.1). Build tools are not in the SBOM. Checks each output against its schema, checks that each bundle's
+# license is on SHIP_ALLOWED, and runs pip-audit on each tools/<tool>/requirements.txt. Fails on a generation error,
+# on an invalid file, on a bundle license outside SHIP_ALLOWED, and on each finding that .sbom-baseline.json does not
+# accept with a reason. See docs/sbom.md.
 # Usage: sh scripts/build-sbom.sh
-# Needs jq, and the tools that `sh scripts/install-tools.sh apm skillspector uv check-jsonschema pip-audit`
-# installs. SBOM_PYPI_BASE replaces https://pypi.org/pypi. The script reads it for a package the runner does not install.
+# Needs jq, curl, and the tools that `sh scripts/install-tools.sh check-jsonschema pip-audit` installs.
+# SBOM_SPDX_SCHEMA_URL and SBOM_SPDX_SCHEMA_SHA256 override the SPDX schema source. The tests use them.
 set -eu
 
 cd "$(dirname "$0")/.."
@@ -16,14 +15,10 @@ OUT=sbom
 BASELINE=.sbom-baseline.json
 CHECK=.tools/check-jsonschema/bin/check-jsonschema
 PIP_AUDIT=.tools/pip-audit/bin/pip-audit
-SITE=lib/python3.12/site-packages
-PYPI_BASE="${SBOM_PYPI_BASE:-https://pypi.org/pypi}"
 SPDX_SCHEMA_URL="${SBOM_SPDX_SCHEMA_URL:-https://spdx.org/schema/3.0.1/spdx-json-schema.json}"
 SPDX_SCHEMA_SHA256="${SBOM_SPDX_SCHEMA_SHA256:-582c64e809d5b3ef9bd0c4de13a32391b47b0284a3e8d199569fb96f649234b1}"
-# SHIP_ALLOWED covers bundles, which ALF distributes. BUILD_ALLOWED covers packages, which only CI runs, so it
-# also takes the licenses that are acceptable only when a package is not shipped.
+# The licenses a shipped bundle may carry.
 SHIP_ALLOWED="MIT Apache-2.0 BSD-2-Clause BSD-3-Clause ISC Unlicense CC0-1.0 PSF-2.0 0BSD Zlib"
-BUILD_ALLOWED="$SHIP_ALLOWED MPL-2.0 CNRI-Python"
 TAB=$(printf '\t')
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
@@ -35,13 +30,6 @@ fi
 for tool in "$CHECK" "$PIP_AUDIT"; do
   if [ ! -x "$tool" ]; then
     echo "build-sbom: $tool not found. Install it with: sh scripts/install-tools.sh check-jsonschema pip-audit" >&2
-    exit 1
-  fi
-done
-for req in tools/*/requirements.txt; do
-  tool=$(basename "$(dirname "$req")")
-  if [ ! -d ".tools/$tool" ]; then
-    echo "build-sbom: .tools/$tool not found. Install it with: sh scripts/install-tools.sh $tool" >&2
     exit 1
   fi
 done
@@ -88,34 +76,9 @@ map_license() {
   esac
 }
 
-# Prints the license in a metadata file: its License-Expression, else its License field, else a License
-# classifier. Prints UNKNOWN when none of them is recognized.
-resolve_license() {  # metadata file
-  expr=$(sed -n 's/^License-Expression: //p' "$1" | tr -d '\r' | head -n 1)
-  if [ -n "$expr" ]; then
-    echo "$expr"
-    return
-  fi
-  mapped=$(map_license "$(sed -n 's/^License: //p' "$1" | tr -d '\r' | head -n 1)")
-  if [ -n "$mapped" ]; then
-    echo "$mapped"
-    return
-  fi
-  while IFS= read -r classifier; do
-    mapped=$(map_license "${classifier#OSI Approved :: }")
-    if [ -n "$mapped" ]; then
-      echo "$mapped"
-      return
-    fi
-  done <<EOF
-$(sed -n 's/^Classifier: License :: //p' "$1" | tr -d '\r')
-EOF
-  echo UNKNOWN
-}
-
-# Prints ok when every license id in the SPDX expression is on the allow list, and denied when one is not.
-# Prints unknown for UNKNOWN. OR is not evaluated: every alternative must be on the list.
-license_status() {  # SPDX expression or UNKNOWN, allow list
+# Prints ok when every license id in the SPDX expression is on SHIP_ALLOWED, and denied when one is not. Prints
+# unknown for UNKNOWN. OR is not evaluated: every alternative must be on the list.
+license_status() {  # SPDX expression or UNKNOWN
   if [ "$1" = UNKNOWN ]; then
     echo unknown
     return
@@ -125,26 +88,13 @@ license_status() {  # SPDX expression or UNKNOWN, allow list
     case "$token" in
       AND | OR | WITH) continue ;;
     esac
-    case " $2 " in
+    case " $SHIP_ALLOWED " in
       *" $token "*) ;;
       *) status=denied ;;
     esac
   done
   echo "$status"
 }
-
-# Prints the name in PEP 503 form: lowercase, with runs of - _ . as -.
-normalize_name() {  # name
-  printf '%s' "$1" | sed 's/[_.]/-/g' | tr 'A-Z' 'a-z'
-}
-
-# Index of installed packages: normalized name, version, and the METADATA file of each .tools venv.
-: > "$WORK/installed.tsv"
-for dir in .tools/*/$SITE/*.dist-info; do
-  [ -d "$dir" ] || continue
-  base=$(basename "$dir" .dist-info)
-  printf '%s\t%s\t%s\n' "$(normalize_name "${base%-*}")" "${base##*-}" "$dir/METADATA" >> "$WORK/installed.tsv"
-done
 
 # Bundles: one per dist/skills/<skill>/. Wrapper rows come from each upstream's PIN.md.
 : > "$WORK/wrappers.tsv"
@@ -161,6 +111,8 @@ for pin in src/upstream/*/PIN.md; do
     }' "$pin" >> "$WORK/wrappers.tsv"
 done
 
+# One row per bundle: name, version, license, source. A wrapper's version is its upstream commit. An in-house
+# skill's version is the ALF commit, and its license is the repository license.
 : > "$OUT/components.tsv"
 for dir in dist/skills/*/; do
   name=$(basename "$dir")
@@ -179,83 +131,15 @@ EOF
   if [ -z "$license" ]; then
     license=UNKNOWN
   fi
-  printf 'bundle\t%s\t%s\t%s\trequired\t%s\t\t\n' "$name" "$version" "$license" "$source" >> "$OUT/components.tsv"
+  printf '%s\t%s\t%s\t%s\n' "$name" "$version" "$license" "$source" >> "$OUT/components.tsv"
 done
 ROOT_LICENSE=$(map_license "$(head -n 1 LICENSE | tr -d '\r')")
 if [ -z "$ROOT_LICENSE" ]; then
   ROOT_LICENSE=UNKNOWN
 fi
 
-# Packages: each pinned line in tools/<tool>/requirements.txt, with its sha256 hashes. Markers are dropped
-# here. A line pinned by URL, such as skillspector, takes its version from the wheel file name.
-PARSE_LOCK='
-function flush() {
-  if (name != "") printf "%s\t%s\t%s\t%s\n", tool, name, version, hashes
-  name = ""; version = ""; hashes = ""
-}
-/^[A-Za-z0-9_.-]+(==| @ )/ {
-  flush()
-  if ($2 == "@") {
-    name = $1
-    n = split($3, parts, "/")
-    split(parts[n], f, "-")
-    version = f[2]
-  } else {
-    split($1, a, "==")
-    name = a[1]
-    version = a[2]
-  }
-  next
-}
-/--hash=sha256:/ {
-  h = $0
-  sub(/.*--hash=sha256:/, "", h)
-  sub(/[^0-9a-f].*/, "", h)
-  hashes = hashes (hashes == "" ? "" : ",") h
-}
-END { flush() }
-'
-: > "$WORK/pins.tsv"
-for req in tools/*/requirements.txt; do
-  tool=$(basename "$(dirname "$req")")
-  awk -v tool="$tool" "$PARSE_LOCK" "$req" >> "$WORK/pins.tsv"
-done
-# One row per name and version, with every tool that pins it and the union of its hashes.
-jq -R -r -s '
-  split("\n")
-  | map(select(length > 0) | split("\t"))
-  | group_by([.[1], .[2]])
-  | .[]
-  | [
-      .[0][1],
-      .[0][2],
-      ([.[][0]] | unique | join(",")),
-      ([.[][3] | select(length > 0) | split(",")[]] | unique | join(","))
-    ]
-  | join("|")
-' "$WORK/pins.tsv" > "$WORK/packages.txt"
-
-while IFS='|' read -r name version tools hashes; do
-  metadata=$(awk -F'\t' -v n="$(normalize_name "$name")" -v v="$version" '$1 == n && $2 == v { print $3; exit }' "$WORK/installed.tsv")
-  if [ -z "$metadata" ]; then
-    # The runner's platform skips some pinned packages, such as Windows-only ones. Read their metadata from
-    # PyPI for the exact pinned version.
-    metadata="$WORK/pypi-$name-$version.txt"
-    if ! body=$(curl -sf --max-time 60 "$PYPI_BASE/$name/$version/json"); then
-      echo "build-sbom: no installed metadata and no PyPI metadata for $name $version" >&2
-      exit 1
-    fi
-    printf '%s' "$body" | jq -r '
-      "License-Expression: " + (.info.license_expression // ""),
-      "License: " + (.info.license // ""),
-      (.info.classifiers[]? | "Classifier: " + .)
-    ' > "$metadata"
-  fi
-  license=$(resolve_license "$metadata")
-  printf 'package\t%s\t%s\t%s\texcluded\t\t%s\t%s\n' "$name" "$version" "$license" "$tools" "$hashes" >> "$OUT/components.tsv"
-done < "$WORK/packages.txt"
-
-jq -R -s -f scripts/sbom-cyclonedx.jq --arg commit "$COMMIT" "$OUT/components.tsv" > "$OUT/alf.cdx.json"
+jq -R -s -f scripts/sbom-cyclonedx.jq --arg commit "$COMMIT" --arg root_license "$ROOT_LICENSE" "$OUT/components.tsv" \
+  > "$OUT/alf.cdx.json"
 jq -R -s -f scripts/sbom-spdx.jq --arg commit "$COMMIT" --arg created "$CREATED" --arg root_license "$ROOT_LICENSE" \
   "$OUT/components.tsv" > "$OUT/alf.spdx.json"
 
@@ -272,18 +156,14 @@ check_schema() {  # schema file, instance file, label
 check_schema tools/check-jsonschema/schemas/bom-1.6.schema.json "$OUT/alf.cdx.json" alf.cdx.json
 check_schema "$SPDX_SCHEMA" "$OUT/alf.spdx.json" alf.spdx.json
 
-while IFS="$TAB" read -r kind name version license _rest; do
-  if [ "$kind" = bundle ]; then
-    allowed="$SHIP_ALLOWED"
-  else
-    allowed="$BUILD_ALLOWED"
-  fi
-  status=$(license_status "$license" "$allowed")
+while IFS="$TAB" read -r name version license _source; do
+  status=$(license_status "$license")
   if [ "$status" != ok ]; then
     printf 'license\t%s\t%s\t%s\n' "$name" "$version" "$license" >> "$FINDINGS"
   fi
 done < "$OUT/components.tsv"
 
+# pip-audit reads each tool's pins, with environment markers removed, so platform-only pins are checked too.
 for req in tools/*/requirements.txt; do
   tool=$(basename "$(dirname "$req")")
   sed 's/ ; [^\\]*//' "$req" > "$WORK/$tool.txt"
