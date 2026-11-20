@@ -17,7 +17,7 @@ CHECK=.tools/check-jsonschema/bin/check-jsonschema
 PIP_AUDIT=.tools/pip-audit/bin/pip-audit
 SITE=lib/python3.12/site-packages
 PYPI_BASE="${SBOM_PYPI_BASE:-https://pypi.org/pypi}"
-ALLOWED="MIT Apache-2.0 BSD-2-Clause BSD-3-Clause ISC Unlicense CC0-1.0"
+ALLOWED="MIT Apache-2.0 BSD-2-Clause BSD-3-Clause ISC Unlicense CC0-1.0 PSF-2.0 0BSD Zlib"
 TAB=$(printf '\t')
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT

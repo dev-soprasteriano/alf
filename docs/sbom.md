@@ -28,7 +28,7 @@ CI uploads `sbom/` as the workflow artifact `sbom`, including when the check fai
 | A license the script does not recognize, shown as `UNKNOWN` | Yes, unless accepted |
 | A known vulnerability in a pinned package | Yes, unless accepted |
 
-The allow list is MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC, Unlicense and CC0-1.0. It is set by `ALLOWED` in `scripts/build-sbom.sh`. An expression such as `MIT OR Apache-2.0` passes only when every license in it is on the list.
+The allow list is MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC, Unlicense, CC0-1.0, PSF-2.0, 0BSD and Zlib. It is set by `ALLOWED` in `scripts/build-sbom.sh`. An expression such as `MIT OR Apache-2.0` passes only when every license in it is on the list.
 
 The script reads a package's license in this order: `License-Expression`, then `License`, then a `License ::` classifier. It reads a package from the installed `.tools/<tool>` venv. If the runner does not install the package, it reads the package from PyPI for the pinned version.
 
