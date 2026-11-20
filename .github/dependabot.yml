@@ -5,6 +5,8 @@ updates:
   - package-ecosystem: uv
     directories:
       - /tools/apm
+      - /tools/check-jsonschema
+      - /tools/pip-audit
       - /tools/uv
     schedule:
       interval: daily

@@ -51,3 +51,13 @@ _Avoid_: Extension
 
 **Flow**:
 A path through the skills from one starting situation to a result. The main flow runs from idea to ship.
+
+## Bill of materials
+
+**SBOM**:
+The machine-readable list of every component in ALF, both shipped and build-time.
+_Avoid_: BOM, inventory
+
+**Component**:
+One entry in the SBOM: a Bundle, or a package pinned in `tools/*/requirements.txt`.
+_Avoid_: Module, part

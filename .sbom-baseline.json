@@ -1,0 +1,46 @@
+{
+  "accepted": [
+    {
+      "kind": "license",
+      "package": "click-default-group",
+      "version": "1.2.4",
+      "license": "UNKNOWN",
+      "reason": "BSD-3-Clause. The LICENSE file has the 'Neither the name' clause. The metadata says only 'License :: Public Domain'."
+    },
+    {
+      "kind": "license",
+      "package": "colorama",
+      "version": "0.4.6",
+      "license": "UNKNOWN",
+      "reason": "BSD-3-Clause. The licenses/LICENSE.txt file has the 'Neither the name' clause. The metadata says only 'BSD License'."
+    },
+    {
+      "kind": "license",
+      "package": "gitdb",
+      "version": "4.0.12",
+      "license": "UNKNOWN",
+      "reason": "BSD-3-Clause. The LICENSE file has the 'Neither the name' clause. The metadata says only 'BSD License'."
+    },
+    {
+      "kind": "license",
+      "package": "isodate",
+      "version": "0.7.2",
+      "license": "UNKNOWN",
+      "reason": "BSD-3-Clause. The LICENSE file has the 'Neither the name' clause. The metadata says only 'BSD License'."
+    },
+    {
+      "kind": "license",
+      "package": "jsonpointer",
+      "version": "3.10",
+      "license": "UNKNOWN",
+      "reason": "BSD-3-Clause. The licenses/LICENSE.txt file has three conditions, the third a non-endorsement clause. The metadata says only 'Modified BSD License'."
+    },
+    {
+      "kind": "license",
+      "package": "pyreadline3",
+      "version": "3.5.6",
+      "license": "UNKNOWN",
+      "reason": "BSD-3-Clause. The LICENSE.md file in the 3.5.6 wheel on PyPI has clause c, the non-endorsement clause. The PyPI metadata says only 'BSD'."
+    }
+  ]
+}
