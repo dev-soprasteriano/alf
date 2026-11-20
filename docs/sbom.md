@@ -34,15 +34,6 @@ Bundles get no vulnerability check. A Markdown skill has no package version to m
 
 Build tools get no license check. They are not shipped, so their licenses do not reach ALF's users.
 
-## Fix a finding
-
-| Finding | Fix |
-| --- | --- |
-| A vulnerability in a build tool's pin | Raise the pin in `tools/<tool>/requirements.in`, run `task tools:lock TOOL=<tool>`, and commit both lock files. If no fix exists, accept it with a reason. |
-| A schema failure | Fix `scripts/sbom-cyclonedx.jq` or `scripts/sbom-spdx.jq`. |
-
-Licenses are not fixed or accepted in the baseline. A bundle's license is allowed or not, as set by `SHIP_ALLOWED` in `scripts/build-sbom.sh`. Change that list in code, with review.
-
 ## Accept a finding
 
 Add an entry to `accepted` in `.sbom-baseline.json`. A finding passes only when every field matches:

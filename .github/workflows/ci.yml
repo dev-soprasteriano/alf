@@ -83,5 +83,5 @@ jobs:
           {
             echo "### SBOM check failed"
             echo
-            echo "The log above lists each finding that is not accepted. [How to fix or accept a finding](https://github.com/${{ github.repository }}/blob/${{ github.sha }}/docs/sbom.md)."
+            echo "The log above lists each finding that is not accepted. [How to accept a finding](https://github.com/${{ github.repository }}/blob/${{ github.sha }}/docs/sbom.md)."
           } >> "$GITHUB_STEP_SUMMARY"

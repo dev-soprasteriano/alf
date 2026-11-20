@@ -213,7 +213,7 @@ cp "$FINDINGS" "$OUT/findings.tsv"
 if [ -s "$UNACCEPTED" ]; then
   echo "build-sbom: findings not accepted by $BASELINE (kind, package, version, detail):" >&2
   cat "$UNACCEPTED" >&2
-  echo "build-sbom: failed. See docs/sbom.md for how to fix or accept a finding." >&2
+  echo "build-sbom: failed. See docs/sbom.md for how to accept a finding." >&2
   exit 1
 fi
 echo "build-sbom: wrote $OUT/alf.cdx.json and $OUT/alf.spdx.json. Accepted findings: $ACCEPTED_COUNT. Passed."
