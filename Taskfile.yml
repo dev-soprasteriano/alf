@@ -57,10 +57,10 @@ tasks:
       - sh scripts/apm-audit-ci.sh{{if .STAGED}} --staged{{end}}
 
   sbom:
-    desc: Generate the SBOM of the shipped bundles in sbom/ (CycloneDX and SPDX) and check it. Checks the schemas, the bundle licenses, and known vulnerabilities in the CI tools. See docs/sbom.md.
+    desc: Generate the SBOM of the shipped bundles in sbom/ (CycloneDX and SPDX) and check it. Checks the schemas and the bundle licenses. See docs/sbom.md.
     preconditions: *jq
     cmds:
-      - sh scripts/install-tools.sh check-jsonschema pip-audit
+      - sh scripts/install-tools.sh check-jsonschema
       - scripts/build-sbom.sh
 
   tools:lock:

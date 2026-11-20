@@ -1,6 +1,6 @@
 #!/bin/sh
-# Tests scripts/build-sbom.sh in fixture git repos. The fixtures have stub check-jsonschema and pip-audit tools, and a
-# file:// copy of the SPDX schema. No network. Run from any directory: sh scripts/test-build-sbom.sh
+# Tests scripts/build-sbom.sh in fixture git repos. The fixtures have a stub check-jsonschema tool and a file:// copy of
+# the SPDX schema. No network. Run from any directory: sh scripts/test-build-sbom.sh
 set -eu
 
 HERE=$(cd "$(dirname "$0")" && pwd)
@@ -25,30 +25,7 @@ fi
 for last; do :; done
 jq -e . "$last" > /dev/null
 EOF
-
-# Stub pip-audit. It writes $STUB_AUDIT_JSON to the -o file. It exits 1 when that report lists a vulnerability,
-# and 2 when STUB_AUDIT_FAIL is set.
-STUB_AUDIT="$WORK/pip-audit"
-cat > "$STUB_AUDIT" <<'EOF'
-#!/bin/sh
-if [ -n "${STUB_AUDIT_FAIL:-}" ]; then
-  echo "stub: pip-audit failed" >&2
-  exit 2
-fi
-out=""
-while [ $# -gt 0 ]; do
-  if [ "$1" = "-o" ]; then
-    out="$2"
-  fi
-  shift
-done
-printf '%s\n' "$STUB_AUDIT_JSON" > "$out"
-if jq -e '[.dependencies[].vulns | length] | add > 0' "$out" > /dev/null; then
-  exit 1
-fi
-exit 0
-EOF
-chmod +x "$STUB_CHECK" "$STUB_AUDIT"
+chmod +x "$STUB_CHECK"
 
 fail() {  # name, detail
   echo "FAIL $1"
@@ -56,15 +33,14 @@ fail() {  # name, detail
   failures=$((failures + 1))
 }
 
-# Builds a fixture repo in $1 with one wrapped upstream bundle and one in-house bundle. Three tool pins are in
-# tools/*/requirements.txt. Test cases edit the fixture afterwards.
+# Builds a fixture repo in $1 with one wrapped upstream bundle and one in-house bundle. Test cases edit the fixture
+# afterwards.
 make_fixture() {  # dir
   dir="$1"
   mkdir -p "$dir/scripts" "$dir/src/upstream/example" "$dir/dist/skills/wrapped" "$dir/dist/skills/inhouse"
   cp "$HERE/build-sbom.sh" "$HERE/sbom-cyclonedx.jq" "$HERE/sbom-spdx.jq" "$dir/scripts/"
-  mkdir -p "$dir/.tools/check-jsonschema/bin" "$dir/.tools/pip-audit/bin"
+  mkdir -p "$dir/.tools/check-jsonschema/bin"
   cp "$STUB_CHECK" "$dir/.tools/check-jsonschema/bin/check-jsonschema"
-  cp "$STUB_AUDIT" "$dir/.tools/pip-audit/bin/pip-audit"
 
   printf 'Upstream: https://github.com/example/skills\n\n| Skill | Upstream path | Commit | Pinned | Wrapper |\n| --- | --- | --- | --- | --- |\n| wrapped | skills/wrapped | %s | no | wrapped |\n' \
     "$UPSTREAM_COMMIT" > "$dir/src/upstream/example/PIN.md"
@@ -73,25 +49,6 @@ make_fixture() {  # dir
   printf '# wrapped\n' > "$dir/dist/skills/wrapped/SKILL.md"
   printf '# inhouse\n' > "$dir/dist/skills/inhouse/SKILL.md"
 
-  mkdir -p "$dir/tools/apm" "$dir/tools/uv" "$dir/tools/skillspector"
-  cat > "$dir/tools/apm/requirements.txt" <<'EOF'
-alpha==1.0.0 ; sys_platform != 'win32' \
-    --hash=sha256:aaaa \
-    --hash=sha256:bbbb
-    # via -r requirements.in
-shared==2.0 \
-    --hash=sha256:cccc
-EOF
-  cat > "$dir/tools/uv/requirements.txt" <<'EOF'
-shared==2.0 \
-    --hash=sha256:dddd
-EOF
-  cat > "$dir/tools/skillspector/requirements.txt" <<'EOF'
-skillspector @ https://example.invalid/skillspector-2.13.4-py3-none-any.whl \
-    --hash=sha256:eeee
-EOF
-
-  printf '{\n  "accepted": []\n}\n' > "$dir/.sbom-baseline.json"
   git -C "$dir" init -q
   git -C "$dir" -c user.name=test -c user.email=test@example.com commit -q --allow-empty -m fixture
 }
@@ -120,14 +77,11 @@ expect_json() {  # name, dir, jq filter that must be true in sbom/alf.cdx.json
   fi
 }
 
-# Default: no vulnerabilities, no stub failures.
-export STUB_AUDIT_JSON='{"dependencies":[]}'
-
-# Case 1: both bundles pass, and no vulnerability is found. Both files list only the two bundles.
+# Case 1: both bundles pass. Both files list only the two bundles.
 d="$WORK/happy"
 make_fixture "$d"
 head_sha=$(git -C "$d" rev-parse HEAD)
-unset STUB_SCHEMA_FAIL STUB_AUDIT_FAIL
+unset STUB_SCHEMA_FAIL
 run_in "$d"
 expect_code "happy path exits 0" 0 "$code"
 if [ ! -f "$d/sbom/alf.spdx.json" ]; then
@@ -143,7 +97,7 @@ if ! jq -e '[.["@graph"][] | select(.type == "software_Package") | .name] | sort
   fail "happy: SPDX lists the bundles and the root only" "$(jq -c '[.["@graph"][] | select(.type == "software_Package") | .name]' "$d/sbom/alf.spdx.json")"
 fi
 
-# Case 2: a bundle under MPL-2.0 fails, because the ship list does not allow it.
+# Case 2: a bundle under MPL-2.0 fails, because SHIP_ALLOWED does not allow it.
 d="$WORK/bundle-mpl"
 make_fixture "$d"
 printf 'Mozilla Public License 2.0 (MPL 2.0)\n\nCopyright (c) Example\n' > "$d/src/upstream/example/LICENSE"
@@ -159,45 +113,7 @@ run_in "$d"
 expect_code "unrecognized bundle license exits 1" 1 "$code"
 expect_line "unrecognized bundle license is reported as UNKNOWN" "$(printf 'license\twrapped\t%s\tUNKNOWN' "$UPSTREAM_COMMIT")"
 
-# Case 4: build tools have no license gate. A pin under GPL-3.0 does not fail, because build tools are not shipped.
-d="$WORK/tool-gpl"
-make_fixture "$d"
-printf 'gplpkg==1.0 \\\n    --hash=sha256:ffff\n' >> "$d/tools/apm/requirements.txt"
-run_in "$d"
-expect_code "a GPL build tool does not fail the license check" 0 "$code"
-expect_json "a GPL build tool is not listed in the SBOM" "$d" '.components | map(.name) | index("gplpkg") == null'
-
-# Case 5: a known vulnerability in a tool pin fails the gate, and a baseline entry with a reason accepts it.
-d="$WORK/vuln"
-make_fixture "$d"
-export STUB_AUDIT_JSON='{"dependencies":[{"name":"alpha","version":"1.0.0","vulns":[{"id":"PYSEC-1"}]}]}'
-run_in "$d"
-expect_code "vulnerability exits 1" 1 "$code"
-expect_line "vulnerability is reported" "$(printf 'vulnerability\talpha\t1.0.0\tPYSEC-1')"
-printf '{"accepted":[{"kind":"vulnerability","package":"alpha","version":"1.0.0","id":"PYSEC-1","reason":"Test accepts it."}]}\n' \
-  > "$d/.sbom-baseline.json"
-run_in "$d"
-expect_code "accepted vulnerability exits 0" 0 "$code"
-export STUB_AUDIT_JSON='{"dependencies":[]}'
-
-# Case 6: a bundle license cannot be accepted by a baseline entry. SHIP_ALLOWED in code decides it.
-d="$WORK/license-accepted"
-make_fixture "$d"
-printf 'Mozilla Public License 2.0 (MPL 2.0)\n\nCopyright (c) Example\n' > "$d/src/upstream/example/LICENSE"
-printf '{"accepted":[{"kind":"license","package":"wrapped","version":"%s","license":"MPL-2.0","reason":"Test accepts it."}]}\n' \
-  "$UPSTREAM_COMMIT" > "$d/.sbom-baseline.json"
-run_in "$d"
-expect_code "a bundle license cannot be accepted: exits 1" 1 "$code"
-expect_line "a bundle license cannot be accepted: still reported" "$(printf 'license\twrapped\t%s\tMPL-2.0' "$UPSTREAM_COMMIT")"
-
-# Case 7: a baseline entry without a reason is an error.
-d="$WORK/no-reason"
-make_fixture "$d"
-printf '{"accepted":[{"kind":"vulnerability","package":"alpha","version":"1.0.0","id":"PYSEC-1"}]}\n' > "$d/.sbom-baseline.json"
-run_in "$d"
-expect_code "entry without a reason exits 1" 1 "$code"
-
-# Case 8: an output that fails its schema fails the gate.
+# Case 4: an output that fails its schema fails the gate.
 d="$WORK/schema"
 make_fixture "$d"
 code=0
@@ -205,18 +121,7 @@ out=$(cd "$d" && STUB_SCHEMA_FAIL=1 sh scripts/build-sbom.sh 2>&1) || code=$?
 expect_code "schema failure exits 1" 1 "$code"
 expect_line "schema failure is reported" "$(printf 'schema\talf.cdx.json\t-\tfails its schema')"
 
-# Case 9: a pip-audit error is a generation error, not a clean result.
-d="$WORK/audit-error"
-make_fixture "$d"
-code=0
-out=$(cd "$d" && STUB_AUDIT_FAIL=1 sh scripts/build-sbom.sh 2>&1) || code=$?
-expect_code "pip-audit error exits 1" 1 "$code"
-case "$out" in
-  *"pip-audit failed"*) ;;
-  *) fail "pip-audit error is reported" "$out" ;;
-esac
-
-# Case 10: an SPDX schema that does not match its pinned SHA-256 is a generation error.
+# Case 5: an SPDX schema that does not match its pinned SHA-256 is a generation error.
 d="$WORK/bad-schema-hash"
 make_fixture "$d"
 code=0

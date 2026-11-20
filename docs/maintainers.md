@@ -87,9 +87,9 @@ tools/<tool>/
 
 CI installs from `requirements.txt` and refuses any file whose hash does not match.
 
-Dependabot opens the pull requests for apm, check-jsonschema, pip-audit, uv and the GitHub Actions, as `.github/dependabot.yml` sets. SkillSpector is not on PyPI, so `.github/workflows/update-skillspector.yml` opens its pull request.
+Dependabot opens the pull requests for apm, check-jsonschema, uv and the GitHub Actions, as `.github/dependabot.yml` sets. SkillSpector is not on PyPI, so `.github/workflows/update-skillspector.yml` opens its pull request.
 
-The `sbom` job generates the SBOM and checks its licenses and known vulnerabilities. [docs/sbom.md](sbom.md) describes the checks and how to accept a finding.
+The `sbom` job generates the SBOM and checks its schemas and the licenses of the shipped bundles. [docs/sbom.md](sbom.md) describes the checks.
 
 The SkillSpector pull request carries over each accepted finding that the new version reports unchanged, with its reason. Only a finding the new version reports differently, or a new finding, fails the check. Accept those as [docs/skillspector.md](skillspector.md) describes, and push the baseline change to the update branch.
 
