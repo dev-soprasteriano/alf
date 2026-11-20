@@ -143,7 +143,8 @@ jq -R -s -f scripts/sbom-cyclonedx.jq --arg commit "$COMMIT" --arg root_license 
 jq -R -s -f scripts/sbom-spdx.jq --arg commit "$COMMIT" --arg created "$CREATED" --arg root_license "$ROOT_LICENSE" \
   "$OUT/components.tsv" > "$OUT/alf.spdx.json"
 
-# Findings: kind, package, version, detail. A schema finding has no baseline entry, so it always fails.
+# Findings: kind, package, version, detail. A schema or license finding has no baseline entry, so it always fails:
+# licenses are decided in code, by SHIP_ALLOWED.
 FINDINGS="$WORK/findings.tsv"
 : > "$FINDINGS"
 
@@ -195,7 +196,7 @@ UNACCEPTED="$WORK/unaccepted.tsv"
 ACCEPTED_COUNT=0
 while IFS= read -r finding; do
   case "$finding" in
-    schema*)
+    schema* | license*)
       echo "$finding" >> "$UNACCEPTED"
       ;;
     *)

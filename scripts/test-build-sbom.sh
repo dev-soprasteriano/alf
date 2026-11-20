@@ -180,14 +180,15 @@ run_in "$d"
 expect_code "accepted vulnerability exits 0" 0 "$code"
 export STUB_AUDIT_JSON='{"dependencies":[]}'
 
-# Case 6: a bundle license outside the ship list is accepted by a baseline entry with a reason.
+# Case 6: a bundle license cannot be accepted by a baseline entry. SHIP_ALLOWED in code decides it.
 d="$WORK/license-accepted"
 make_fixture "$d"
 printf 'Mozilla Public License 2.0 (MPL 2.0)\n\nCopyright (c) Example\n' > "$d/src/upstream/example/LICENSE"
 printf '{"accepted":[{"kind":"license","package":"wrapped","version":"%s","license":"MPL-2.0","reason":"Test accepts it."}]}\n' \
   "$UPSTREAM_COMMIT" > "$d/.sbom-baseline.json"
 run_in "$d"
-expect_code "accepted bundle license exits 0" 0 "$code"
+expect_code "a bundle license cannot be accepted: exits 1" 1 "$code"
+expect_line "a bundle license cannot be accepted: still reported" "$(printf 'license\twrapped\t%s\tMPL-2.0' "$UPSTREAM_COMMIT")"
 
 # Case 7: a baseline entry without a reason is an error.
 d="$WORK/no-reason"

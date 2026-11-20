@@ -25,7 +25,7 @@ CI uploads `sbom/` as the workflow artifact `sbom`, including when the check fai
 | --- | --- |
 | The generator fails, or pip-audit fails | Yes |
 | An output fails its schema | Yes. It cannot be accepted. |
-| A bundle license is not on `SHIP_ALLOWED`, or is not recognized (`UNKNOWN`) | Yes, unless accepted |
+| A bundle license is not on `SHIP_ALLOWED`, or is not recognized (`UNKNOWN`) | Yes. Licenses cannot be accepted in the baseline. |
 | A known vulnerability in a build tool's pin | Yes, unless accepted |
 
 `SHIP_ALLOWED` is set in `scripts/build-sbom.sh`: MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC, Unlicense, CC0-1.0, PSF-2.0, 0BSD and Zlib. An expression such as `MIT OR Apache-2.0` passes only when every license in it is on the list.
@@ -38,10 +38,10 @@ Build tools get no license check. They are not shipped, so their licenses do not
 
 | Finding | Fix |
 | --- | --- |
-| A bundle license is not on `SHIP_ALLOWED` | Replace the skill, or accept it with a reason. |
-| `UNKNOWN` | Read the bundle's `LICENSE` file. If it names a license on the list, add the wording to `map_license` in `scripts/build-sbom.sh`. Otherwise accept it with a reason. |
 | A vulnerability in a build tool's pin | Raise the pin in `tools/<tool>/requirements.in`, run `task tools:lock TOOL=<tool>`, and commit both lock files. If no fix exists, accept it with a reason. |
 | A schema failure | Fix `scripts/sbom-cyclonedx.jq` or `scripts/sbom-spdx.jq`. |
+
+Licenses are not fixed or accepted in the baseline. A bundle's license is allowed or not, as set by `SHIP_ALLOWED` in `scripts/build-sbom.sh`. Change that list in code, with review.
 
 ## Accept a finding
 
@@ -50,13 +50,6 @@ Add an entry to `accepted` in `.sbom-baseline.json`. A finding passes only when 
 ```json
 {
   "accepted": [
-    {
-      "kind": "license",
-      "package": "example-skill",
-      "version": "1111111111111111111111111111111111111111",
-      "license": "MPL-2.0",
-      "reason": "Reviewed by the licensing contact. The file is unchanged from upstream."
-    },
     {
       "kind": "vulnerability",
       "package": "example",
@@ -68,10 +61,9 @@ Add an entry to `accepted` in `.sbom-baseline.json`. A finding passes only when 
 }
 ```
 
-- For a `license` entry, `package` is the bundle name and `version` is its commit. `license` is the value the finding reports.
 - For a `vulnerability` entry, `package` and `version` are the build tool's pinned package. `id` is the advisory ID that `sbom/findings.tsv` lists.
 - Every entry needs a non-empty `reason`. Reviewers check the reason in the pull request.
-- A schema finding cannot be accepted.
+- A schema finding and a license finding cannot be accepted.
 
 ## Limits
 
