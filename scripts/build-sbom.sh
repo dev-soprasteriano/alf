@@ -1,6 +1,6 @@
 #!/bin/sh
-# Generates the SBOM for ALF in sbom/, then checks it. Writes sbom/alf.cdx.json (CycloneDX 1.6) and
-# sbom/alf.spdx.json (SPDX 3.0.1). Checks each file against its schema in tools/check-jsonschema/schemas/.
+# Generates the SBOM for ALF in sbom/ as sbom/alf.cdx.json (CycloneDX 1.6), then checks it. The schema
+# is in tools/check-jsonschema/schemas/.
 # Every package and bundle license must be on the allow list below. pip-audit checks each
 # tools/<tool>/requirements.txt for known vulnerabilities. Fails on a generation error, on an invalid file,
 # and on each finding that .sbom-baseline.json does not accept with a reason. See docs/sbom.md.
@@ -43,7 +43,6 @@ done
 rm -rf "$OUT"
 mkdir -p "$OUT/audit"
 COMMIT=$(git rev-parse HEAD)
-CREATED=$(TZ=UTC git log -1 --format=%cd --date=format:%Y-%m-%dT%H:%M:%SZ HEAD)
 
 # Prints the SPDX id for a license string, or nothing when the string is not on the list. A bare "BSD License"
 # gets nothing: it does not say which BSD clause applies.
@@ -155,10 +154,6 @@ EOF
   fi
   printf 'bundle\t%s\t%s\t%s\trequired\t%s\t\t\n' "$name" "$version" "$license" "$source" >> "$OUT/components.tsv"
 done
-ROOT_LICENSE=$(map_license "$(head -n 1 LICENSE | tr -d '\r')")
-if [ -z "$ROOT_LICENSE" ]; then
-  ROOT_LICENSE=UNKNOWN
-fi
 
 # Packages: each pinned line in tools/<tool>/requirements.txt, with its sha256 hashes. Markers are dropped
 # here. A line pinned by URL, such as skillspector, takes its version from the wheel file name.
@@ -230,20 +225,15 @@ while IFS='|' read -r name version tools hashes; do
 done < "$WORK/packages.txt"
 
 jq -R -s -f scripts/sbom-cyclonedx.jq --arg commit "$COMMIT" "$OUT/components.tsv" > "$OUT/alf.cdx.json"
-jq -R -s -f scripts/sbom-spdx.jq --arg commit "$COMMIT" --arg created "$CREATED" --arg root_license "$ROOT_LICENSE" \
-  "$OUT/components.tsv" > "$OUT/alf.spdx.json"
 
 # Findings: kind, package, version, detail. A schema finding has no baseline entry, so it always fails.
 FINDINGS="$WORK/findings.tsv"
 : > "$FINDINGS"
 
-for pair in "bom-1.6.schema.json alf.cdx.json cyclonedx" "spdx-3.0.1.schema.json alf.spdx.json spdx"; do
-  set -- $pair
-  if ! "$CHECK" --schemafile "tools/check-jsonschema/schemas/$1" "$OUT/$2" > "$WORK/check.log" 2>&1; then
-    printf 'schema\t%s\t-\tfails its schema\n' "$2" >> "$FINDINGS"
-    cat "$WORK/check.log" >&2
-  fi
-done
+if ! "$CHECK" --schemafile tools/check-jsonschema/schemas/bom-1.6.schema.json "$OUT/alf.cdx.json" > "$WORK/check.log" 2>&1; then
+  printf 'schema\talf.cdx.json\t-\tfails its schema\n' >> "$FINDINGS"
+  cat "$WORK/check.log" >&2
+fi
 
 while IFS="$TAB" read -r kind name version license _rest; do
   status=$(license_status "$license")
@@ -303,4 +293,4 @@ if [ -s "$UNACCEPTED" ]; then
   echo "build-sbom: failed. See docs/sbom.md for how to fix or accept a finding." >&2
   exit 1
 fi
-echo "build-sbom: wrote $OUT/alf.cdx.json and $OUT/alf.spdx.json. Accepted findings: $ACCEPTED_COUNT. Passed."
+echo "build-sbom: wrote $OUT/alf.cdx.json. Accepted findings: $ACCEPTED_COUNT. Passed."

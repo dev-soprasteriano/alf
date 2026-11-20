@@ -57,7 +57,7 @@ fail() {  # name, detail
 make_fixture() {  # dir
   dir="$1"
   mkdir -p "$dir/scripts" "$dir/src/upstream/example" "$dir/dist/skills/wrapped" "$dir/dist/skills/inhouse"
-  cp "$HERE/build-sbom.sh" "$HERE/sbom-cyclonedx.jq" "$HERE/sbom-spdx.jq" "$dir/scripts/"
+  cp "$HERE/build-sbom.sh" "$HERE/sbom-cyclonedx.jq" "$dir/scripts/"
   mkdir -p "$dir/.tools/check-jsonschema/bin" "$dir/.tools/pip-audit/bin"
   cp "$STUB_CHECK" "$dir/.tools/check-jsonschema/bin/check-jsonschema"
   cp "$STUB_AUDIT" "$dir/.tools/pip-audit/bin/pip-audit"

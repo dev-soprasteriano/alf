@@ -19,7 +19,6 @@ alf copies skills from the upstream repositories below. Each upstream is MIT-lic
 `tools/check-jsonschema/schemas/` holds the schemas that `scripts/build-sbom.sh` checks the SBOM against. Sources and checksums are in [tools/check-jsonschema/SOURCES.md](tools/check-jsonschema/SOURCES.md).
 
 - **CycloneDX schemas** (`bom-1.6.schema.json`, `spdx.schema.json`, `jsf-0.82.schema.json`). Source: https://cyclonedx.org. License: Apache-2.0. Full text: [LICENSE-APACHE-2.0](tools/check-jsonschema/schemas/LICENSE-APACHE-2.0). The files carry no copyright notice.
-- **SPDX schema** (`spdx-3.0.1.schema.json`). Source: https://spdx.org/schema/3.0.1/spdx-json-schema.json. The SPDX specification repository names three licenses: the Community Specification License 1.0, CC-BY-3.0 and MIT. Which one applies to this file is under review. Full text: [LICENSE-SPDX](tools/check-jsonschema/schemas/LICENSE-SPDX).
 
 ## alf
 

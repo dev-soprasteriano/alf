@@ -7,8 +7,7 @@ The `sbom` job in CI generates ALF's software bill of materials (SBOM) and check
 | File | Contents |
 | --- | --- |
 | `sbom/alf.cdx.json` | CycloneDX 1.6 JSON |
-| `sbom/alf.spdx.json` | SPDX 3.0.1 JSON |
-| `sbom/components.tsv` | The rows both SBOM files are built from |
+| `sbom/components.tsv` | The rows the SBOM is built from |
 | `sbom/audit/<tool>.json` | The pip-audit report for each `tools/<tool>/requirements.txt` |
 | `sbom/findings.tsv` | Every finding, accepted or not |
 
@@ -42,7 +41,7 @@ Bundles get no vulnerability check. A Markdown skill has no package version to m
 | A license outside the allow list | Replace the package, or accept it with a reason. |
 | `UNKNOWN` | Read the license file in the package. Accept it with a reason that names the license. |
 | A vulnerability | Raise the pin in `tools/<tool>/requirements.in`, run `task tools:lock TOOL=<tool>`, and commit both lock files. If no fix exists, accept it with a reason. |
-| A schema failure | Fix `scripts/sbom-cyclonedx.jq` or `scripts/sbom-spdx.jq`. |
+| A schema failure | Fix `scripts/sbom-cyclonedx.jq`. |
 
 ## Accept a finding
 
@@ -77,5 +76,5 @@ Add an entry to `accepted` in `.sbom-baseline.json`. A finding passes only when 
 ## Limits
 
 - The SBOM covers pull requests only. Pushes to `main` produce no SBOM.
-- SPDX 3.0.1 has no build-only relationship. A build-only package says so in its `comment`.
+- Build-only packages carry `scope: excluded` in the CycloneDX file.
 - The vendored schemas and their sources are listed in `tools/check-jsonschema/SOURCES.md`.
