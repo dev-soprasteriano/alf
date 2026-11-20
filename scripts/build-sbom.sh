@@ -2,7 +2,7 @@
 # Generates the SBOM for ALF in sbom/, then checks it. Writes sbom/alf.cdx.json (CycloneDX 1.6) and
 # sbom/alf.spdx.json (SPDX 3.0.1). The CycloneDX schema is in tools/check-jsonschema/schemas/. The SPDX schema
 # is fetched at check time and must match SPDX_SCHEMA_SHA256. It is not kept in the repo.
-# Every package and bundle license must be on the allow list below. pip-audit checks each
+# A bundle license must be on SHIP_ALLOWED. A package license must be on BUILD_ALLOWED. pip-audit checks each
 # tools/<tool>/requirements.txt for known vulnerabilities. Fails on a generation error, on an invalid file,
 # and on each finding that .sbom-baseline.json does not accept with a reason. See docs/sbom.md.
 # Usage: sh scripts/build-sbom.sh
@@ -20,7 +20,10 @@ SITE=lib/python3.12/site-packages
 PYPI_BASE="${SBOM_PYPI_BASE:-https://pypi.org/pypi}"
 SPDX_SCHEMA_URL="${SBOM_SPDX_SCHEMA_URL:-https://spdx.org/schema/3.0.1/spdx-json-schema.json}"
 SPDX_SCHEMA_SHA256="${SBOM_SPDX_SCHEMA_SHA256:-582c64e809d5b3ef9bd0c4de13a32391b47b0284a3e8d199569fb96f649234b1}"
-ALLOWED="MIT Apache-2.0 BSD-2-Clause BSD-3-Clause ISC Unlicense CC0-1.0 PSF-2.0 0BSD Zlib"
+# SHIP_ALLOWED covers bundles, which ALF distributes. BUILD_ALLOWED covers packages, which only CI runs, so it
+# also takes the licenses that are acceptable only when a package is not shipped.
+SHIP_ALLOWED="MIT Apache-2.0 BSD-2-Clause BSD-3-Clause ISC Unlicense CC0-1.0 PSF-2.0 0BSD Zlib"
+BUILD_ALLOWED="$SHIP_ALLOWED MPL-2.0 CNRI-Python"
 TAB=$(printf '\t')
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
@@ -112,7 +115,7 @@ EOF
 
 # Prints ok when every license id in the SPDX expression is on the allow list, and denied when one is not.
 # Prints unknown for UNKNOWN. OR is not evaluated: every alternative must be on the list.
-license_status() {  # SPDX expression or UNKNOWN
+license_status() {  # SPDX expression or UNKNOWN, allow list
   if [ "$1" = UNKNOWN ]; then
     echo unknown
     return
@@ -122,7 +125,7 @@ license_status() {  # SPDX expression or UNKNOWN
     case "$token" in
       AND | OR | WITH) continue ;;
     esac
-    case " $ALLOWED " in
+    case " $2 " in
       *" $token "*) ;;
       *) status=denied ;;
     esac
@@ -270,7 +273,12 @@ check_schema tools/check-jsonschema/schemas/bom-1.6.schema.json "$OUT/alf.cdx.js
 check_schema "$SPDX_SCHEMA" "$OUT/alf.spdx.json" alf.spdx.json
 
 while IFS="$TAB" read -r kind name version license _rest; do
-  status=$(license_status "$license")
+  if [ "$kind" = bundle ]; then
+    allowed="$SHIP_ALLOWED"
+  else
+    allowed="$BUILD_ALLOWED"
+  fi
+  status=$(license_status "$license" "$allowed")
   if [ "$status" != ok ]; then
     printf 'license\t%s\t%s\t%s\n' "$name" "$version" "$license" >> "$FINDINGS"
   fi

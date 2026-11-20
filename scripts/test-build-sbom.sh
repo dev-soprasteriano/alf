@@ -245,6 +245,22 @@ case "$out" in
   *) fail "schema hash mismatch is reported" "$out" ;;
 esac
 
+# Case 11: the ship list applies to bundles. A bundle under MPL-2.0 fails, because ALF ships it.
+d="$WORK/bundle-mpl"
+make_fixture "$d"
+printf 'Mozilla Public License 2.0 (MPL 2.0)\n\nCopyright (c) Example\n' > "$d/src/upstream/example/LICENSE"
+run_in "$d"
+expect_code "bundle under MPL-2.0 exits 1" 1 "$code"
+expect_line "bundle under MPL-2.0 is reported" "$(printf 'license\twrapped\t%s\tMPL-2.0' "$UPSTREAM_COMMIT")"
+
+# Case 12: the build list applies to packages. A build-only package under MPL-2.0 or CNRI-Python passes.
+d="$WORK/build-only-mpl"
+make_fixture "$d"
+printf 'Name: alpha\nVersion: 1.0.0\nLicense-Expression: MPL-2.0 AND (Apache-2.0 OR MIT)\n' > "$d/.tools/apm/lib/python3.12/site-packages/alpha-1.0.0.dist-info/METADATA"
+printf 'Name: shared\nVersion: 2.0\nLicense-Expression: Apache-2.0 AND CNRI-Python\n' > "$d/.tools/apm/lib/python3.12/site-packages/shared-2.0.dist-info/METADATA"
+run_in "$d"
+expect_code "build-only MPL-2.0 and CNRI-Python exit 0" 0 "$code"
+
 if [ "$failures" -gt 0 ]; then
   echo "test-build-sbom: $failures failure(s)" >&2
   exit 1
