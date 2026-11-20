@@ -57,7 +57,7 @@ tasks:
       - sh scripts/apm-audit-ci.sh{{if .STAGED}} --staged{{end}}
 
   sbom:
-    desc: Generate the SBOM of the shipped bundles in sbom/ (CycloneDX and SPDX). The SBOM workflow runs this on each push to main. See docs/sbom.md.
+    desc: Generate the SBOM of the shipped bundles in sbom/ (CycloneDX). The SBOM workflow runs this on each push to main. See docs/sbom.md.
     preconditions: *jq
     cmds:
       - sh scripts/install-tools.sh check-jsonschema

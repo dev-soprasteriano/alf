@@ -7,7 +7,6 @@ The `sbom` job checks the SBOM of ALF's shipped bundles on every pull request, a
 | File | Contents |
 | --- | --- |
 | `sbom/alf.cdx.json` | CycloneDX 1.6 JSON |
-| `sbom/alf.spdx.json` | SPDX 3.0.1 JSON |
 | `sbom/components.tsv` | The rows both SBOM files are built from |
 | `sbom/findings.tsv` | Every finding. The job fails when there is one. |
 
