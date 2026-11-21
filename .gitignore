@@ -1,5 +1,2 @@
 .tools/
 sbom/
-apm_modules/
-.agents/skills/
-.claude/skills/

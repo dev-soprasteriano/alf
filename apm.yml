@@ -1,8 +1,0 @@
-name: alf-dev
-version: 1.0.0
-targets:
-  - agent-skills
-  - claude
-dependencies:
-  apm:
-    - dev-soprasteriano/alf/dist

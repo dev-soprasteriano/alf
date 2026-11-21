@@ -11,6 +11,8 @@ src/
 └── skill-dependencies.txt   # the skills each skill calls or mentions
 .claude-plugin/              # marketplace.json: hand-written, one plugin, alf, at ./dist
 dist/                        # generated bundles: never edit
+.agents/skills               # symlink to dist/skills/
+.claude/skills               # symlink to dist/skills/
 tools/                       # CI tools, pinned with hashes
 scripts/                     # build, update and CI scripts
 ```
@@ -19,12 +21,12 @@ scripts/                     # build, update and CI scripts
 
 ```sh
 brew install go-task jq python@3.12
-task setup
+task hooks:install
 ```
 
-`task setup` runs `task hooks:install` and `task skills:install` (which installs the pinned alf skills from `apm.lock.yaml` into `.agents/skills/` and `.claude/skills/`). Run `task skills:update` to refresh `apm.lock.yaml` to the latest skills on `main`.
-
 Run `task --list` for the commands and their options. Once hooks are installed, each commit runs `task ci:staged`. `task ci` runs the full set that CI runs.
+
+Coding agents load the repo's own bundles automatically through `.agents/skills` and `.claude/skills` (on Windows, enable Developer Mode or `git config core.symlinks true`). If you also keep the global `alf` plugin enabled, Claude Code lists both `<skill>` and `alf:<skill>`, and Copilot CLI uses the repo copy.
 
 ## Build after a change
 
