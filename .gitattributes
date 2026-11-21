@@ -1,7 +1,8 @@
 # Generated bundles: review the source under src/skills/ and src/upstream/, not these copies.
-# Normalize to LF line endings so builds and APM lockfile hashes match across Windows, macOS, and Linux.
-src/** text=auto eol=lf
-dist/** linguist-generated=true text=auto eol=lf
-.agents/skills/** text=auto eol=lf
-.claude/skills/** text=auto eol=lf
+# Keep upstream copies, dist/, and deployed skills byte-exact (-text) so Windows checkouts do not rewrite line endings and break hashes or byte-for-byte upstream parity.
+src/skills/** text=auto eol=lf
+src/upstream/** -text
+dist/** linguist-generated=true -text
+.agents/skills/** -text
+.claude/skills/** -text
 apm.lock.yaml linguist-generated=true text=auto eol=lf

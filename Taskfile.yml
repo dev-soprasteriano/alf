@@ -44,7 +44,15 @@ tasks:
       - sh scripts/test-apm-audit-ci.sh
       - sh scripts/test-build-apm-readme.sh
       - sh scripts/test-build-sbom.sh
-      - "{{if not .STAGED}}sh scripts/test-sync-skills.sh{{else}}:{{end}}"
+      - |
+        {{if .STAGED}}
+        paths="dist .agents/skills .claude/skills apm.lock.yaml"
+        untracked="$(git ls-files --others --exclude-standard -- $paths | grep -v '/\.DS_Store$' || true)"
+        if ! git diff --quiet -- $paths || [ -n "$untracked" ]; then
+          echo "Stage dist/, .agents/skills/, .claude/skills/ and apm.lock.yaml with the change." >&2
+          exit 1
+        fi
+        {{else}}sh scripts/test-sync-skills.sh{{end}}
 
   ci:skillspector:
     desc: Scan every alf skill and upstream skill with SkillSpector, static only (no LLM). STAGED=1 scans only the skill folders of the staged files.

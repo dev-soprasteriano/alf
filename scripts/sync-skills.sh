@@ -44,7 +44,8 @@ if [ "$mode" = "sync" ]; then
   # Pre-flight into an empty root without --force so APM still blocks critical hidden-character
   # findings before --force overwrites existing repo files that lack local receipts.
   tmp_apm --root "$WORK/preflight" || die "pre-flight apm install failed (see output above); refusing to deploy ./dist"
-  exec "$APM" install --force
+  "$APM" install --force
+  exit 0
 fi
 
 [ -f apm.lock.yaml ] || die "apm.lock.yaml not found. Run task build-apm and commit the result."
@@ -56,7 +57,7 @@ for root in .agents/skills .claude/skills; do
 done
 find "$WORK" -name '.DS_Store' -delete
 
-tmp_apm --frozen --root "$WORK" || die "apm install --frozen failed (see output above). If dist/ changed, run task build-apm and commit the result."
+tmp_apm --frozen --root "$WORK" || die "apm install --frozen failed (see output above). If dist/ changed, run task build-apm and commit the result. If you edited or added files under .agents/skills/ or .claude/skills/, revert them."
 
 for root in .agents/skills .claude/skills; do
   if ! diff -r -x .DS_Store "$root" "$WORK/$root" > "$WORK/diff.txt" 2>&1; then
