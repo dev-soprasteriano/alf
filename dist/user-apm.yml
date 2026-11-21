@@ -1,8 +1,10 @@
 name: alf
 version: 1.0.0
 targets:
+  - agent-skills
   - claude
-  - copilot
+  - antigravity
+  - opencode
 dependencies:
   apm:
     - dev-soprasteriano/alf/dist/skills/ask-alf
