@@ -14,6 +14,12 @@ alf copies skills from the upstream repositories below. Each upstream is MIT-lic
 - License: MIT. Copyright (c) 2026 HumanLayer. Full text: [src/upstream/humanlayer/LICENSE](src/upstream/humanlayer/LICENSE).
 - Skills: `show-me`.
 
+## Vendored schemas
+
+`tools/check-jsonschema/schemas/` holds the CycloneDX schemas that `scripts/build-sbom.sh` checks the SBOM against. Sources and checksums are in [tools/check-jsonschema/SOURCES.md](tools/check-jsonschema/SOURCES.md).
+
+- **CycloneDX schemas** (`bom-1.6.schema.json`, `spdx.schema.json`, `jsf-0.82.schema.json`). Source: https://cyclonedx.org. License: Apache-2.0. Full text: [LICENSE-APACHE-2.0](tools/check-jsonschema/schemas/LICENSE-APACHE-2.0). The files carry no copyright notice.
+
 ## alf
 
-The in-house skills `ci-doctor`, `git-commit` and `repo-doctor`, and all other files, fall under the repository [LICENSE](LICENSE).
+The in-house skills `ci-doctor`, `git-commit` and `repo-doctor`, and all other files except the vendored schemas above, fall under the repository [LICENSE](LICENSE).
