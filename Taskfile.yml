@@ -25,6 +25,7 @@ tasks:
     desc: Run the same checks on the staged files.
     cmds:
       - task: ci:build
+        vars: {STAGED: "1"}
       - task: ci:skillspector
         vars: {STAGED: "1"}
       - task: ci:apm-audit
@@ -43,7 +44,7 @@ tasks:
       - sh scripts/test-apm-audit-ci.sh
       - sh scripts/test-build-apm-readme.sh
       - sh scripts/test-build-sbom.sh
-      - sh scripts/test-sync-skills.sh
+      - "{{if not .STAGED}}sh scripts/test-sync-skills.sh{{else}}:{{end}}"
 
   ci:skillspector:
     desc: Scan every alf skill and upstream skill with SkillSpector, static only (no LLM). STAGED=1 scans only the skill folders of the staged files.

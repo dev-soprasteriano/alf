@@ -412,7 +412,7 @@ cmd_update() {
 
   # Rebuild the APM bundles and local deployed skills from the changed copies. A failing build stops the update here.
   "$REPO_DIR/scripts/build-apm.sh"
-  sh "$REPO_DIR/scripts/install-tools.sh" apm
+  (cd "$REPO_DIR" && sh scripts/install-tools.sh apm)
   sh "$REPO_DIR/scripts/sync-skills.sh"
 
   if [[ -z "$(git -C "$REPO_DIR" status --porcelain -- src dist .agents/skills .claude/skills apm.lock.yaml)" ]]; then

@@ -1,5 +1,5 @@
 # Generated bundles: review the source under src/skills/ and src/upstream/, not these copies.
-# Pin LF line endings so builds and APM lockfile hashes match across Windows, macOS, and Linux.
+# Normalize to LF line endings so builds and APM lockfile hashes match across Windows, macOS, and Linux.
 src/** text=auto eol=lf
 dist/** linguist-generated=true text=auto eol=lf
 .agents/skills/** text=auto eol=lf
