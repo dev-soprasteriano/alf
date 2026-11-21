@@ -40,8 +40,6 @@ def main(skills: list[str]) -> int:
     if old_version == __version__ or not accepted:
         return 0
 
-    # Pairs of (entry as old_version, entry as installed version) for every finding.
-    # One scan feeds both, so the pairs line up: the version is the only input that differs.
     pairs: list[tuple[dict, dict]] = []
     build = cli.build_baseline_dict
 
@@ -55,7 +53,6 @@ def main(skills: list[str]) -> int:
 
     cli.build_baseline_dict = build_and_record
     for skill in skills:
-        # The command prints a baseline for the folder on stdout. Only its findings are needed.
         with contextlib.redirect_stdout(io.StringIO()):
             code = cli.app(["baseline", skill, "--no-llm", "--output", "-"], standalone_mode=False)
         if code:

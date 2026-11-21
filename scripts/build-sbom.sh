@@ -1,10 +1,4 @@
 #!/bin/sh
-# Generates the SBOM for ALF's shipped bundles in sbom/ as sbom/alf.cdx.json (CycloneDX 1.6). Build tools are not in
-# the SBOM. Checks the output against its schema, and checks that each bundle's license is on SHIP_ALLOWED. Fails on a
-# generation error, on an invalid file, and on a bundle license outside SHIP_ALLOWED. See docs/sbom.md.
-# Usage: sh scripts/build-sbom.sh          writes sbom/. The SBOM workflow runs this on each push to main.
-#        sh scripts/build-sbom.sh --check  runs the same checks and writes no files. The pull request check runs this.
-# Needs jq, and the tool that `sh scripts/install-tools.sh check-jsonschema` installs.
 set -eu
 
 cd "$(dirname "$0")/.."
@@ -20,7 +14,6 @@ case "${1:-}" in
 esac
 OUT=sbom
 CHECK=.tools/check-jsonschema/bin/check-jsonschema
-# The licenses a shipped bundle may carry. Add one here, with review, when a skill needs it.
 SHIP_ALLOWED="MIT"
 TAB=$(printf '\t')
 WORK=$(mktemp -d)
@@ -34,7 +27,6 @@ if [ ! -x "$CHECK" ]; then
   exit 1
 fi
 
-# Prints the SHA-256 of a file.
 sha256_of() {
   if command -v sha256sum > /dev/null 2>&1; then
     sha256sum "$1" | cut -d ' ' -f 1
@@ -47,8 +39,6 @@ rm -rf "$OUT"
 mkdir -p "$OUT"
 COMMIT=$(git rev-parse HEAD)
 
-# Prints the SPDX id for a license string, or nothing when the string is not on the list. A bare "BSD License"
-# gets nothing: it does not say which BSD clause applies.
 map_license() {
   case "$1" in
     MIT | "MIT License" | "The MIT License") echo MIT ;;
@@ -64,9 +54,7 @@ map_license() {
   esac
 }
 
-# Prints ok when every license id in the SPDX expression is on SHIP_ALLOWED, and denied when one is not. Prints
-# unknown for UNKNOWN. OR is not evaluated: every alternative must be on the list.
-license_status() {  # SPDX expression or UNKNOWN
+license_status() {
   if [ "$1" = UNKNOWN ]; then
     echo unknown
     return
@@ -84,7 +72,6 @@ license_status() {  # SPDX expression or UNKNOWN
   echo "$status"
 }
 
-# Bundles: one per dist/skills/<skill>/. Wrapper rows come from each upstream's PIN.md.
 : > "$WORK/wrappers.tsv"
 for pin in src/upstream/*/PIN.md; do
   upstream=$(basename "$(dirname "$pin")")
@@ -99,8 +86,6 @@ for pin in src/upstream/*/PIN.md; do
     }' "$pin" >> "$WORK/wrappers.tsv"
 done
 
-# One row per bundle: name, version, license, source. A wrapper's version is its upstream commit. An in-house
-# skill's version is the ALF commit, and its license is the repository license.
 : > "$OUT/components.tsv"
 for dir in dist/skills/*/; do
   name=$(basename "$dir")
@@ -129,11 +114,10 @@ fi
 jq -R -s -f scripts/sbom-cyclonedx.jq --arg commit "$COMMIT" --arg root_license "$ROOT_LICENSE" "$OUT/components.tsv" \
   > "$OUT/alf.cdx.json"
 
-# Findings: kind, package, version, detail. Any finding fails the job. Licenses are decided in code, by SHIP_ALLOWED.
 FINDINGS="$WORK/findings.tsv"
 : > "$FINDINGS"
 
-check_schema() {  # schema file, instance file, label
+check_schema() {
   if ! "$CHECK" --schemafile "$1" "$2" > "$WORK/check.log" 2>&1; then
     printf 'schema\t%s\t-\tfails its schema\n' "$3" >> "$FINDINGS"
     cat "$WORK/check.log" >&2

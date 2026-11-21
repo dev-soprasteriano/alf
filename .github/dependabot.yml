@@ -6,6 +6,7 @@ updates:
     directories:
       - /tools/apm
       - /tools/check-jsonschema
+      - /tools/tree-sitter
       - /tools/uv
     schedule:
       interval: daily

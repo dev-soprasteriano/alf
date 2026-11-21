@@ -25,6 +25,7 @@ Rules for agents working in this repo. Read them before changing `src/skills/` o
 - The skills tables in `README.md` sit between `<!-- skills:start -->` and `<!-- skills:end -->`. They name every skill in `src/skills/`, and every code span in them is a skill.
 - `README.md` holds the URL of each upstream.
 - When a skill names another skill, list that name in `src/skill-dependencies.txt`: under the skill as a dependency if it calls the skill, or under `mentions` if it does not. The build fails on any unlisted name.
+- Do not write comments in `scripts/` or `.githooks/`. Only line-1 shebangs (`#!`) and linter directives (`# shellcheck`, `# noqa`, `# type: ignore`, `# pragma:`, `# pyright:`, `# fmt:`) are allowed. `scripts/check-comments.py` fails `task ci` on any other comment.
 
 ## Writing style
 

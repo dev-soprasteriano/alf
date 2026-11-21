@@ -1,8 +1,4 @@
 #!/bin/sh
-# Regenerates tools/<tool>/requirements.txt, with every dependency and its hashes, from tools/<tool>/requirements.in.
-# Uses the hash-locked uv from tools/uv, installed by install-tools.sh. Targets Python 3.12, like install-tools.sh.
-# Run by `task tools:lock` and by scripts/update-skillspector.sh. Commit both files after a change.
-# Usage: sh scripts/lock-tool.sh <tool>
 set -eu
 
 cd "$(dirname "$0")/.."

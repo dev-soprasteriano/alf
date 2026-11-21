@@ -1,12 +1,4 @@
 #!/usr/bin/env bash
-# Builds one self-contained APM skill bundle per skill into dist/skills/, dist/user-apm.yml,
-# the manifest a single user copies to ~/.apm/apm.yml, and dist/.claude-plugin/plugin.json,
-# which makes dist/ a Claude Code and Copilot CLI plugin. Run by `task build-apm`.
-# `--check` builds into a temp folder and fails if dist/ differs from it. CI runs it.
-# Never edit dist/ by hand. See AGENTS.md.
-#
-# Written for bash 3.2 (macOS /bin/bash): plain variables, loops and case only.
-
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -32,28 +24,23 @@ usage() {
   exit 2
 }
 
-# Frontmatter of a SKILL.md, from line 1 through the closing ---.
-frontmatter() {  # SKILL.md
+frontmatter() {
   awk '{ print } NR > 1 && /^---$/ { exit }' "$1"
 }
 
-# Everything after the closing --- of a SKILL.md.
-body() {  # SKILL.md
+body() {
   awk 'seen { print } !seen && NR > 1 && /^---$/ { seen = 1 }' "$1"
 }
 
-# The overlay block of a wrapper, markers included.
-overlay() {  # SKILL.md
+overlay() {
   awk -v s="$OVERLAY_START" -v e="$OVERLAY_END" '$0 == s { on = 1 } on { print } $0 == e { exit }' "$1"
 }
 
-# The upstream skill a wrapper points at, as slug/skill. Prints nothing for an in-house skill.
-upstream_ref() {  # SKILL.md
+upstream_ref() {
   grep -o '`\.\./\.\./upstream/[^`]*/SKILL\.md`' "$1" | head -n 1 \
     | sed 's#^`\.\./\.\./upstream/##; s#/SKILL\.md`$##' || true
 }
 
-# Names of the skills in src/skills/, sorted.
 list_skills() {
   local d
   for d in "$SKILLS_DIR"/*/; do
@@ -63,9 +50,7 @@ list_skills() {
   done
 }
 
-# The names listed under a key in src/skill-dependencies.txt, space-separated.
-# Key is a skill (its dependencies) or "<skill> mentions" (its mentions).
-names_for() {  # key
+names_for() {
   [[ -f "$DEPS_FILE" ]] || return 0
   awk -v n="$1" '
     /^#/ || !/:/ { next }
@@ -74,27 +59,22 @@ names_for() {  # key
   ' "$DEPS_FILE"
 }
 
-# Dependencies a skill declares, space-separated.
-deps_for() {  # skill
+deps_for() {
   names_for "$1"
 }
 
-# Names a skill mentions without calling, space-separated.
-mentions_for() {  # skill
+mentions_for() {
   names_for "$1 mentions"
 }
 
-# Regex that matches a skill name used as a call: /name, `name`, "name", 'name', or "name skill".
-name_pattern() {  # name
+name_pattern() {
   local n="$1" pat
   pat="(^|[ (])/${n}([^A-Za-z0-9/_-]|\$)"
   pat="$pat|\`${n}\`|\"${n}\"|'${n}'|(^|[^A-Za-z0-9/_.-])${n} skill"
   printf '%s\n' "$pat"
 }
 
-# Writes dist/skills/<skill>/ into the output folder: the whole upstream folder, the wrapper's
-# frontmatter, the upstream body and the overlay. In-house skills are copied as they are.
-build_skill() {  # skill out
+build_skill() {
   local skill="$1" out="$2" src dest ref slug up deps dep
   src="$SKILLS_DIR/$skill"
   dest="$out/skills/$skill"
@@ -128,8 +108,7 @@ build_skill() {  # skill out
   fi
 }
 
-# Writes dist/user-apm.yml, which lists every skill for a single user across the four user-scope skill roots.
-write_user_manifest() {  # out
+write_user_manifest() {
   local out="$1" skill
   {
     printf 'name: alf\nversion: 1.0.0\ntargets:\n  - agent-skills\n  - claude\n  - antigravity\n  - opencode\n'
@@ -141,9 +120,7 @@ write_user_manifest() {  # out
   } > "$out/user-apm.yml"
 }
 
-# Writes dist/.claude-plugin/plugin.json, which makes dist/ the plugin alf for Claude Code and
-# Copilot CLI. It leaves out version: a version that is not bumped would block updates.
-write_plugin_manifest() {  # out
+write_plugin_manifest() {
   local out="$1" url="https://github.com/$ALF_REPO"
   mkdir -p "$out/.claude-plugin"
   {
@@ -155,9 +132,7 @@ write_plugin_manifest() {  # out
   } > "$out/.claude-plugin/plugin.json"
 }
 
-# Fails when a skill names another skill by name and does not declare it, or declares a name
-# that is not a skill. Scans the built .md files of each skill.
-check_references() {  # out
+check_references() {
   local out="$1" skill ref refname target wrapper declared targets dep errs=0 pairs
   pairs="$WORK/pairs.tsv"
   : > "$pairs"
