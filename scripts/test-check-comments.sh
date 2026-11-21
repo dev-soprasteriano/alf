@@ -33,6 +33,30 @@ expect_fail() {
   fi
 }
 
+expect_staged_pass() {
+  if ! out=$(cd "$2" && "$PY" -I "$CHECK" --staged 2>&1); then
+    echo "FAIL $1: expected pass, got '$out'"
+    failures=$((failures + 1))
+  elif ! printf '%s\n' "$out" | grep -q -F "$3"; then
+    echo "FAIL $1: want '$3', got '$out'"
+    failures=$((failures + 1))
+  else
+    echo "ok   $1"
+  fi
+}
+
+expect_staged_fail() {
+  if out=$(cd "$2" && "$PY" -I "$CHECK" --staged 2>&1); then
+    echo "FAIL $1: expected failure, got pass"
+    failures=$((failures + 1))
+  elif ! printf '%s\n' "$out" | grep -q -F "$3"; then
+    echo "FAIL $1: want '$3', got '$out'"
+    failures=$((failures + 1))
+  else
+    echo "ok   $1"
+  fi
+}
+
 cat > "$WORK/clean.sh" <<'EOF'
 #!/usr/bin/env bash
 # shellcheck disable=SC2034
@@ -87,6 +111,35 @@ x = 1
 y = 2
 EOF
 expect_fail "python comment" "$WORK/bad.py" ":2: disallowed comment: # regular python comment"
+
+REPO="$WORK/repo"
+mkdir -p "$REPO/scripts" "$REPO/.githooks" "$REPO/tools/tree-sitter"
+git -C "$REPO" init -q
+git -C "$REPO" config user.email "test@example.com"
+git -C "$REPO" config user.name "Test"
+printf '#!/bin/sh\necho ok\n' > "$REPO/scripts/ok.sh"
+printf 'tree-sitter==0.26.1\n' > "$REPO/tools/tree-sitter/requirements.txt"
+git -C "$REPO" add scripts/ok.sh tools/tree-sitter/requirements.txt
+git -C "$REPO" commit -q -m "init"
+
+expect_staged_pass "staged: nothing staged" "$REPO" "no staged script changed"
+
+printf '#!/bin/sh\necho clean\n' > "$REPO/scripts/ok.sh"
+git -C "$REPO" add scripts/ok.sh
+printf '#!/bin/sh\n# unstaged comment\necho clean\n' > "$REPO/scripts/ok.sh"
+expect_staged_pass "staged: checks index blob, ignores unstaged working-tree comment" "$REPO" "1 staged file(s) clean"
+
+git -C "$REPO" add scripts/ok.sh
+expect_staged_fail "staged: catches staged comment" "$REPO" "scripts/ok.sh:2: disallowed comment: # unstaged comment"
+
+git -C "$REPO" reset -q HEAD scripts/ok.sh
+git -C "$REPO" checkout -q -- scripts/ok.sh
+printf '#!/bin/sh\n# existing comment\necho bad\n' > "$REPO/scripts/old.sh"
+git -C "$REPO" add scripts/old.sh
+git -C "$REPO" commit -q -m "add old"
+printf 'tree-sitter==0.26.1\n' >> "$REPO/tools/tree-sitter/requirements.txt"
+git -C "$REPO" add tools/tree-sitter/requirements.txt
+expect_staged_fail "staged: lockfile change triggers full scan" "$REPO" "scripts/old.sh:2: disallowed comment: # existing comment"
 
 if [ "$failures" -ne 0 ]; then
   echo "$failures test(s) failed"

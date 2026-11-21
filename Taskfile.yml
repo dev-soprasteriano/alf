@@ -15,6 +15,7 @@ tasks:
     desc: Run the same checks as CI.
     cmds:
       - task: ci:build
+      - task: ci:comments
       - task: ci:skillspector
       - task: ci:apm-audit
       - task: ci:sbom
@@ -23,25 +24,32 @@ tasks:
     desc: Run the same checks on the staged files.
     cmds:
       - task: ci:build
+      - task: ci:comments
+        vars: {STAGED: "1"}
       - task: ci:skillspector
         vars: {STAGED: "1"}
       - task: ci:apm-audit
         vars: {STAGED: "1"}
 
   ci:build:
-    desc: Check dist/ and README.md match src/, check scripts for comments, and run the script tests.
+    desc: Check dist/ and README.md match src/, and run the script tests.
     preconditions:
       - sh: command -v jq
         msg: "jq not found. Install it with: brew install jq"
     cmds:
       - scripts/build-apm.sh --check
       - sh scripts/install-tools.sh tree-sitter
-      - .tools/tree-sitter/bin/python -I scripts/check-comments.py
       - sh scripts/test-changed-skills.sh
       - sh scripts/test-apm-audit-ci.sh
       - sh scripts/test-build-apm-readme.sh
       - sh scripts/test-build-sbom.sh
       - sh scripts/test-check-comments.sh
+
+  ci:comments:
+    desc: Check scripts/ and .githooks/ for disallowed comments. STAGED=1 checks only the staged files.
+    cmds:
+      - sh scripts/install-tools.sh tree-sitter
+      - .tools/tree-sitter/bin/python -I scripts/check-comments.py{{if .STAGED}} --staged{{end}}
 
   ci:skillspector:
     desc: Scan every alf skill and upstream skill with SkillSpector, static only (no LLM). STAGED=1 scans only the skill folders of the staged files.
