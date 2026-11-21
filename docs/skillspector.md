@@ -50,3 +50,9 @@ The pull request that updates SkillSpector carries each entry over to the new ve
 - [ ] The `reason` says why the finding is safe, in one or two sentences.
 - [ ] The `rule_id` and `file` match the finding in the failing log.
 - [ ] The pull request adds no entry for a finding the author did not show.
+
+## Script behavior
+
+- `scripts/skillspector-ci.sh` scans each skill folder separately because SkillSpector rejects `--baseline` on recursive scans. It skips `dist/` because `dist/` is built from `src/`.
+- `scripts/update-skillspector.sh` commits with `--no-verify` because the pre-commit scan fails by design while a new or dropped finding awaits human review. It exits early when the update branch already pins the latest release so a fresh commit does not dismiss pull request approvals.
+- Set `SKILLSPECTOR_BRANCH` to override the default `tools/skillspector-update` branch, or `SKILLSPECTOR_LOCAL_ONLY=1` to commit locally without pushing or opening a pull request.

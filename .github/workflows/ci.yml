@@ -31,6 +31,7 @@ jobs:
           sh scripts/test-apm-audit-ci.sh
           sh scripts/test-build-apm-readme.sh
           sh scripts/test-build-sbom.sh
+          sh scripts/test-install-tools.sh
           sh scripts/test-check-comments.sh
 
   skillspector:

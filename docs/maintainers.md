@@ -22,7 +22,7 @@ brew install go-task jq python@3.12
 task hooks:install
 ```
 
-Run `task --list` for the commands and their options. Once hooks are installed, each commit runs `task ci:staged`. `task ci` runs the full set that CI runs.
+Run `task --list` for the commands and their options. Once hooks are installed, each commit runs `task ci:staged`. `task ci` runs the full set that CI runs. The hooks in `.githooks/` chain to the global `core.hooksPath` hooks because setting a repo-local `core.hooksPath` hides the global directory.
 
 ## Build after a change
 
@@ -64,7 +64,7 @@ Three sources open update pull requests. Each one passes the same gate.
 ```mermaid
 flowchart LR
     weekly["update-upstream.yml<br>Mondays"] -->|upstream skills| pr
-    dependabot["Dependabot<br>daily"] -->|apm, uv, GitHub Actions| pr
+    dependabot["Dependabot<br>daily"] -->|apm, check-jsonschema, tree-sitter, uv, GitHub Actions| pr
     skillspector["update-skillspector.yml<br>daily"] -->|SkillSpector| pr
     pr[Update pull request] --> ci{{CI checks}}
     ci --> review["Approving review<br>after the last push"]
@@ -85,9 +85,9 @@ tools/<tool>/
 └── requirements.txt   # pins every dependency with its hash
 ```
 
-CI installs from `requirements.txt` and refuses any file whose hash does not match.
+CI installs from `requirements.txt` and refuses any file whose hash does not match. `scripts/install-tools.sh` targets Python 3.12 because some pinned packages ship no binary wheel for newer versions, and writes `.tools/<tool>/requirements.txt` last so an interrupted install runs again on the next call.
 
-Dependabot opens the pull requests for apm, check-jsonschema, uv and the GitHub Actions, as `.github/dependabot.yml` sets. SkillSpector is not on PyPI, so `.github/workflows/update-skillspector.yml` opens its pull request.
+Dependabot opens the pull requests for apm, check-jsonschema, tree-sitter, uv and the GitHub Actions, as `.github/dependabot.yml` sets. SkillSpector is not on PyPI, so `.github/workflows/update-skillspector.yml` opens its pull request.
 
 The `sbom` job checks the SBOM on pull requests. The SBOM workflow generates it on each push to `main`. [docs/sbom.md](sbom.md) describes both.
 
@@ -101,7 +101,7 @@ The SkillSpector pull request carries over each accepted finding that the new ve
 
 | CI check | Fails when | Fix |
 | --- | --- | --- |
-| `build` | `dist/` is stale, `README.md` differs from `src/`, or a script test fails | Run `task build-apm`, fix what it reports, and commit. |
+| `build` | `dist/` is stale, `README.md` differs from `src/`, a script has a disallowed comment, or a script test fails | Run `task build-apm` or fix what the failing check reports, and commit. |
 | `skillspector` | A skill has an active MEDIUM, HIGH or CRITICAL finding | [docs/skillspector.md](skillspector.md) |
 | `apm-audit` | A file in `dist/` has hidden Unicode at WARNING or CRITICAL | [docs/apm-audit.md](apm-audit.md) |
 

@@ -38,11 +38,11 @@ tasks:
         msg: "jq not found. Install it with: brew install jq"
     cmds:
       - scripts/build-apm.sh --check
-      - sh scripts/install-tools.sh tree-sitter
       - sh scripts/test-changed-skills.sh
       - sh scripts/test-apm-audit-ci.sh
       - sh scripts/test-build-apm-readme.sh
       - sh scripts/test-build-sbom.sh
+      - sh scripts/test-install-tools.sh
       - sh scripts/test-check-comments.sh
 
   ci:comments:

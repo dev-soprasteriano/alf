@@ -15,7 +15,7 @@ fi
 for tool in "$@"; do
   case "$tool" in
     "" | *[!a-z0-9-]*)
-      echo "install-tools: invalid tool name: $tool" >&2
+      echo "install-tools: invalid tool name '$tool' (must be a plain folder name; becomes an rm -rf target under .tools/)" >&2
       exit 2
       ;;
   esac

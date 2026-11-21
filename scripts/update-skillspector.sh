@@ -99,4 +99,5 @@ if [ "$(gh pr list --head "$branch" --state open --json number --jq length)" -gt
 else
   gh pr create --base main --head "$branch" --title "$title" --body-file "$work/body.md"
 fi
+echo "Dispatching ci.yml on $branch (GITHUB_TOKEN pushes do not trigger pull_request workflows)."
 gh workflow run ci.yml --ref "$branch"

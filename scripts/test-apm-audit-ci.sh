@@ -169,6 +169,8 @@ expect_result "warning: blocks, logged with the scanned path" \
   "dist/skills/a/SKILL.md	3	U+200B	warning	Zero-width space" "docs/apm-audit.md"
 expect_result "critical: blocks" "$(report_with critical 3 U+202E)" 1 1 \
   "dist/skills/a/SKILL.md	3	U+202E	critical"
+expect_result "unknown severity: blocks" "$(report_with high 3 U+200B)" 2 1 \
+  "dist/skills/a/SKILL.md	3	U+200B	high"
 expect_result "info: never blocks" "$(report_with info 3 U+FE0F)" 0 0 "passed"
 
 expect_result "apm exits 3 (configuration error): fails" "$CLEAN" 3 1 "dist/skills/a/SKILL.md" "docs/apm-audit.md"

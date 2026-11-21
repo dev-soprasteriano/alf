@@ -6,7 +6,7 @@
 
 | Severity | Blocks | Accept it? |
 | --- | --- | --- |
-| CRITICAL, WARNING | Yes | No. Fix it. |
+| CRITICAL, WARNING, or any unknown severity | Yes | No. Fix it. |
 | INFO | Never | Not needed. |
 
 The log lists each blocking finding with its file, line, codepoint, severity and description.

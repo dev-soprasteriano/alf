@@ -420,6 +420,7 @@ cmd_update() {
   else
     gh pr create --base main --head "$branch" --title "$title" --body-file "$body"
   fi
+  printf 'Dispatching ci.yml on %s (GITHUB_TOKEN pushes do not trigger pull_request workflows).\n' "$branch"
   gh workflow run ci.yml --ref "$branch"
 }
 
