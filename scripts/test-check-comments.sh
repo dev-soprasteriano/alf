@@ -5,9 +5,7 @@ ROOT=$(cd "$(dirname "$0")/.." && pwd)
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 
-if [ ! -x "$ROOT/.tools/tree-sitter/bin/python" ]; then
-  sh "$ROOT/scripts/install-tools.sh" tree-sitter
-fi
+(cd "$ROOT" && sh scripts/install-tools.sh tree-sitter)
 PY="$ROOT/.tools/tree-sitter/bin/python"
 CHECK="$ROOT/scripts/check-comments.py"
 failures=0
@@ -15,8 +13,12 @@ failures=0
 expect_pass() {
   test_name=$1
   target=$2
+  expected=${3:-}
   if ! out=$("$PY" -I "$CHECK" "$target" 2>&1); then
     echo "FAIL $test_name: expected pass, got '$out'"
+    failures=$((failures + 1))
+  elif [ -n "$expected" ] && ! printf '%s\n' "$out" | grep -q -F "$expected"; then
+    echo "FAIL $test_name: want '$expected', got '$out'"
     failures=$((failures + 1))
   else
     echo "ok   $test_name"
@@ -140,8 +142,11 @@ expect_fail "python tokenize error fails closed" "$WORK/broken.py" "parse error:
 printf 'plain text without shebang or extension\n' > "$WORK/mystery"
 expect_fail "unclassified file fails closed" "$WORK/mystery" ":1: unclassified file"
 
+printf '#!/usr/bin/env fish\necho hi\n' > "$WORK/fish-script"
+expect_fail "fish shebang fails closed as unclassified" "$WORK/fish-script" ":1: unclassified file"
+
 printf '.\n' > "$WORK/filter.jq"
-expect_pass "explicitly unchecked .jq file prints skip notice and passes" "$WORK/filter.jq"
+expect_pass "explicitly unchecked .jq file prints skip notice and passes" "$WORK/filter.jq" "skipping unchecked .jq file:"
 
 REPO="$WORK/repo"
 mkdir -p "$REPO/scripts/lib" "$REPO/.githooks" "$REPO/tools/tree-sitter"
@@ -160,6 +165,14 @@ expect_repo_pass "full scan: checks tracked scripts and extensionless hooks, pri
 printf '#!/bin/sh\n# nested untracked comment\necho hi\n' > "$REPO/scripts/lib/nested.sh"
 expect_repo_fail "full scan: catches nested untracked script" "$REPO" "scripts/lib/nested.sh:2: disallowed comment: # nested untracked comment"
 rm "$REPO/scripts/lib/nested.sh"
+
+TAB_SCRIPT=$(printf 'scripts/a\tb.sh')
+printf '#!/bin/sh\n# tab filename comment\necho hi\n' > "$REPO/$TAB_SCRIPT"
+expect_repo_fail "full scan: catches comment in tab-named script" "$REPO" ":2: disallowed comment: # tab filename comment"
+git -C "$REPO" add "$TAB_SCRIPT"
+expect_repo_fail "staged: catches comment in tab-named script" "$REPO" ":2: disallowed comment: # tab filename comment" --staged
+git -C "$REPO" reset -q HEAD -- "$TAB_SCRIPT"
+rm "$REPO/$TAB_SCRIPT"
 
 printf '#!/bin/sh\n# hook comment\necho hook\n' > "$REPO/.githooks/custom-hook"
 expect_repo_fail "full scan: catches comment in extensionless hook" "$REPO" ".githooks/custom-hook:2: disallowed comment: # hook comment"

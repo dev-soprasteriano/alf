@@ -10,6 +10,8 @@ from tree_sitter import Language, Parser
 
 SHELL_DIRECTIVE = re.compile(r"^#\s*shellcheck\b")
 PYTHON_DIRECTIVE = re.compile(r"^#\s*(?:noqa\b|type:\s*ignore\b|pragma:|pyright:|fmt:)")
+SHELL_SHEBANG = re.compile(rb"^#!\s*(?:/usr/bin/env\s+(?:-S\s+)?|\S*/)?(?:ba|da|a|k|z)?sh(?:\s|$)")
+PYTHON_SHEBANG = re.compile(rb"^#!\s*(?:/usr/bin/env\s+(?:-S\s+)?|\S*/)?python[0-9.]*(?:\s|$)")
 SHELL_LANGUAGE = Language(tree_sitter_bash.language())
 FULL_SCAN_TRIGGERS = ("tools/tree-sitter/requirements.txt", "scripts/check-comments.py")
 UNCHECKED_SUFFIXES = frozenset({".jq"})
@@ -82,16 +84,20 @@ def resolve_checker(path: Path, source: bytes) -> Checker | str | None:
     if path.suffix in {".sh", ".bash"} or ".githooks" in path.parts:
         return check_shell_bytes
     first_line = source.splitlines()[:1]
-    if first_line and first_line[0].startswith(b"#!"):
-        if b"python" in first_line[0]:
+    if first_line:
+        if PYTHON_SHEBANG.match(first_line[0]):
             return check_python_bytes
-        if b"sh" in first_line[0]:
+        if SHELL_SHEBANG.match(first_line[0]):
             return check_shell_bytes
     return None
 
 
 def run_git(args: list[str], cwd: Path) -> subprocess.CompletedProcess[bytes]:
     return subprocess.run(["git", *args], cwd=cwd, capture_output=True, check=False)
+
+
+def split_nul(data: bytes) -> list[str]:
+    return [chunk.decode("utf-8", errors="surrogateescape") for chunk in data.split(b"\0") if chunk]
 
 
 def git_root(cwd: Path) -> Path | None:
@@ -122,17 +128,16 @@ def check_staged(cwd: Path) -> int:
         return 2
     trigger = run_git(["diff", "--cached", "--quiet", "--", *FULL_SCAN_TRIGGERS], repo)
     if trigger.returncode != 0:
-        listed = run_git(["-c", "core.quotePath=false", "ls-files", "--", "scripts/", ".githooks/"], repo)
+        listed = run_git(["ls-files", "-z", "--", "scripts/", ".githooks/"], repo)
     else:
         listed = run_git(
             [
-                "-c",
-                "core.quotePath=false",
                 "diff",
                 "--cached",
                 "--no-renames",
                 "--name-only",
                 "--diff-filter=d",
+                "-z",
                 "--",
                 "scripts/",
                 ".githooks/",
@@ -142,7 +147,7 @@ def check_staged(cwd: Path) -> int:
     if listed.returncode != 0:
         print(listed.stderr.decode("utf-8", errors="replace"), file=sys.stderr)
         return 2
-    relpaths = [line for line in listed.stdout.decode("utf-8").splitlines() if line]
+    relpaths = split_nul(listed.stdout)
     if not relpaths:
         print("check-comments: no staged script changed. Nothing to check.")
         return 0
@@ -151,6 +156,8 @@ def check_staged(cwd: Path) -> int:
     for rel in relpaths:
         blob = run_git(["show", f":{rel}"], repo)
         if blob.returncode != 0:
+            print(f"{rel}:1: failed to read staged blob", file=sys.stderr)
+            failures += 1
             continue
         c, f = report(rel, Path(rel), blob.stdout)
         checked += c
@@ -167,9 +174,8 @@ def default_targets(cwd: Path) -> tuple[Path, list[Path]]:
     if repo is not None:
         listed = run_git(
             [
-                "-c",
-                "core.quotePath=false",
                 "ls-files",
+                "-z",
                 "--cached",
                 "--others",
                 "--exclude-standard",
@@ -180,7 +186,7 @@ def default_targets(cwd: Path) -> tuple[Path, list[Path]]:
             repo,
         )
         if listed.returncode == 0:
-            paths = [repo / line for line in sorted(set(listed.stdout.decode("utf-8").splitlines())) if line]
+            paths = [repo / rel for rel in sorted(set(split_nul(listed.stdout)))]
             return repo, [path for path in paths if path.is_file()]
     root = Path(__file__).resolve().parent.parent
     targets: list[Path] = []
