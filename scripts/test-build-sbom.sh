@@ -49,20 +49,28 @@ run_in() {
 }
 
 expect_code() {
-  if [ "$2" != "$3" ]; then
-    fail "$1" "exit $3, want $2. Output: $out"
+  name=$1
+  want=$2
+  got=$3
+  if [ "$want" != "$got" ]; then
+    fail "$name" "exit $got, want $want. Output: $out"
   fi
 }
 
 expect_line() {
-  if ! printf '%s\n' "$out" | grep -qxF "$2"; then
-    fail "$1" "missing output line: $2. Output: $out"
+  name=$1
+  expected=$2
+  if ! printf '%s\n' "$out" | grep -qxF "$expected"; then
+    fail "$name" "missing output line: $expected. Output: $out"
   fi
 }
 
 expect_json() {
-  if ! jq -e "$3" "$2/sbom/alf.cdx.json" > /dev/null 2>&1; then
-    fail "$1" "sbom/alf.cdx.json does not satisfy: $3"
+  name=$1
+  dir=$2
+  expr=$3
+  if ! jq -e "$expr" "$dir/sbom/alf.cdx.json" > /dev/null 2>&1; then
+    fail "$name" "sbom/alf.cdx.json does not satisfy: $expr"
   fi
 }
 

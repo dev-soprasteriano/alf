@@ -118,8 +118,11 @@ FINDINGS="$WORK/findings.tsv"
 : > "$FINDINGS"
 
 check_schema() {
-  if ! "$CHECK" --schemafile "$1" "$2" > "$WORK/check.log" 2>&1; then
-    printf 'schema\t%s\t-\tfails its schema\n' "$3" >> "$FINDINGS"
+  schema=$1
+  instance=$2
+  label=$3
+  if ! "$CHECK" --schemafile "$schema" "$instance" > "$WORK/check.log" 2>&1; then
+    printf 'schema\t%s\t-\tfails its schema\n' "$label" >> "$FINDINGS"
     cat "$WORK/check.log" >&2
   fi
 }

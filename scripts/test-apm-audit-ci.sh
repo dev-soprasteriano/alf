@@ -81,9 +81,11 @@ expect_scanned() {
 
 expect_result() {
   name=$1
-  run_script "$2" "$3"
+  report=$2
+  stub_exit=$3
   want_code=$4
   shift 4
+  run_script "$report" "$stub_exit"
   if [ "$code" -ne "$want_code" ]; then
     fail "$name" "want exit $want_code, got $code: $out"
     return 0
@@ -98,7 +100,10 @@ expect_result() {
 }
 
 report_with() {
-  printf '{"exit_code": 2, "summary": {}, "findings": [{"severity": "%s", "file": "SKILL.md", "line": %s, "column": 2, "codepoint": "%s", "category": "zero-width", "description": "Zero-width space"}]}' "$1" "$2" "$3"
+  severity=$1
+  line=$2
+  codepoint=$3
+  printf '{"exit_code": 2, "summary": {}, "findings": [{"severity": "%s", "file": "SKILL.md", "line": %s, "column": 2, "codepoint": "%s", "category": "zero-width", "description": "Zero-width space"}]}' "$severity" "$line" "$codepoint"
 }
 
 git_repo init -q

@@ -27,12 +27,13 @@ normalize() {
 }
 
 check() {
+  name=$1
   got=$(normalize "$2")
   want=$(normalize "$3")
   if [ "$got" = "$want" ]; then
-    echo "ok   $1"
+    echo "ok   $name"
   else
-    echo "FAIL $1"
+    echo "FAIL $name"
     echo "  want: $(echo "$want" | tr '\n' ' ')"
     echo "  got:  $(echo "$got" | tr '\n' ' ')"
     failures=$((failures + 1))
@@ -40,12 +41,15 @@ check() {
 }
 
 expect_changed() {
-  if ! out=$(cd "$FIXTURE" && printf '%s\n' "$2" | sh "$SCRIPT"); then
-    echo "FAIL $1: script exited nonzero"
+  test_name=$1
+  input_paths=$2
+  expected=$3
+  if ! out=$(cd "$FIXTURE" && printf '%s\n' "$input_paths" | sh "$SCRIPT"); then
+    echo "FAIL $test_name: script exited nonzero"
     failures=$((failures + 1))
     return 0
   fi
-  check "$1" "$out" "$3"
+  check "$test_name" "$out" "$expected"
 }
 
 expect_staged() {

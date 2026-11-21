@@ -51,51 +51,56 @@ load_rows() {
 }
 
 set_row() {
-  local rows="$WORK_DIR/rows/$1" tmp="$WORK_DIR/rows.tmp"
-  awk -v s="$2" -v c="$3" -v p="$4" '$1 == s { $3 = c; $4 = p } { print }' "$rows" > "$tmp"
+  local slug="$1" skill="$2" commit="$3" pinned="$4"
+  local rows="$WORK_DIR/rows/$slug" tmp="$WORK_DIR/rows.tmp"
+  awk -v s="$skill" -v c="$commit" -v p="$pinned" '$1 == s { $3 = c; $4 = p } { print }' "$rows" > "$tmp"
   mv "$tmp" "$rows"
 }
 
 write_pin() {
+  local slug="$1" url="$2" rows_file="$3"
   {
-    printf 'Upstream: %s\n\n' "$2"
+    printf 'Upstream: %s\n\n' "$url"
     printf 'Files under this folder are copied from the commits in the table by scripts/update-upstream.sh.\n'
     printf 'Edit only through scripts/update-upstream.sh. Rows marked yes are skipped by the weekly update.\n\n'
     printf '| Skill | Upstream path | Commit | Pinned | Wrapper |\n'
     printf '| --- | --- | --- | --- | --- |\n'
-    awk '{ printf "| %s | %s | %s | %s | %s |\n", $1, $2, $3, $4, $5 }' "$3"
-  } > "$UPSTREAM_DIR/$1/PIN.md"
+    awk '{ printf "| %s | %s | %s | %s | %s |\n", $1, $2, $3, $4, $5 }' "$rows_file"
+  } > "$UPSTREAM_DIR/$slug/PIN.md"
 }
 
 clone_upstream() {
-  local dir="$WORK_DIR/clones/$1"
+  local slug="$1" url="$2"
+  local dir="$WORK_DIR/clones/$slug"
   if [[ ! -d "$dir" ]]; then
-    git clone --quiet "$2" "$dir" || die "cannot clone $2"
+    git clone --quiet "$url" "$dir" || die "cannot clone $url"
   fi
   printf '%s\n' "$dir"
 }
 
 default_head() {
-  git -C "$1" rev-parse --verify --quiet 'origin/HEAD^{commit}' || die "no default branch in $1"
+  local clone="$1"
+  git -C "$clone" rev-parse --verify --quiet 'origin/HEAD^{commit}' || die "no default branch in $clone"
 }
 
 latest_commit() {
-  git -C "$1" log -1 --format=%H "$(default_head "$1")" -- "$2"
+  local clone="$1" upath="$2"
+  git -C "$clone" log -1 --format=%H "$(default_head "$clone")" -- "$upath"
 }
 
 commit_at() {
-  local rev
-  rev="$(git -C "$1" rev-parse --verify --quiet "$2^{commit}")" || die "unknown revision: $2"
-  git -C "$1" log -1 --format=%H "$rev" -- "$3"
+  local clone="$1" target_rev="$2" upath="$3" rev
+  rev="$(git -C "$clone" rev-parse --verify --quiet "$target_rev^{commit}")" || die "unknown revision: $target_rev"
+  git -C "$clone" log -1 --format=%H "$rev" -- "$upath"
 }
 
 export_folder() {
-  local tmp
+  local clone="$1" commit="$2" upath="$3" dest="$4" tmp
   tmp="$(mktemp -d "$WORK_DIR/export.XXXXXX")"
-  git -C "$1" archive "$2" -- "$3" | tar -x -C "$tmp"
-  rm -rf "$4"
-  mkdir -p "$(dirname "$4")"
-  mv "$tmp/$3" "$4"
+  git -C "$clone" archive "$commit" -- "$upath" | tar -x -C "$tmp"
+  rm -rf "$dest"
+  mkdir -p "$(dirname "$dest")"
+  mv "$tmp/$upath" "$dest"
 }
 
 skill_name() {
@@ -121,17 +126,19 @@ skill_in_catalogue() {
 }
 
 wrapper_for() {
-  awk -v s="$2" '$1 == s { print $5; exit }' "$WORK_DIR/rows/$1"
+  local slug="$1" skill="$2"
+  awk -v s="$skill" '$1 == s { print $5; exit }' "$WORK_DIR/rows/$slug"
 }
 
 write_wrapper() {
-  local upstream_skill="$UPSTREAM_DIR/$1/$2/SKILL.md"
-  local dir="$SKILLS_DIR/$3"
+  local slug="$1" skill="$2" wrapper_name="$3"
+  local upstream_skill="$UPSTREAM_DIR/$slug/$skill/SKILL.md"
+  local dir="$SKILLS_DIR/$wrapper_name"
   local wrapper="$dir/SKILL.md"
   local overlay
-  [[ -n "$3" ]] || die "no wrapper name for $1/$2"
+  [[ -n "$wrapper_name" ]] || die "no wrapper name for $slug/$skill"
   [[ "$(head -n 1 "$upstream_skill")" == "---" ]] || die "$upstream_skill has no frontmatter"
-  [[ "$(skill_name "$upstream_skill")" == "$2" ]] || die "$upstream_skill: frontmatter name does not match folder $2"
+  [[ "$(skill_name "$upstream_skill")" == "$skill" ]] || die "$upstream_skill: frontmatter name does not match folder $skill"
   if [[ -f "$wrapper" ]]; then
     overlay="$(awk -v s="$OVERLAY_START" -v e="$OVERLAY_END" '$0 == s { on = 1 } on { print } $0 == e { exit }' "$wrapper")"
     [[ "$overlay" == *"$OVERLAY_END" ]] || die "$wrapper: overlay markers are missing; fix this file by hand"
@@ -141,12 +148,12 @@ $OVERLAY_END"
   fi
   mkdir -p "$dir"
   {
-    if [[ "$3" == "$2" ]]; then
+    if [[ "$wrapper_name" == "$skill" ]]; then
       frontmatter "$upstream_skill"
     else
-      frontmatter "$upstream_skill" | awk -v n="$3" '/^name:/ && !done { print "name: " n; done = 1; next } { print }'
+      frontmatter "$upstream_skill" | awk -v n="$wrapper_name" '/^name:/ && !done { print "name: " n; done = 1; next } { print }'
     fi
-    printf '\nFollow the skill in full at `../../upstream/%s/%s/SKILL.md`. Read it first and do what it says, using the reference files beside it.\n\n' "$1" "$2"
+    printf '\nFollow the skill in full at `../../upstream/%s/%s/SKILL.md`. Read it first and do what it says, using the reference files beside it.\n\n' "$slug" "$skill"
     printf '<!-- Local additions go between the markers. scripts/update-upstream.sh rewrites everything else. -->\n'
     printf '%s\n' "$overlay"
   } > "$wrapper"
@@ -178,20 +185,22 @@ check_overlay() {
 }
 
 stage_upstream() {
-  local stage="$WORK_DIR/stage/$4/$5"
-  export_folder "$1" "$2" "$3" "$stage"
-  [[ "$(head -n 1 "$stage/SKILL.md")" == "---" ]] || die "$4/$5: new revision has no frontmatter"
-  [[ "$(skill_name "$stage/SKILL.md")" == "$5" ]] || die "$4/$5: new revision's frontmatter name does not match"
-  check_overlay "$6"
+  local clone="$1" commit="$2" upath="$3" slug="$4" skill="$5" wrapper_name="$6"
+  local stage="$WORK_DIR/stage/$slug/$skill"
+  export_folder "$clone" "$commit" "$upath" "$stage"
+  [[ "$(head -n 1 "$stage/SKILL.md")" == "---" ]] || die "$slug/$skill: new revision has no frontmatter"
+  [[ "$(skill_name "$stage/SKILL.md")" == "$skill" ]] || die "$slug/$skill: new revision's frontmatter name does not match"
+  check_overlay "$wrapper_name"
 }
 
 new_upstream_skills() {
-  local clone="$WORK_DIR/clones/$1" name
-  git -C "$clone" ls-tree -d --name-only "$4:$2" 2>/dev/null | while read -r name; do
-    if git -C "$clone" cat-file -e "$4:$2/$name/SKILL.md" 2>/dev/null \
-      && ! git -C "$clone" cat-file -e "$3:$2/$name/SKILL.md" 2>/dev/null \
+  local slug="$1" parent="$2" old="$3" new="$4"
+  local clone="$WORK_DIR/clones/$slug" name
+  git -C "$clone" ls-tree -d --name-only "$new:$parent" 2>/dev/null | while read -r name; do
+    if git -C "$clone" cat-file -e "$new:$parent/$name/SKILL.md" 2>/dev/null \
+      && ! git -C "$clone" cat-file -e "$old:$parent/$name/SKILL.md" 2>/dev/null \
       && ! skill_in_catalogue "$name"; then
-      printf -- '- %s/%s\n' "$2" "$name"
+      printf -- '- %s/%s\n' "$parent" "$name"
     fi
   done
 }
