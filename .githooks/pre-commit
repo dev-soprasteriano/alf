@@ -1,6 +1,4 @@
 #!/bin/sh
-# Runs `task ci:staged` before each commit: the CI checks, on the staged files.
-# Activated by `task hooks:install`.
 set -eu
 
 if ! command -v task >/dev/null 2>&1; then
@@ -10,7 +8,6 @@ fi
 
 task ci:staged
 
-# core.hooksPath in this repo hides the global hooks directory, so run the global pre-commit hook here.
 global_dir=$(git config --global --get core.hooksPath || true)
 if [ -n "$global_dir" ] && [ -x "$global_dir/pre-commit" ]; then
   exec "$global_dir/pre-commit" "$@"

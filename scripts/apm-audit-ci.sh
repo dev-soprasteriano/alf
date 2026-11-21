@@ -1,12 +1,4 @@
 #!/bin/sh
-# Scans every file in dist/ for hidden Unicode with `apm audit`, one file at a time.
-# Usage: sh scripts/apm-audit-ci.sh [--staged]
-#   No argument: scans every file in dist/. CI runs this.
-#   --staged: scans only the staged files under dist/ that still exist. The pre-commit hook runs this.
-#     Scans every file in dist/ when tools/apm/requirements.txt is staged.
-# Fails on any WARNING or CRITICAL finding, and on any apm run that exits 3 or higher or prints no valid JSON
-# report. Findings cannot be accepted: fix them. See docs/apm-audit.md.
-# Runs the apm that `sh scripts/install-tools.sh apm` installs from tools/apm/requirements.txt.
 set -eu
 
 APM=".tools/apm/bin/apm"
@@ -19,8 +11,6 @@ BLOCKING="$WORK/blocking.tsv"
 : > "$FINDINGS"
 status=0
 
-# Prints the staged files under dist/ that still exist. Prints every file in dist/ when the apm lock file is
-# staged: a new apm version can find what the old one missed.
 staged_targets() {
   if ! git diff --cached --quiet -- "$LOCK"; then
     find dist -type f | sort
@@ -56,8 +46,6 @@ fi
 while IFS= read -r file; do
   [ -n "$file" ] || continue
   report="$WORK/report.json"
-  # Exit codes 1 (CRITICAL) and 2 (WARNING) still print a report. The findings decide what blocks.
-  # 3 is a configuration error. A higher code is unknown, so it fails too.
   if "$APM" audit --file "$file" --format json > "$report" 2> "$WORK/stderr"; then
     code=0
   else
@@ -75,14 +63,11 @@ while IFS= read -r file; do
     status=1
     continue
   fi
-  # findings[].file is not always the scanned path, so tag each finding with the path passed to --file.
   jq -c --arg file "$file" '.findings[] | .file = $file' "$report" >> "$FINDINGS"
 done <<EOF
 $targets
 EOF
 
-# INFO never blocks. Any other severity blocks: the pinned apm reports only WARNING and CRITICAL besides INFO,
-# and a severity added by a later version should not pass unseen.
 jq -rs '.[] | select(.severity != "info") | [.file, .line, .codepoint, .severity, .description] | @tsv' \
   "$FINDINGS" > "$BLOCKING"
 
