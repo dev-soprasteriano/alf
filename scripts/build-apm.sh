@@ -128,11 +128,11 @@ build_skill() {  # skill out
   fi
 }
 
-# Writes dist/user-apm.yml, which lists every skill for a single user.
+# Writes dist/user-apm.yml, which lists every skill for a single user across the four user-scope skill roots.
 write_user_manifest() {  # out
   local out="$1" skill
   {
-    printf 'name: alf\nversion: 1.0.0\ntargets:\n  - claude\n  - copilot\n'
+    printf 'name: alf\nversion: 1.0.0\ntargets:\n  - agent-skills\n  - claude\n  - antigravity\n  - opencode\n'
     printf 'dependencies:\n  apm:\n'
     for skill in $(list_skills); do
       printf '    - %s/dist/skills/%s\n' "$ALF_REPO" "$skill"
