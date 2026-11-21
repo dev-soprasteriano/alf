@@ -77,6 +77,24 @@ tasks:
     cmds:
       - sh scripts/lock-tool.sh "{{.TOOL}}"
 
+  setup:
+    desc: Set up a fresh clone (git hooks and project skills).
+    cmds:
+      - task: hooks:install
+      - task: skills:install
+
+  skills:install:
+    desc: Install the pinned project skills from apm.lock.yaml into .agents/skills/ and .claude/skills/.
+    cmds:
+      - sh scripts/install-tools.sh apm
+      - .tools/apm/bin/apm install --frozen
+
+  skills:update:
+    desc: Move apm.lock.yaml to the latest alf skills on main.
+    cmds:
+      - sh scripts/install-tools.sh apm
+      - .tools/apm/bin/apm update --yes
+
   hooks:install:
     desc: Point this clone's git hooks at .githooks. Run once per clone.
     cmds:

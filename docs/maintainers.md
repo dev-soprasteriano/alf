@@ -19,8 +19,10 @@ scripts/                     # build, update and CI scripts
 
 ```sh
 brew install go-task jq python@3.12
-task hooks:install
+task setup
 ```
+
+`task setup` runs `task hooks:install` and `task skills:install` (which installs the pinned alf skills from `apm.lock.yaml` into `.agents/skills/` and `.claude/skills/`). Run `task skills:update` to refresh `apm.lock.yaml` to the latest skills on `main`.
 
 Run `task --list` for the commands and their options. Once hooks are installed, each commit runs `task ci:staged`. `task ci` runs the full set that CI runs.
 
