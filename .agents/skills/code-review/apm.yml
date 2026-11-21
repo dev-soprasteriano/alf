@@ -1,0 +1,5 @@
+name: code-review
+version: 1.0.0
+dependencies:
+  apm:
+    - dev-soprasteriano/alf/dist/skills/setup-alf

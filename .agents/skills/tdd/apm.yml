@@ -1,0 +1,6 @@
+name: tdd
+version: 1.0.0
+dependencies:
+  apm:
+    - dev-soprasteriano/alf/dist/skills/codebase-design
+    - dev-soprasteriano/alf/dist/skills/code-review

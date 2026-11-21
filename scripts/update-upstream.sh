@@ -410,10 +410,12 @@ cmd_update() {
     write_pin "$slug" "$(pin_url "$UPSTREAM_DIR/$slug/PIN.md")" "$WORK_DIR/rows/$slug"
   done < <(cut -d' ' -f1 "$plan" | sort -u)
 
-  # Rebuild the APM bundles from the changed copies. A failing build stops the update here.
+  # Rebuild the APM bundles and local deployed skills from the changed copies. A failing build stops the update here.
   "$REPO_DIR/scripts/build-apm.sh"
+  sh "$REPO_DIR/scripts/install-tools.sh" apm
+  sh "$REPO_DIR/scripts/sync-skills.sh"
 
-  if [[ -z "$(git -C "$REPO_DIR" status --porcelain -- src dist)" ]]; then
+  if [[ -z "$(git -C "$REPO_DIR" status --porcelain -- src dist .agents/skills .claude/skills apm.lock.yaml)" ]]; then
     printf 'Files already match; skipped the commit.\n'
     exit 0
   fi
@@ -437,7 +439,7 @@ cmd_update() {
 
   branch="${UPSTREAM_BRANCH:-upstream/update-$(date -u +%Y%m%d-%H%M%S)}"
   git -C "$REPO_DIR" checkout --quiet -B "$branch"
-  git -C "$REPO_DIR" add -A -- src dist
+  git -C "$REPO_DIR" add -A -- src dist .agents/skills .claude/skills apm.lock.yaml
   git -C "$REPO_DIR" commit --quiet -F "$WORK_DIR/commit.txt"
   git -C "$REPO_DIR" checkout --quiet main
   if [[ "${UPSTREAM_LOCAL_ONLY:-0}" == 1 ]]; then
