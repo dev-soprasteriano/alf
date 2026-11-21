@@ -32,15 +32,23 @@ fi
 [ -f "$REPO_DIR/apm.yml" ] || die "apm.yml not found"
 [ -d "$REPO_DIR/dist" ] || die "dist/ not found. Run task build-apm first."
 
+WORK="$(mktemp -d)"
+trap 'rm -rf "$WORK"' EXIT
+
 if [ "$mode" = "sync" ]; then
+  # Pre-flight without --force in an empty temp dir so APM still blocks critical hidden-character
+  # findings before --force overwrites existing repo files that lack local receipts.
+  cp "$REPO_DIR/apm.yml" "$WORK/"
+  cp -R "$REPO_DIR/dist" "$WORK/dist"
+  if ! (cd "$WORK" && "$APM" install) > "$WORK/apm.out" 2>&1; then
+    cat "$WORK/apm.out" >&2
+    die "pre-flight apm install failed (see output above); refusing to deploy ./dist"
+  fi
   (cd "$REPO_DIR" && "$APM" install --force)
   exit 0
 fi
 
 [ -f "$REPO_DIR/apm.lock.yaml" ] || die "apm.lock.yaml not found. Run task build-apm and commit the result."
-
-WORK="$(mktemp -d)"
-trap 'rm -rf "$WORK"' EXIT
 
 cp "$REPO_DIR/apm.yml" "$REPO_DIR/apm.lock.yaml" "$WORK/"
 cp -R "$REPO_DIR/dist" "$WORK/dist"
@@ -54,7 +62,7 @@ done
 
 if ! (cd "$WORK" && "$APM" install --frozen) > "$WORK/apm.out" 2>&1; then
   cat "$WORK/apm.out" >&2
-  die "deployed skills or apm.lock.yaml are out of date with dist/. Run task build-apm and commit the result."
+  die "apm install --frozen failed (see output above). If dist/ changed, run task build-apm and commit the result."
 fi
 
 for root in .agents/skills .claude/skills; do

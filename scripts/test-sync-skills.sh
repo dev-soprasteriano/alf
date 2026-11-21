@@ -75,9 +75,9 @@ ln -s "$HERE/.tools/apm" "$CLONE/.tools/apm"
 
 printf '\nupdated on fresh clone\n' >> "$CLONE/dist/skills/pr/SKILL.md"
 rm -f "$CLONE/dist/skills/pr/CREDITS.md"
-if ! out=$(HOME="$FRESH_HOME" sh "$CLONE/scripts/sync-skills.sh" 2>&1); then
+if ! out=$(env -u XDG_CONFIG_HOME -u XDG_DATA_HOME -u XDG_CACHE_HOME -u XDG_STATE_HOME HOME="$FRESH_HOME" sh "$CLONE/scripts/sync-skills.sh" 2>&1); then
   fail "fresh clone without receipts can update existing skill" "$out"
-elif ! HOME="$FRESH_HOME" sh "$CLONE/scripts/sync-skills.sh" --check > /dev/null 2>&1; then
+elif ! env -u XDG_CONFIG_HOME -u XDG_DATA_HOME -u XDG_CACHE_HOME -u XDG_STATE_HOME HOME="$FRESH_HOME" sh "$CLONE/scripts/sync-skills.sh" --check > /dev/null 2>&1; then
   fail "fresh clone check passes after sync" "check failed after sync"
 elif [ ! -f "$CLONE/.agents/skills/repo-only/SKILL.md" ] || [ ! -f "$CLONE/.claude/skills/repo-only/SKILL.md" ]; then
   fail "fresh clone sync preserves repo-only skill" "repo-only skill was deleted"
@@ -86,6 +86,16 @@ elif [ -e "$CLONE/.agents/skills/pr/CREDITS.md" ]; then
 else
   pass "fresh clone without receipts updates modified/deleted skill files and preserves repo-only skill"
 fi
+
+"$HERE/.tools/apm/bin/python" -c 'open("'"$REPO"'/dist/skills/pr/SKILL.md", "a", encoding="utf-8").write("\n\u202ehidden\n")'
+if out=$(sh "$REPO/scripts/sync-skills.sh" 2>&1); then
+  fail "hidden Unicode in dist blocks sync" "sync succeeded unexpectedly"
+elif grep -q 'hidden' "$REPO/.agents/skills/pr/SKILL.md"; then
+  fail "hidden Unicode in dist blocks sync" "poisoned file was deployed"
+else
+  pass "hidden Unicode in dist blocks sync before deploying"
+fi
+cp "$HERE/dist/skills/pr/SKILL.md" "$REPO/dist/skills/pr/SKILL.md"
 
 printf '\nstale edit\n' >> "$REPO/dist/skills/pr/SKILL.md"
 if out=$(sh "$REPO/scripts/sync-skills.sh" --check 2>&1); then
