@@ -52,7 +52,10 @@ Write like a technical writer. State facts, steps and decisions. Cut anything el
 - `task ci` runs the same checks as CI.
 - `task ci:staged` runs the same checks on the staged files.
 - `task tools:lock TOOL=<tool>` regenerates `tools/<tool>/requirements.txt` after an edit to its `requirements.in`.
+- `task setup` runs `task hooks:install` and `task skills:install`. Run it once per clone.
 - `task hooks:install` points this clone's git hooks at `.githooks`. Run it once per clone.
+- `task skills:install` installs the pinned project skills from `apm.lock.yaml` into `.agents/skills/` and `.claude/skills/`.
+- `task skills:update` updates `apm.lock.yaml` to the latest skills on `main`.
 
 Each update opens a PR. Its description tells the reviewer to check LICENSE changes and missing linked upstream skills.
 
