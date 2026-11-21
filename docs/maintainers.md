@@ -26,7 +26,7 @@ brew install go-task jq python@3.12
 task hooks:install
 ```
 
-Run `task --list` for the commands and their options. Once hooks are installed, each commit runs `task ci:staged`. `task ci` runs the full set that CI runs.
+Run `task --list` for the commands and their options. Once hooks are installed, each commit runs `task ci:staged` (which needs Python 3.12, installs `apm` on first run, and runs `sync-skills.sh --check` in ~4s). `task ci` runs the full set that CI runs.
 
 The repo's bundles are committed under `.agents/skills/` and `.claude/skills/` via `apm.yml` (`./dist`), so coding agents (including cloud agents and Windows) load them on checkout without a setup step. If you also keep the global `alf` plugin enabled, Claude Code lists both `<skill>` and `alf:<skill>`, and Copilot CLI uses the repo copy.
 
@@ -94,7 +94,7 @@ tools/<tool>/
 
 CI installs from `requirements.txt` and refuses any file whose hash does not match.
 
-Dependabot opens the pull requests for apm, check-jsonschema, uv and the GitHub Actions, as `.github/dependabot.yml` sets. SkillSpector is not on PyPI, so `.github/workflows/update-skillspector.yml` opens its pull request.
+Dependabot opens the pull requests for apm, check-jsonschema, uv and the GitHub Actions, as `.github/dependabot.yml` sets. SkillSpector is not on PyPI, so `.github/workflows/update-skillspector.yml` opens its pull request. If an `apm` update changes the lockfile format and fails `sync-skills.sh --check`, run `task build-apm` on the Dependabot branch and commit the refreshed `apm.lock.yaml`.
 
 The `sbom` job checks the SBOM on pull requests. The SBOM workflow generates it on each push to `main`. [docs/sbom.md](sbom.md) describes both.
 

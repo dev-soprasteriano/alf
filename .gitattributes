@@ -1,3 +1,6 @@
 # Generated bundles: review the source under src/skills/ and src/upstream/, not these copies.
-dist/** linguist-generated=true
-apm.lock.yaml linguist-generated=true
+# Pin LF line endings so APM lockfile hashes match across Windows, macOS, and Linux.
+dist/** linguist-generated=true text=auto eol=lf
+.agents/skills/** text=auto eol=lf
+.claude/skills/** text=auto eol=lf
+apm.lock.yaml linguist-generated=true text=auto eol=lf

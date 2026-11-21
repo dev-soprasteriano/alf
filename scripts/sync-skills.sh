@@ -29,17 +29,18 @@ if [ ! -x "$APM" ]; then
   die "$APM not found. Install it with: sh scripts/install-tools.sh apm"
 fi
 
+[ -f "$REPO_DIR/apm.yml" ] || die "apm.yml not found"
+[ -d "$REPO_DIR/dist" ] || die "dist/ not found. Run task build-apm first."
+
 if [ "$mode" = "sync" ]; then
-  (cd "$REPO_DIR" && "$APM" install)
+  (cd "$REPO_DIR" && "$APM" install --force)
   exit 0
 fi
 
+[ -f "$REPO_DIR/apm.lock.yaml" ] || die "apm.lock.yaml not found. Run task build-apm and commit the result."
+
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
-
-[ -f "$REPO_DIR/apm.yml" ] || die "apm.yml not found"
-[ -f "$REPO_DIR/apm.lock.yaml" ] || die "apm.lock.yaml not found. Run task build-apm and commit the result."
-[ -d "$REPO_DIR/dist" ] || die "dist/ not found. Run task build-apm first."
 
 cp "$REPO_DIR/apm.yml" "$REPO_DIR/apm.lock.yaml" "$WORK/"
 cp -R "$REPO_DIR/dist" "$WORK/dist"
@@ -47,6 +48,7 @@ for root in .agents/skills .claude/skills; do
   if [ -d "$REPO_DIR/$root" ]; then
     mkdir -p "$WORK/$(dirname "$root")"
     cp -R "$REPO_DIR/$root" "$WORK/$root"
+    find "$WORK/$root" -name '.DS_Store' -delete
   fi
 done
 
@@ -59,9 +61,9 @@ for root in .agents/skills .claude/skills; do
   if [ ! -d "$REPO_DIR/$root" ]; then
     die "$root is missing. Run task build-apm and commit the result."
   fi
-  if ! diff -r "$REPO_DIR/$root" "$WORK/$root" > "$WORK/diff.txt" 2>&1; then
+  if ! diff -r -x .DS_Store "$REPO_DIR/$root" "$WORK/$root" > "$WORK/diff.txt" 2>&1; then
     head -n 40 "$WORK/diff.txt" >&2
-    die "$root is out of date with dist/. Run task build-apm and commit the result."
+    die "$root differs from dist/. Run task build-apm, or remove stray files inside deployed skill folders."
   fi
 done
 

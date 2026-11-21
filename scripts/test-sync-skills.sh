@@ -55,6 +55,38 @@ else
   pass "repo-only skill preserved by sync and check"
 fi
 
+printf 'finder\n' > "$REPO/.agents/skills/pr/.DS_Store"
+if ! out=$(sh "$REPO/scripts/sync-skills.sh" --check 2>&1); then
+  fail ".DS_Store ignored by check" "$out"
+else
+  pass ".DS_Store ignored by check"
+fi
+rm -f "$REPO/.agents/skills/pr/.DS_Store"
+
+CLONE="$WORK/fresh-clone"
+FRESH_HOME="$WORK/fresh-home"
+mkdir -p "$CLONE/scripts" "$CLONE/.tools" "$CLONE/.agents" "$CLONE/.claude" "$FRESH_HOME"
+cp "$REPO/scripts/sync-skills.sh" "$CLONE/scripts/sync-skills.sh"
+cp "$REPO/apm.yml" "$REPO/apm.lock.yaml" "$CLONE/"
+cp -R "$REPO/dist" "$CLONE/dist"
+cp -R "$REPO/.agents/skills" "$CLONE/.agents/skills"
+cp -R "$REPO/.claude/skills" "$CLONE/.claude/skills"
+ln -s "$HERE/.tools/apm" "$CLONE/.tools/apm"
+
+printf '\nupdated on fresh clone\n' >> "$CLONE/dist/skills/pr/SKILL.md"
+rm -f "$CLONE/dist/skills/pr/CREDITS.md"
+if ! out=$(HOME="$FRESH_HOME" sh "$CLONE/scripts/sync-skills.sh" 2>&1); then
+  fail "fresh clone without receipts can update existing skill" "$out"
+elif ! HOME="$FRESH_HOME" sh "$CLONE/scripts/sync-skills.sh" --check > /dev/null 2>&1; then
+  fail "fresh clone check passes after sync" "check failed after sync"
+elif [ ! -f "$CLONE/.agents/skills/repo-only/SKILL.md" ] || [ ! -f "$CLONE/.claude/skills/repo-only/SKILL.md" ]; then
+  fail "fresh clone sync preserves repo-only skill" "repo-only skill was deleted"
+elif [ -e "$CLONE/.agents/skills/pr/CREDITS.md" ]; then
+  fail "fresh clone sync removes deleted skill file" "CREDITS.md still exists"
+else
+  pass "fresh clone without receipts updates modified/deleted skill files and preserves repo-only skill"
+fi
+
 printf '\nstale edit\n' >> "$REPO/dist/skills/pr/SKILL.md"
 if out=$(sh "$REPO/scripts/sync-skills.sh" --check 2>&1); then
   fail "stale dist fails check" "check passed unexpectedly"
