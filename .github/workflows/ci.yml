@@ -26,6 +26,7 @@ jobs:
           sh scripts/test-changed-skills.sh
           sh scripts/test-apm-audit-ci.sh
           sh scripts/test-build-apm-readme.sh
+          sh scripts/test-build-sbom.sh
 
   skillspector:
     runs-on: ubuntu-24.04
@@ -59,4 +60,21 @@ jobs:
             echo "### apm audit check failed"
             echo
             echo "The log above lists each blocking finding or scan error. [How to fix findings](https://github.com/${{ github.repository }}/blob/${{ github.sha }}/docs/apm-audit.md)."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  sbom:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install CI tools
+        run: sh scripts/install-tools.sh check-jsonschema
+      - name: Check the SBOM would pass
+        run: sh scripts/build-sbom.sh --check
+      - name: Explain a failed check
+        if: failure()
+        run: |
+          {
+            echo "### SBOM check failed"
+            echo
+            echo "The log above lists each finding. [How the SBOM check works](https://github.com/${{ github.repository }}/blob/${{ github.sha }}/docs/sbom.md)."
           } >> "$GITHUB_STEP_SUMMARY"

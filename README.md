@@ -3,7 +3,7 @@
 <h1><img src="docs/assets/banner.svg" alt="alf: Agentic Lifecycle Foundation" width="720"></h1>
 
 **A sound base of agent skills for the core of the software development lifecycle.**<br>
-Install it into Claude Code or GitHub Copilot through [APM](https://microsoft.github.io/apm/) or as a plugin, and your team starts from the same skills.
+Install it through [APM](https://microsoft.github.io/apm/) across coding agents, or as a plugin for Claude Code and GitHub Copilot, and your team starts from the same skills.
 
 [![CI](https://github.com/dev-soprasteriano/alf/actions/workflows/ci.yml/badge.svg)](https://github.com/dev-soprasteriano/alf/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
@@ -23,7 +23,7 @@ Install it into Claude Code or GitHub Copilot through [APM](https://microsoft.gi
 
 Install APM first: `brew install apm`.
 
-**Every skill.** Copy the manifest and install it:
+**Every skill (user-wide).** Copy the manifest and install it:
 
 ```sh
 mkdir -p ~/.apm
@@ -31,16 +31,20 @@ curl -fsSL -o ~/.apm/apm.yml https://raw.githubusercontent.com/dev-soprasteriano
 apm install -g
 ```
 
-**Only some skills.** Write your own `apm.yml` and run `apm install`. Commit it to share the set with your team:
+`dist/user-apm.yml` deploys to the four user-scope skill roots: `agent-skills` (`~/.agents/skills/`, read by Copilot, Codex, Cursor, Gemini CLI and Windsurf), `claude` (`~/.claude/skills/`), `antigravity`, and `opencode` (`~/.config/opencode/skills/`). Remove any target you do not use (or drop `antigravity` if `~/.gemini/config/skills` symlinks to `~/.agents/skills`).
+
+**In a project.** Write `apm.yml` and run `apm install`. Commit `apm.yml` and `apm.lock.yaml` (and optionally the deployed skills folder) to share the set with your team:
 
 ```yaml
 targets:
+  - agent-skills
   - claude
-  - copilot
 dependencies:
   apm:
     - dev-soprasteriano/alf/dist/skills/grill-with-docs
 ```
+
+`agent-skills` writes `.agents/skills/`, which Copilot, Codex, Cursor, Gemini CLI, Antigravity, OpenCode and Windsurf read. Leave out `claude` if `.claude/skills` already symlinks to `.agents/skills`. To install every skill in one entry, depend on `dev-soprasteriano/alf/dist`.
 
 A skill also installs the skills it calls by name:
 
