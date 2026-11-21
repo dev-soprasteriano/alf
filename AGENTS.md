@@ -36,7 +36,7 @@ Write like a technical writer. State facts, steps and decisions. Cut anything el
 
 ## Adding or updating upstream skills, or checking a PR that touches them
 
-1. **License.** Read the upstream `LICENSE`. Tell the user its name and copyright line. If it is new, or changed since the last pin, say so. If it is missing, or not permissive (MIT, Apache-2.0, BSD-2/3-Clause, ISC, Unlicense, CC0), warn the user and suggest aborting that change.
+1. **License.** Read the upstream `LICENSE`. Tell the user its name and copyright line. If it is new, or changed since the last pin, say so. If it is missing, or its license is not on `SHIP_ALLOWED` in `scripts/build-sbom.sh`, warn the user and suggest aborting that change.
 2. **Dependencies.** For every changed upstream skill, list the other skills its files call or link to: any phrase that asks for another skill to be called or used by name (for example `call ... with "name"` or `the name skill`), `/name` references to skills, and relative links that leave the upstream skill folder. Each one must be an upstream skill with a wrapper in `src/skills/`. Only names of skills count.
 3. **Missing dependencies.** Report each missing one, and offer to add it as an upstream skill.
 4. **Report, then ask.** Summarise what you found, and ask before committing or pushing.

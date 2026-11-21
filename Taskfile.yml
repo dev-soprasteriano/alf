@@ -17,6 +17,7 @@ tasks:
       - task: ci:build
       - task: ci:skillspector
       - task: ci:apm-audit
+      - task: ci:sbom
 
   ci:staged:
     desc: Run the same checks on the staged files.
@@ -37,6 +38,7 @@ tasks:
       - sh scripts/test-changed-skills.sh
       - sh scripts/test-apm-audit-ci.sh
       - sh scripts/test-build-apm-readme.sh
+      - sh scripts/test-build-sbom.sh
 
   ci:skillspector:
     desc: Scan every alf skill and upstream skill with SkillSpector, static only (no LLM). STAGED=1 scans only the skill folders of the staged files.
@@ -53,6 +55,20 @@ tasks:
     cmds:
       - sh scripts/install-tools.sh apm
       - sh scripts/apm-audit-ci.sh{{if .STAGED}} --staged{{end}}
+
+  sbom:
+    desc: Generate the SBOM of the shipped bundles in sbom/ (CycloneDX). The SBOM workflow runs this on each push to main. See docs/sbom.md.
+    preconditions: *jq
+    cmds:
+      - sh scripts/install-tools.sh check-jsonschema
+      - scripts/build-sbom.sh
+
+  ci:sbom:
+    desc: Check the SBOM as the pull request check does, the schemas and the bundle licenses. Writes no files.
+    preconditions: *jq
+    cmds:
+      - sh scripts/install-tools.sh check-jsonschema
+      - scripts/build-sbom.sh --check
 
   tools:lock:
     desc: Regenerate tools/<TOOL>/requirements.txt, with hashes, from tools/<TOOL>/requirements.in. Run after editing requirements.in, and commit both files.
