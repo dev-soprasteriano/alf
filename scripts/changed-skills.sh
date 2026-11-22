@@ -1,18 +1,12 @@
 #!/bin/sh
 # Prints the skill folders to scan. Run from the repo root.
-#   --all: every skill folder.
-#   --staged: the skill folders of the staged files.
-#   no argument: the skill folders of the changed paths read from stdin, one per line, repo-relative.
-# Both scan every skill folder when the changed paths include the baseline or the SkillSpector lock file.
+# Usage: --all, --staged, or changed paths on stdin, one per line.
 set -eu
 
-# Succeeds when the folder $1 is a skill: it has a SKILL.md.
 has_skill() {  # folder
   [ -f "$1/SKILL.md" ]
 }
 
-# Prints the folder a path belongs to: src/skills/<name>/ or src/upstream/<upstream>/<skill>/.
-# Prints nothing for any other path.
 skill_folder_of() {  # path
   case "$1" in
     src/skills/*/*) printf '%s\n' "$1" | cut -d/ -f1-3 ;;
@@ -20,7 +14,6 @@ skill_folder_of() {  # path
   esac
 }
 
-# Prints every skill folder: src/skills/<name>/ and src/upstream/<upstream>/<skill>/.
 list_all() {
   for d in src/skills/*/ src/upstream/*/*/; do
     d=${d%/}
@@ -30,8 +23,7 @@ list_all() {
   done
 }
 
-# Succeeds when a changed path on stdin is the baseline or the SkillSpector lock file. A new SkillSpector
-# version can find what the old one missed, and makes accepted findings active again.
+# A new SkillSpector version can find what the old one missed, so scan every skill.
 scan_all_changed() {
   while IFS= read -r p; do
     case "$p" in
@@ -51,8 +43,7 @@ wrappers_linking() {  # e.g. src/upstream/mattpocock/to-spec
   done
 }
 
-# Prints the skill folders to scan for the changed paths on stdin: each path's own skill folder,
-# and the wrappers that link to a changed upstream skill.
+# Prints each changed path's folder, plus the wrappers that link to a changed upstream skill.
 folders_to_scan() {
   while IFS= read -r p; do
     f=$(skill_folder_of "$p")
@@ -68,8 +59,6 @@ folders_to_scan() {
   done
 }
 
-# Prints the scan targets for the changed paths in $1: every skill when the baseline or the lock file is among
-# them, else their folders.
 targets_for() {  # changed paths, newline-separated
   if printf '%s\n' "$1" | scan_all_changed; then
     list_all

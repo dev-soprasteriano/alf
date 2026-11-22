@@ -1,7 +1,7 @@
 name: CI
 
-# Each job runs the scripts that `task ci` runs locally. The tools come from the hash-locked
-# tools/<tool>/requirements.txt, installed with the runner's Python 3.12. No third-party actions.
+# Jobs run the scripts that `task ci` runs locally, with tools from hash-locked requirements on Python 3.12.
+# Uses no third-party actions.
 
 on:
   pull_request:

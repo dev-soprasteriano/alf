@@ -1,6 +1,5 @@
 #!/bin/sh
-# Tests scripts/build-sbom.sh in fixture git repos. The fixtures have a stub check-jsonschema tool. No network. Run from
-# any directory: sh scripts/test-build-sbom.sh
+# Tests scripts/build-sbom.sh in fixture git repos, with a stub check-jsonschema. No network.
 set -eu
 
 HERE=$(cd "$(dirname "$0")" && pwd)
@@ -9,7 +8,6 @@ trap 'rm -rf "$WORK"' EXIT
 failures=0
 UPSTREAM_COMMIT=1111111111111111111111111111111111111111
 
-# Stub check-jsonschema. It fails when STUB_SCHEMA_FAIL is set. Otherwise it passes any instance that parses as JSON.
 STUB_CHECK="$WORK/check-jsonschema"
 cat > "$STUB_CHECK" <<'EOF'
 #!/bin/sh
@@ -28,8 +26,7 @@ fail() {  # name, detail
   failures=$((failures + 1))
 }
 
-# Builds a fixture repo in $1 with one wrapped upstream bundle and one in-house bundle. Test cases edit the fixture
-# afterwards.
+# Builds a fixture repo in $1 with one wrapped and one in-house bundle.
 make_fixture() {  # dir
   dir="$1"
   mkdir -p "$dir/scripts" "$dir/src/upstream/example" "$dir/dist/skills/wrapped" "$dir/dist/skills/inhouse"
@@ -48,7 +45,7 @@ make_fixture() {  # dir
   git -C "$dir" -c user.name=test -c user.email=test@example.com commit -q --allow-empty -m fixture
 }
 
-# Runs the script in fixture $1. Sets $code to its exit code, and $out to its stdout and stderr.
+# Runs the script in fixture $1. Sets $code and $out.
 run_in() {  # dir
   code=0
   out=$(cd "$1" && sh scripts/build-sbom.sh 2>&1) || code=$?

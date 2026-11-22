@@ -1,6 +1,5 @@
 #!/bin/sh
-# Tests scripts/changed-skills.sh on a fixture tree and a fixture git repo. Run from any directory:
-# sh scripts/test-changed-skills.sh
+# Tests scripts/changed-skills.sh on a fixture tree and a fixture git repo.
 set -eu
 
 HERE=$(cd "$(dirname "$0")" && pwd)
@@ -10,13 +9,11 @@ REPO=$(mktemp -d)
 trap 'rm -rf "$FIXTURE" "$REPO"' EXIT
 failures=0
 
-# Writes a file into the fixture, creating its folder.
 write_fixture() {  # path, content
   mkdir -p "$FIXTURE/$(dirname "$1")"
   printf '%s\n' "$2" > "$FIXTURE/$1"
 }
 
-# Writes a file into the git repo, creating its folder. Does not stage it.
 write_repo() {  # path, content
   mkdir -p "$REPO/$(dirname "$1")"
   printf '%s\n' "$2" > "$REPO/$1"
@@ -26,12 +23,10 @@ git_repo() {  # git arguments, run in the repo
   git -C "$REPO" -c user.name=test -c user.email=test@example.com "$@"
 }
 
-# Prints the output $1 without blank lines, sorted.
 normalize() {
   printf '%s\n' "$1" | sed '/^$/d' | sort
 }
 
-# Passes when the output matches the expected folders.
 check() {  # name, output, expected folders (newline-separated)
   got=$(normalize "$2")
   want=$(normalize "$3")
@@ -45,7 +40,6 @@ check() {  # name, output, expected folders (newline-separated)
   fi
 }
 
-# Passes when the script, given the changed paths on stdin, prints the expected folders.
 expect_changed() {  # name, changed paths (newline-separated), expected folders (newline-separated)
   if ! out=$(cd "$FIXTURE" && printf '%s\n' "$2" | sh "$SCRIPT"); then
     echo "FAIL $1: script exited nonzero"
@@ -55,7 +49,6 @@ expect_changed() {  # name, changed paths (newline-separated), expected folders 
   check "$1" "$out" "$3"
 }
 
-# Passes when the script, run with --staged in the git repo, prints the expected folders.
 expect_staged() {  # name, expected folders (newline-separated)
   if ! out=$(cd "$REPO" && sh "$SCRIPT" --staged); then
     echo "FAIL $1: script exited nonzero"
@@ -123,7 +116,6 @@ expect_changed "upstream file and the wrapper's own file: each folder once" \
 src/skills/wrap-a/SKILL.md" "src/upstream/mattpocock/to-spec
 src/skills/wrap-a"
 
-# Git repo for --staged: one skill, one other skill, the Taskfile, the scan script, the lock file and the baseline.
 git_repo init -q
 write_repo Taskfile.yml "version: '3'"
 write_repo scripts/skillspector-ci.sh "# scan script"
@@ -134,7 +126,6 @@ write_repo src/skills/other/SKILL.md "# Other skill"
 git_repo add -A
 git_repo commit -q -m "fixture"
 
-# Each case resets the repo to the commit, then stages one change.
 stage() {  # path, content
   git_repo reset -q --hard HEAD
   write_repo "$1" "$2"

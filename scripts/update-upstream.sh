@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
-# Copies upstream skills into src/upstream, records each upstream skill's commit in PIN.md,
-# and writes the wrapper skills under src/skills. Then rebuilds dist/ with build-apm.sh.
-# Run by `task update-upstream`, by the weekly workflow, and by agents. See AGENTS.md.
-#
+# Copies upstream skills into src/upstream, records their commits in PIN.md, and writes their wrappers.
 # Written for bash 3.2 (macOS /bin/bash): plain variables, loops and case only.
 
 set -euo pipefail
@@ -40,7 +37,6 @@ die() {
   exit 1
 }
 
-# Upstream URL from the PIN.md line "Upstream: <url>".
 pin_url() {
   awk -F': ' '$1 == "Upstream" { print $2; exit }' "$1"
 }
@@ -58,14 +54,12 @@ load_rows() {   # slug
   pin_rows "$UPSTREAM_DIR/$1/PIN.md" > "$WORK_DIR/rows/$1"
 }
 
-# Sets commit and pinned for one upstream skill in an upstream's rows file.
 set_row() {   # slug skill commit pinned
   local rows="$WORK_DIR/rows/$1" tmp="$WORK_DIR/rows.tmp"
   awk -v s="$2" -v c="$3" -v p="$4" '$1 == s { $3 = c; $4 = p } { print }' "$rows" > "$tmp"
   mv "$tmp" "$rows"
 }
 
-# Rewrites PIN.md for one upstream from its rows file.
 write_pin() {   # slug url rows-file
   {
     printf 'Upstream: %s\n\n' "$2"
@@ -90,19 +84,16 @@ default_head() {   # clone
   git -C "$1" rev-parse --verify --quiet 'origin/HEAD^{commit}' || die "no default branch in $1"
 }
 
-# Newest commit on the default branch that changes a folder.
 latest_commit() {   # clone upstream-path
   git -C "$1" log -1 --format=%H "$(default_head "$1")" -- "$2"
 }
 
-# Newest commit at a revision that changes a folder.
 commit_at() {   # clone rev upstream-path
   local rev
   rev="$(git -C "$1" rev-parse --verify --quiet "$2^{commit}")" || die "unknown revision: $2"
   git -C "$1" log -1 --format=%H "$rev" -- "$3"
 }
 
-# Copies a folder as it was at a commit to dest, replacing whatever is there.
 export_folder() {   # clone commit upstream-path dest
   local tmp
   tmp="$(mktemp -d "$WORK_DIR/export.XXXXXX")"
@@ -112,17 +103,15 @@ export_folder() {   # clone commit upstream-path dest
   mv "$tmp/$3" "$4"
 }
 
-# The name: value of a SKILL.md frontmatter block.
 skill_name() {   # SKILL.md
   awk 'NR > 1 && /^---$/ { exit } /^name:/ { sub(/^name: */, ""); print; exit }' "$1"
 }
 
-# The frontmatter block of a SKILL.md, from its first line through the closing ---.
 frontmatter() {   # SKILL.md
   awk '{ print } NR > 1 && /^---$/ { exit }' "$1"
 }
 
-# Succeeds if a name is already used by an upstream skill (folder name) or a wrapper (skill name).
+# Succeeds if an upstream skill folder or a wrapper already uses the name.
 skill_in_catalogue() {   # name
   local pin
   if [[ -e "$SKILLS_DIR/$1" ]]; then
@@ -137,13 +126,11 @@ skill_in_catalogue() {   # name
   return 1
 }
 
-# The wrapper name of an upstream skill, from its upstream's rows file.
 wrapper_for() {   # slug skill
   awk -v s="$2" '$1 == s { print $5; exit }' "$WORK_DIR/rows/$1"
 }
 
-# Writes the wrapper for an upstream skill under its wrapper name. Frontmatter and pointer are
-# regenerated (the name line is replaced when the wrapper name differs); the overlay is kept.
+# Regenerates the frontmatter and pointer, and keeps the overlay.
 write_wrapper() {   # slug skill wrapper-name
   local upstream_skill="$UPSTREAM_DIR/$1/$2/SKILL.md"
   local dir="$SKILLS_DIR/$3"
@@ -172,7 +159,6 @@ $OVERLAY_END"
   } > "$wrapper"
 }
 
-# Writes the default-branch LICENSE of an upstream to WORK_DIR/license.<slug>, if it has one.
 fresh_license() {   # slug
   local clone="$WORK_DIR/clones/$1" head
   head="$(default_head "$clone")"
@@ -183,7 +169,6 @@ fresh_license() {   # slug
   return 1
 }
 
-# Records an upstream whose LICENSE differs from the copy on disk.
 check_license() {   # slug
   if ! fresh_license "$1"; then
     printf 'warning: %s has no LICENSE on its default branch; kept the existing copy\n' "$1" >&2
@@ -192,7 +177,7 @@ check_license() {   # slug
   fi
 }
 
-# Dies on broken overlay markers in an existing wrapper. Runs during planning.
+# Dies on broken overlay markers. Runs during planning, before any file is replaced.
 check_overlay() {   # wrapper-name
   local wrapper="$SKILLS_DIR/$1/SKILL.md" overlay
   [[ -f "$wrapper" ]] || return 0
@@ -200,7 +185,6 @@ check_overlay() {   # wrapper-name
   [[ "$overlay" == *"$OVERLAY_END" ]] || die "$wrapper: overlay markers are missing; fix this file by hand"
 }
 
-# Exports a changed upstream skill to a staging folder and checks it.
 stage_upstream() {   # clone commit upstream-path slug skill wrapper-name
   local stage="$WORK_DIR/stage/$4/$5"
   export_folder "$1" "$2" "$3" "$stage"
@@ -209,7 +193,6 @@ stage_upstream() {   # clone commit upstream-path slug skill wrapper-name
   check_overlay "$6"
 }
 
-# Skills next to a copied one that are new since the old commit and not in the catalogue.
 new_upstream_skills() {   # slug parent-path old new
   local clone="$WORK_DIR/clones/$1" name
   git -C "$clone" ls-tree -d --name-only "$4:$2" 2>/dev/null | while read -r name; do
@@ -338,8 +321,7 @@ cmd_update() {
     [[ -z "$(git -C "$REPO_DIR" status --porcelain)" ]] || die "working tree has local changes; commit or stash them first"
   fi
 
-  # Plan: which rows move, and which LICENSE files differ.
-  # Each changed upstream skill is exported to a staging folder and checked before any file is replaced.
+  # Stage and check every changed upstream skill before any file is replaced.
   plan="$WORK_DIR/plan"
   : > "$plan"
   rm -f "$WORK_DIR/license_changes"
@@ -392,7 +374,6 @@ cmd_update() {
     exit 0
   fi
 
-  # Apply: move staged upstream skills into place, then wrappers, LICENSE files and pins.
   while read -r slug skill upath old new pinned_new; do
     if [[ "$old" != "$new" ]]; then
       rm -rf "$UPSTREAM_DIR/$slug/$skill"
@@ -410,7 +391,6 @@ cmd_update() {
     write_pin "$slug" "$(pin_url "$UPSTREAM_DIR/$slug/PIN.md")" "$WORK_DIR/rows/$slug"
   done < <(cut -d' ' -f1 "$plan" | sort -u)
 
-  # Rebuild the APM bundles from the changed copies. A failing build stops the update here.
   "$REPO_DIR/scripts/build-apm.sh"
 
   if [[ -z "$(git -C "$REPO_DIR" status --porcelain -- src dist)" ]]; then
@@ -450,8 +430,8 @@ cmd_update() {
   else
     gh pr create --base main --head "$branch" --title "$title" --body-file "$body"
   fi
-  # A push made with GITHUB_TOKEN does not start pull_request workflows, so the CI checks that
-  # `main` requires never run on this PR. Start them here. workflow_dispatch is exempt.
+  # A push made with GITHUB_TOKEN starts no pull_request workflows, so start CI here.
+  # Required CI checks would otherwise never run on this PR.
   gh workflow run ci.yml --ref "$branch"
 }
 

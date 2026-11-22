@@ -1,13 +1,6 @@
 #!/bin/sh
-# Scans alf skills with SkillSpector, static only (no LLM).
 # Usage: sh scripts/skillspector-ci.sh [--staged]
-#   No argument: scans every skill folder. CI runs this.
-#   --staged: scans only the skill folders of the staged files. The pre-commit hook runs this.
-#     scripts/changed-skills.sh picks those folders. It also decides which changes scan every skill.
-# Fails on any active MEDIUM, HIGH, or CRITICAL finding, and on any scan that errors or is incomplete.
 # A reviewer accepts a finding by adding it to .skillspector-baseline.yaml with a reason.
-# Runs the SkillSpector that `sh scripts/install-tools.sh skillspector` installs from
-# tools/skillspector/requirements.txt.
 set -eu
 
 SKILLSPECTOR=".tools/skillspector/bin/skillspector"
@@ -35,9 +28,8 @@ if [ ! -x "$SKILLSPECTOR" ]; then
   exit 1
 fi
 
-# --baseline is rejected for recursive multi-skill scans, so each skill folder is scanned on its own.
-# dist/ is not scanned here. Its bundles repeat these skills at shifted line numbers, and the
-# baseline does not match them. `task ci` checks that dist/ matches a fresh build of these sources.
+# --baseline is rejected for recursive scans, so each skill folder is scanned on its own.
+# dist/ is not scanned: its bundles repeat these skills at shifted line numbers, so the baseline misses them.
 for skill in $targets; do
   report="$WORK/$(echo "$skill" | tr '/' '_').json"
 
