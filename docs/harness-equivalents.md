@@ -1,5 +1,7 @@
 # Harness equivalents
 
+**TLDR:** This page maps ALF skills against the harnesses' own built-in commands, so future development targets only the real gaps: where a built-in already does the job, don't duplicate it; where it does part of the job, build the rest. Harnesses release weekly and can absorb a skill's job into a new built-in at any time. Re-check this page against each harness's current state on a regular cadence — every three months, or sooner after a major release — and update the cells, the date and the version at the top.
+
 Claude Code and GitHub Copilot CLI ship their own commands. Some do part of what an alf skill does. This page tells you which one to run for each task.
 
 Checked on 2026-11-14 against the Claude Code docs and Copilot CLI 1.0.112. Both harnesses change weekly, so a command here can be renamed or removed.
