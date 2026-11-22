@@ -1,5 +1,5 @@
 #!/bin/sh
-# Passes the commit message to the global commit-msg hook. core.hooksPath in this repo hides it otherwise.
+# This repo's core.hooksPath hides the global hooks, so this hook calls them.
 global_dir=$(git config --global --get core.hooksPath || true)
 if [ -n "$global_dir" ] && [ -x "$global_dir/commit-msg" ]; then
   exec "$global_dir/commit-msg" "$@"

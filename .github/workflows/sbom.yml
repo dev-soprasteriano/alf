@@ -1,7 +1,6 @@
 name: SBOM
 
-# Generates the SBOM of ALF's shipped bundles for each commit on main, and uploads it as a workflow artifact named
-# after the commit. The pull request check is the sbom job in ci.yml. It writes no files.
+# Generates the SBOM on each push to main. The pull request check is the sbom job in ci.yml.
 
 on:
   push:

@@ -1,6 +1,5 @@
 #!/bin/sh
-# Tests scripts/apm-audit-ci.sh in a fixture git repo, with a stub apm installed at .tools/apm/bin/apm. Run from
-# any directory: sh scripts/test-apm-audit-ci.sh
+# Tests scripts/apm-audit-ci.sh against a stub apm in a fixture git repo.
 set -eu
 
 HERE=$(cd "$(dirname "$0")" && pwd)
@@ -12,7 +11,6 @@ trap 'rm -rf "$REPO" "$REPORT_REPO" "$WORK"' EXIT
 failures=0
 CLEAN='{"exit_code": 0, "summary": {}, "findings": []}'
 
-# The stub apm logs each --file argument to $STUB_LOG, prints $STUB_REPORT, and exits with $STUB_EXIT.
 STUB="$WORK/apm"
 cat > "$STUB" <<'EOF'
 #!/bin/sh
@@ -29,7 +27,6 @@ chmod +x "$STUB"
 STUB_LOG="$WORK/scanned.txt"
 export STUB_LOG
 
-# Writes a file into the git repo, creating its folder. Does not stage it.
 write_repo() {  # path, content
   mkdir -p "$REPO/$(dirname "$1")"
   printf '%s\n' "$2" > "$REPO/$1"
@@ -39,7 +36,6 @@ git_repo() {  # git arguments, run in the repo
   git -C "$REPO" -c user.name=test -c user.email=test@example.com "$@"
 }
 
-# Prints the output $1 without blank lines, sorted.
 normalize() {
   printf '%s\n' "$1" | sed '/^$/d' | sort
 }
@@ -56,9 +52,8 @@ install_stub() {  # folder
   cp "$STUB" "$1/.tools/apm/bin/apm"
 }
 
-# Runs the script in the folder $RUN_IN with the stub apm. Sets $code to its exit code, and $out to its stdout
-# and stderr.
 RUN_IN=$REPO
+# Runs the script in $RUN_IN with the stub apm. Sets $code and $out.
 run_script() {  # report, stub exit code, script arguments...
   report=$1
   stub_exit=$2
@@ -71,7 +66,6 @@ run_script() {  # report, stub exit code, script arguments...
   fi
 }
 
-# Passes when the script, with a clean report, exits 0 and scans exactly the expected files.
 expect_scanned() {  # name, expected files (newline-separated), script arguments...
   name=$1
   want=$(normalize "$2")
@@ -88,7 +82,6 @@ expect_scanned() {  # name, expected files (newline-separated), script arguments
   fi
 }
 
-# Passes when the script, given the report and the stub exit code, exits as expected and logs every expected text.
 expect_result() {  # name, report, stub exit code, expected exit code, expected texts...
   name=$1
   run_script "$2" "$3"
@@ -112,7 +105,7 @@ report_with() {  # severity, line, codepoint
   printf '{"exit_code": 2, "summary": {}, "findings": [{"severity": "%s", "file": "SKILL.md", "line": %s, "column": 2, "codepoint": "%s", "category": "zero-width", "description": "Zero-width space"}]}' "$1" "$2" "$3"
 }
 
-# Fixture repo: the apm lock file, three dist/ files and two other files. .tools/ is ignored, as in the repo.
+# Fixture repo. It ignores .tools/, as the real repo does.
 git_repo init -q
 write_repo .gitignore ".tools/"
 write_repo tools/apm/requirements.txt "apm-cli==0.35.0"
@@ -132,7 +125,6 @@ dist/user-apm.yml"
 
 expect_scanned "no argument: every file in dist/" "$ALL"
 
-# Each case resets the repo to the commit, then stages one change.
 stage() {  # path, content
   git_repo reset -q --hard HEAD
   git_repo clean -q -fd
@@ -172,7 +164,6 @@ expect_scanned "scan script staged: nothing to scan" "" --staged
 stage tools/apm/requirements.txt "apm-cli==0.35.1"
 expect_scanned "apm lock file staged: every file in dist/" "$ALL" --staged
 
-# Report fixture: one dist/ file. Each case runs a report against that file.
 RUN_IN=$REPORT_REPO
 mkdir -p "$REPORT_REPO/dist/skills/a"
 printf '# A\n' > "$REPORT_REPO/dist/skills/a/SKILL.md"

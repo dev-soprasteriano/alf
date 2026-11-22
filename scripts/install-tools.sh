@@ -1,12 +1,9 @@
 #!/bin/sh
-# Installs CI tools into .tools/<tool>/, one Python virtual environment per tool, from the hash-locked
-# tools/<tool>/requirements.txt. pip refuses any package whose hash is not in that file, and any sdist.
-# Skips a tool whose installed lock file matches; reinstalls it when the lock file changed.
+# Installs CI tools into .tools/<tool>/ from tools/<tool>/requirements.txt.
 # Usage: sh scripts/install-tools.sh <tool>...   Tools: the folders under tools/, such as apm or skillspector.
-# Uses python3.12, the version the lock files target. Some locked packages ship no wheel for newer versions.
-# Set PYTHON to use another Python 3.12 executable.
 set -eu
 
+# Some locked packages ship no wheel for newer Python versions.
 PYTHON="${PYTHON:-python3.12}"
 
 if [ $# -eq 0 ]; then

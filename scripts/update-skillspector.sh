@@ -1,11 +1,6 @@
 #!/bin/sh
-# Moves SkillSpector to NVIDIA's latest GitHub release, and opens or updates a pull request for it.
-# Dependabot cannot: SkillSpector is not on PyPI, and tools/skillspector/requirements.in pins a release wheel URL.
-# Run daily by .github/workflows/update-skillspector.yml. Needs gh with a token, and Python 3.12 (see install-tools.sh).
-# Usage: sh scripts/update-skillspector.sh
-# Environment:
-#   SKILLSPECTOR_BRANCH        branch for the update (default: tools/skillspector-update)
-#   SKILLSPECTOR_LOCAL_ONLY=1  commit to the branch, but skip the push and the pull request
+# Moves SkillSpector to the latest NVIDIA release and opens or updates its pull request.
+# Dependabot cannot update it: SkillSpector is not on PyPI.
 set -eu
 
 cd "$(dirname "$0")/.."
@@ -19,7 +14,7 @@ die() {
   exit 1
 }
 
-# Succeeds for a release tag such as v2.13.4, and nothing else. The tag goes into a URL, a file and a branch.
+# The tag goes into a URL, a file and a branch, so accept only a release tag such as v2.13.4.
 is_version() {
   expr "x$1" : 'xv[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*$' > /dev/null
 }
@@ -111,6 +106,6 @@ if [ "$(gh pr list --head "$branch" --state open --json number --jq length)" -gt
 else
   gh pr create --base main --head "$branch" --title "$title" --body-file "$work/body.md"
 fi
-# A push made with GITHUB_TOKEN does not start pull_request workflows, so the CI checks that
-# main requires never run on this pull request. Start them here. workflow_dispatch is exempt.
+# A push made with GITHUB_TOKEN starts no pull_request workflows, so start CI here.
+# Required CI checks would otherwise never run on this pull request.
 gh workflow run ci.yml --ref "$branch"

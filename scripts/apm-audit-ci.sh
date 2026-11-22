@@ -1,12 +1,6 @@
 #!/bin/sh
-# Scans every file in dist/ for hidden Unicode with `apm audit`, one file at a time.
+# Scans dist/ for hidden Unicode with `apm audit`. Findings cannot be accepted: fix them.
 # Usage: sh scripts/apm-audit-ci.sh [--staged]
-#   No argument: scans every file in dist/. CI runs this.
-#   --staged: scans only the staged files under dist/ that still exist. The pre-commit hook runs this.
-#     Scans every file in dist/ when tools/apm/requirements.txt is staged.
-# Fails on any WARNING or CRITICAL finding, and on any apm run that exits 3 or higher or prints no valid JSON
-# report. Findings cannot be accepted: fix them. See docs/apm-audit.md.
-# Runs the apm that `sh scripts/install-tools.sh apm` installs from tools/apm/requirements.txt.
 set -eu
 
 APM=".tools/apm/bin/apm"
@@ -19,8 +13,7 @@ BLOCKING="$WORK/blocking.tsv"
 : > "$FINDINGS"
 status=0
 
-# Prints the staged files under dist/ that still exist. Prints every file in dist/ when the apm lock file is
-# staged: a new apm version can find what the old one missed.
+# Staging the apm lock file scans all of dist/: a new apm version can find what the old one missed.
 staged_targets() {
   if ! git diff --cached --quiet -- "$LOCK"; then
     find dist -type f | sort
@@ -81,8 +74,7 @@ done <<EOF
 $targets
 EOF
 
-# INFO never blocks. Any other severity blocks: the pinned apm reports only WARNING and CRITICAL besides INFO,
-# and a severity added by a later version should not pass unseen.
+# Any severity but INFO blocks, so a severity a later apm version adds does not pass unseen.
 jq -rs '.[] | select(.severity != "info") | [.file, .line, .codepoint, .severity, .description] | @tsv' \
   "$FINDINGS" > "$BLOCKING"
 

@@ -26,6 +26,25 @@ Rules for agents working in this repo. Read them before changing `src/skills/` o
 - `README.md` holds the URL of each upstream.
 - When a skill names another skill, list that name in `src/skill-dependencies.txt`: under the skill as a dependency if it calls the skill, or under `mentions` if it does not. The build fails on any unlisted name.
 
+## Comments
+
+Write a comment only when names and signatures cannot carry the meaning.
+
+- Before writing a comment, improve the name or signature. Delete any comment that restates them.
+- Describe the present only.
+- Never describe history: no "used to", "previously", "after #12", or "changed because".
+- One line, two at most.
+- Shebangs and linter directives are not comments under this section.
+
+Good:
+
+    # bash 3.2 (macOS /bin/bash): no associative arrays
+
+Bad:
+
+    # increment the retry count
+    # switched from associative arrays after #31
+
 ## Writing style
 
 Write like a technical writer. State facts, steps and decisions. Cut anything else.
