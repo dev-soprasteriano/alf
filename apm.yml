@@ -1,0 +1,10 @@
+# ./dist carries .claude-plugin/plugin.json, so APM installs it as a plugin.
+# Keep non-skill Claude plugin primitives out of dist/ unless you want them deployed into .claude/.
+name: alf-dev
+version: 1.0.0
+targets:
+  - agent-skills
+  - claude
+dependencies:
+  apm:
+    - ./dist

@@ -1,2 +1,9 @@
 # Generated bundles: review the source under src/skills/ and src/upstream/, not these copies.
-dist/** linguist-generated=true
+# Keep upstream copies, dist/, and deployed skills byte-exact (-text) so Windows checkouts do not rewrite line endings and break hashes or byte-for-byte upstream parity.
+src/skills/** text=auto eol=lf
+src/skill-dependencies.txt text=auto eol=lf
+src/upstream/** -text
+dist/** linguist-generated=true -text
+.agents/skills/** -text
+.claude/skills/** -text
+apm.lock.yaml linguist-generated=true text=auto eol=lf

@@ -7,9 +7,11 @@ tasks:
       - scripts/update-upstream.sh update {{if .DRY_RUN}}--dry-run {{end}}{{if .REF}}--ref {{.REF}} {{end}}{{if .SKILL}}{{.SKILL}}{{end}}
 
   build-apm:
-    desc: Build the APM skill bundles, dist/user-apm.yml and the plugin manifest dist/.claude-plugin/plugin.json from src/skills and src/upstream. Fails when README.md differs from src/. Commit dist/ with the change.
+    desc: Build the APM skill bundles, dist/user-apm.yml and dist/.claude-plugin/plugin.json from src/, and deploy them into .agents/skills/ and .claude/skills/ via apm. Fails when README.md differs from src/. Commit dist/, .agents/skills/, .claude/skills/, and apm.lock.yaml with the change.
     cmds:
       - scripts/build-apm.sh
+      - sh scripts/install-tools.sh apm
+      - sh scripts/sync-skills.sh
 
   ci:
     desc: Run the same checks as CI.
@@ -23,22 +25,34 @@ tasks:
     desc: Run the same checks on the staged files.
     cmds:
       - task: ci:build
+        vars: {STAGED: "1"}
       - task: ci:skillspector
         vars: {STAGED: "1"}
       - task: ci:apm-audit
         vars: {STAGED: "1"}
 
   ci:build:
-    desc: Check dist/ and README.md match src/, and run the script tests.
+    desc: Check dist/, README.md, and deployed skills match src/, and run the script tests.
     preconditions:
       - sh: command -v jq
         msg: "jq not found. Install it with: brew install jq"
     cmds:
       - scripts/build-apm.sh --check
+      - sh scripts/install-tools.sh apm
+      - sh scripts/sync-skills.sh --check
       - sh scripts/test-changed-skills.sh
       - sh scripts/test-apm-audit-ci.sh
       - sh scripts/test-build-apm-readme.sh
       - sh scripts/test-build-sbom.sh
+      - |
+        {{if .STAGED}}
+        paths="dist .agents/skills .claude/skills apm.lock.yaml"
+        untracked="$(git ls-files --others --exclude-standard -- $paths | grep -v '/\.DS_Store$' || true)"
+        if ! git diff --quiet -- $paths || [ -n "$untracked" ]; then
+          echo "Stage dist/, .agents/skills/, .claude/skills/ and apm.lock.yaml with the change." >&2
+          exit 1
+        fi
+        {{else}}sh scripts/test-sync-skills.sh{{end}}
 
   ci:skillspector:
     desc: Scan every alf skill and upstream skill with SkillSpector, static only (no LLM). STAGED=1 scans only the skill folders of the staged files.

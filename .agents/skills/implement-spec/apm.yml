@@ -1,0 +1,9 @@
+name: implement-spec
+version: 1.0.0
+dependencies:
+  apm:
+    - dev-soprasteriano/alf/dist/skills/tdd
+    - dev-soprasteriano/alf/dist/skills/code-review
+    - dev-soprasteriano/alf/dist/skills/to-spec
+    - dev-soprasteriano/alf/dist/skills/to-tickets
+    - dev-soprasteriano/alf/dist/skills/setup-alf

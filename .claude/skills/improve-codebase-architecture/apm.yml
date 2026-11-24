@@ -1,0 +1,7 @@
+name: improve-codebase-architecture
+version: 1.0.0
+dependencies:
+  apm:
+    - dev-soprasteriano/alf/dist/skills/codebase-design
+    - dev-soprasteriano/alf/dist/skills/grilling
+    - dev-soprasteriano/alf/dist/skills/domain-modeling
