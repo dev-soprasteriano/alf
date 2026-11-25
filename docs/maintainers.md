@@ -45,6 +45,8 @@ flowchart LR
 
 After any change under `src/`, run `task build-apm` and commit `dist/`, `.agents/skills/`, `.claude/skills/`, and `apm.lock.yaml` with it. `task ci` fails when `dist/` or the deployed skills are stale.
 
+`task build-apm` runs APM against the existing `dist/` before rebuilding it. This records the deployed files locally so APM can remove obsolete copies on the second install, even on a fresh clone.
+
 Check the plugin with `claude plugin validate .` and `claude plugin validate dist`, and try it with `claude --plugin-dir dist`. Expect a warning about the missing `version`, and one about the missing icon for `dist`. Leave `version` out: plugin users then get every commit to `main`.
 
 ## Change a skill
