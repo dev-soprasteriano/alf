@@ -1,53 +1,53 @@
 # SkillSpector baseline — findings listed here are suppressed on future scans.
 # Edit 'reason' fields and add glob 'rules' as needed. See docs/SUPPRESSION.md.
 version: 2
-scanner_version: 2.13.6
+scanner_version: 2.13.7
 rules: []
 fingerprints:
-- hash: sha256:0f528f59e69d056839788d8e11a42b0b27a7e8082d33eaa9aa8acc196c9bd4f3
+- hash: sha256:f48cb923eaf04fe6bd2e3b60f14c07728155f1261bd4ec42f081b575fab71d8e
   rule_id: P6
   file: scripts/hitl-loop.template.sh
   reason: Usage comment describing the step helper, which shows a prompt to the user.
     The script does not reveal the system prompt or any secret.
-- hash: sha256:67389b3e4bd876a94c0e7c6e000309e636b3462f154dc7bb6808c390f58c8d2e
+- hash: sha256:9aadee2bdb3f6c1b5b4bd509ee7ac8a2900ff29c6ca904260af44b7107974525
   rule_id: AR1
   file: SKILL.md
   reason: Skill guidance noting the user can always answer questions about who a questionnaire
     goes to. It does not tell the agent to ignore refusals or safety limits.
-- hash: sha256:43b4183ac4c84b58e1c4e7c62c0640a0f956f32ac620ceb75a1c58380915c3d8
+- hash: sha256:bb788be47e1f4e0d417a671059404e9a3cb23562f60a3543c14e219fbc4c18f9
   rule_id: TM2
   file: SKILL.md
   reason: Ticket-sequencing guidance for large refactors (expand, migrate in batches,
     contract). It describes planning steps and does not direct the agent to run tools
     or change code outside the tickets.
-- hash: sha256:cb11ca49c65b6276a8a7f48bf8cd74e122745f15f2a268d03d235ffd8b60ec4d
+- hash: sha256:ad118c819268673e156427255005ad0acd937382c20d42a943bd961ca3c2cc87
   rule_id: PE3
   file: template.sh
   reason: Setup template that reads an existing .env value only to prefill prompts
     that show their input. The template uses those for public values only. Secret
     prompts use ask_secret, which hides input and does not show the saved value. Changes
     no privileges.
-- hash: sha256:15c11122286b0164907da0c5fa1ec44c51917c752eb730c37a1a9366ede2cb84
+- hash: sha256:7e5517b293c5477cccac8a57a26701298456dcebc7f91b87541067f73ac213cc
   rule_id: LP3
   file: SKILL.md
   reason: Upstream skill declares no allowed-tools list. Accepted as is.
-- hash: sha256:cbfe995ca39bf2204f2a68ab32c520ccde9b1ad827f5d186c66ef9dbd91203ca
+- hash: sha256:949d6508ccdef61ca9c6832fd38be606dece9c8500b55dab17fbcaafc1c95716
   rule_id: EA2
   file: SKILL.md
   reason: Skill tells the agent to look up environment facts itself instead of asking
     the user, and to leave every decision to the user. Accepted as is.
-- hash: sha256:cecb3cea5395f0825f08d28d7183e259485f990551851492c0f0bc7b229e7637
+- hash: sha256:5cb36df5a12562ee519304280ad0316d4c949b0451e481624c39917c58b4f472
   rule_id: AS3
   file: SKILL.md
   reason: Attribution URL in credits metadata pointing to the upstream skill source.
     It is not an instruction to read another skill.
-- hash: sha256:007e1082b3cf4c1cf1bd4c44537ec938f3ce8cf28629dd9a9198914d596cfc41
+- hash: sha256:60e15b5bb0c7a31d1814a722abe78673c34fbb4979bbd10a46a5317605e409a5
   rule_id: EA2
   file: SKILL.md
   reason: Setup skill writes the default single-context domain-docs layout without
     asking. Label names and multi-context layouts are confirmed with the user. Accepted
     as is.
-- hash: sha256:bef3f7bea75492a9316340071b83d258ef8dcf1595f8217d46a08f5cf8c68163
+- hash: sha256:cb5f1faf85bfeab9156d3aa8cbce62d6acba1d4d5eec62146aa10f59026e2d08
   rule_id: AS3
   file: SKILL.md
   reason: Attribution URL in credits metadata pointing to the upstream skill source.
