@@ -9,8 +9,9 @@ tasks:
   build-apm:
     desc: Build the APM skill bundles, dist/user-apm.yml and dist/.claude-plugin/plugin.json from src/, and deploy them into .agents/skills/ and .claude/skills/ via apm. Fails when README.md differs from src/. Commit dist/, .agents/skills/, .claude/skills/, and apm.lock.yaml with the change.
     cmds:
-      - scripts/build-apm.sh
       - sh scripts/install-tools.sh apm
+      - sh scripts/sync-skills.sh --record-baseline
+      - scripts/build-apm.sh
       - sh scripts/sync-skills.sh
 
   ci:

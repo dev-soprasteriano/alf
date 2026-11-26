@@ -14,22 +14,32 @@ die() {
 }
 
 usage() {
-  printf 'Usage: sh scripts/sync-skills.sh [--check]\n' >&2
+  printf 'Usage: sh scripts/sync-skills.sh [--record-baseline | --check]\n' >&2
   exit 2
 }
 
 mode=sync
 case "${1:-}" in
   "") ;;
+  --record-baseline) mode=record_baseline ;;
   --check) mode=check ;;
   *) usage ;;
 esac
 
 [ -x "$APM" ] || die "$APM not found. Install it with: sh scripts/install-tools.sh apm"
 [ -f "$REPO_DIR/apm.yml" ] || die "apm.yml not found"
-[ -d "$REPO_DIR/dist" ] || die "dist/ not found. Run task build-apm first."
 
 cd "$REPO_DIR"
+if [ "$mode" = "record_baseline" ]; then
+  if [ ! -d dist ]; then
+    printf 'sync-skills: no dist/ to record before building\n'
+    exit 0
+  fi
+  exec "$APM" install --no-frozen
+fi
+
+[ -d "$REPO_DIR/dist" ] || die "dist/ not found. Run task build-apm first."
+
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 
@@ -44,7 +54,7 @@ if [ "$mode" = "sync" ]; then
   # Pre-flight into an empty root without --force so APM still blocks critical hidden-character
   # findings before --force overwrites existing repo files that lack local receipts.
   tmp_apm --root "$WORK/preflight" || die "pre-flight apm install failed (see output above); refusing to deploy ./dist"
-  "$APM" install --force
+  "$APM" install --no-frozen --force
   exit 0
 fi
 

@@ -94,18 +94,22 @@ cp -R "$REPO/.agents/skills" "$CLONE/.agents/skills"
 cp -R "$REPO/.claude/skills" "$CLONE/.claude/skills"
 ln -s "$REPO_DIR/.tools/apm" "$CLONE/.tools/apm"
 
+fresh_env sh "$CLONE/scripts/sync-skills.sh" --record-baseline
 printf '\nupdated on fresh clone\n' >> "$CLONE/dist/skills/demo/SKILL.md"
 rm -f "$CLONE/dist/skills/demo/NOTES.md"
 if ! out=$(fresh_env sh "$CLONE/scripts/sync-skills.sh" 2>&1); then
-  fail "fresh clone without receipts updates existing skill" "$out"
-elif ! out=$(fresh_env sh "$CLONE/scripts/sync-skills.sh" --check 2>&1); then
-  fail "fresh clone check passes after sync" "$out"
+  fail "fresh clone updates existing skill" "$out"
+elif ! cmp -s "$CLONE/dist/skills/demo/SKILL.md" "$CLONE/.agents/skills/demo/SKILL.md" ||
+  ! cmp -s "$CLONE/dist/skills/demo/SKILL.md" "$CLONE/.claude/skills/demo/SKILL.md"; then
+  fail "fresh clone updates existing skill" "SKILL.md does not match dist/"
 elif [ ! -f "$CLONE/.agents/skills/repo-only/SKILL.md" ] || [ ! -f "$CLONE/.claude/skills/repo-only/SKILL.md" ]; then
   fail "fresh clone sync preserves repo-only skill" "repo-only skill was deleted"
-elif [ -e "$CLONE/.agents/skills/demo/NOTES.md" ]; then
+elif [ -e "$CLONE/.agents/skills/demo/NOTES.md" ] || [ -e "$CLONE/.claude/skills/demo/NOTES.md" ]; then
   fail "fresh clone sync removes deleted skill file" "NOTES.md still exists"
+elif ! out=$(fresh_env sh "$CLONE/scripts/sync-skills.sh" --check 2>&1); then
+  fail "fresh clone check passes after sync" "$out"
 else
-  pass "fresh clone without receipts updates modified/deleted skill files and preserves repo-only skill"
+  pass "fresh clone updates modified/deleted skill files and preserves repo-only skill"
 fi
 
 cp "$REPO/dist/skills/demo/SKILL.md" "$WORK/demo.orig"

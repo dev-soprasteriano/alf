@@ -1,5 +1,8 @@
-lockfile_version: '1'
-apm_version: 0.36.1
+lockfile_version: '4'
+apm_version: 0.37.0
+manifest_targets:
+- agent-skills
+- claude
 dependencies:
 - repo_url: _local/dist
   name: alf
@@ -575,7 +578,7 @@ dependencies:
     .claude/skills/writing-for-agents/agents/openai.yaml: sha256:eacb24b2a618cfb81dacb0416f4fdd75ddf3a8060f8ddb99aae1b1e301907e4b
   source: local
   local_path: ./dist
-  content_hash: sha256:e61bc30234e594d0a178e69f90b4d5353f56a6a5a1581972a669513663b7f817
+  content_hash: sha256:8e801213a5e98117a2c5864c7247801879bb403cbcc7cc91bc5d805edf66b62d
   declared_license: MIT
 deployments:
 - kind: project-relative
