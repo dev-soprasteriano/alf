@@ -181,9 +181,9 @@ anyio==4.16.0 \
     # via
     #   httpx2
     #   openai
-apm-cli==0.37.0 \
-    --hash=sha256:1078dc4d5bd7d797f4924548f684daffd026df740b31f99b17fc13958e5da762 \
-    --hash=sha256:87cbcb6a864aa8251ffea446fc34fd439caa6d01d51df1a9399669bed5fab576
+apm-cli==0.39.1 \
+    --hash=sha256:af1636869ee0217129549f16d8ac9e645c77af5a6d4fbfc9dbd08e47bdefd0da \
+    --hash=sha256:b569fea62e19504a8d5fd4983f765241eacebd4d7f64465c105b755450b67b96
     # via -r requirements.in
 attrs==26.1.0 \
     --hash=sha256:c647aa4a12dfbad9333ca4e71fe62ddc36f4e63b2d260a37a8b83d2f043ac309 \
