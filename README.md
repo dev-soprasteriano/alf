@@ -36,6 +36,8 @@ apm install -g
 **In a project.** Write `apm.yml` and run `apm install`. Commit `apm.yml` and `apm.lock.yaml` (and optionally the deployed skills folder) to share the set with your team:
 
 ```yaml
+name: my-project
+version: 1.0.0
 targets:
   - agent-skills
   - claude
