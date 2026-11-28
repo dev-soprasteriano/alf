@@ -1,4 +1,6 @@
-# ./dist carries .claude-plugin/plugin.json, so APM installs it as a plugin.
+# ./dist carries .claude-plugin/plugin.json. From 0.38, APM deploys such a package as a native plugin
+# at project scope. skills: ["*"] deploys its skills loose into .agents/skills/ and .claude/skills/,
+# which load in git worktrees, in claude -p runs and in cloud agents.
 # Keep non-skill Claude plugin primitives out of dist/ unless you want them deployed into .claude/.
 name: alf-dev
 version: 1.0.0
@@ -7,4 +9,5 @@ targets:
   - claude
 dependencies:
   apm:
-    - ./dist
+    - path: ./dist
+      skills: ["*"]
